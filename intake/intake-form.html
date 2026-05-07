@@ -2111,18 +2111,32 @@
       else localStorage.removeItem(API_KEY_STORAGE);
     } catch (e) {}
   }
+  // HTTP headers must be ISO-8859-1. Strip anything that wasn't and warn if the
+  // input had to be cleaned — usually means a smart-quote or zero-width space
+  // snuck in via copy-paste from Notes/Slack/Email.
+  function _sanitizeApiKey(raw) {
+    const trimmed = (raw || '').trim();
+    const cleaned = trimmed.replace(/[^\x21-\x7E]/g, '');
+    return { cleaned, hadInvalid: cleaned !== trimmed };
+  }
 
   $('api_key').value = getStoredApiKey();
 
   $('save_api_key').addEventListener('click', () => {
-    const key = $('api_key').value.trim();
-    setStoredApiKey(key);
-    showApiTestResult(key ? 'API key saved.' : 'API key cleared — using manual chat workflow.', 'success');
+    const { cleaned, hadInvalid } = _sanitizeApiKey($('api_key').value);
+    setStoredApiKey(cleaned);
+    if (cleaned) $('api_key').value = cleaned;
+    if (hadInvalid) {
+      showApiTestResult('API key saved (cleaned non-ASCII characters from copy-paste).', 'success');
+    } else {
+      showApiTestResult(cleaned ? 'API key saved.' : 'API key cleared — using manual chat workflow.', 'success');
+    }
   });
 
   $('test_api_key').addEventListener('click', async () => {
-    const key = $('api_key').value.trim();
+    const { cleaned: key, hadInvalid } = _sanitizeApiKey($('api_key').value);
     if (!key) { showApiTestResult('Enter an API key first.', 'error'); return; }
+    if (hadInvalid) $('api_key').value = key;
     showApiTestResult('Testing key…', 'loading');
     try {
       const res = await fetch('https://api.anthropic.com/v1/messages', {
