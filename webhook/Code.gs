@@ -647,20 +647,26 @@ function rebuildDashboard() {
     
     if (visual.barEnd > 0) {
       const richBuilder = SpreadsheetApp.newRichTextValue()
-        .setText(visual.text)
-        .setTextStyle(0, visual.filledEnd, 
+        .setText(visual.text);
+
+      // Filled segment — only style if non-empty (Apps Script setTextStyle
+      // throws "Illegal argument" when start === end, which happens on a
+      // brand-new contract whose effective date is today: elapsed = 0).
+      if (visual.filledEnd > 0) {
+        richBuilder.setTextStyle(0, visual.filledEnd,
           SpreadsheetApp.newTextStyle().setForegroundColor(filledColor).setBold(true).build());
-      
+      }
+
       if (visual.barEnd > visual.filledEnd) {
-        richBuilder.setTextStyle(visual.filledEnd, visual.barEnd, 
+        richBuilder.setTextStyle(visual.filledEnd, visual.barEnd,
           SpreadsheetApp.newTextStyle().setForegroundColor('#E5E7EB').setBold(true).build());
       }
-      
+
       if (visual.text.length > visual.barEnd) {
-        richBuilder.setTextStyle(visual.barEnd, visual.text.length, 
+        richBuilder.setTextStyle(visual.barEnd, visual.text.length,
           SpreadsheetApp.newTextStyle().setForegroundColor('#374151').setBold(false).build());
       }
-      
+
       progressCell.setRichTextValue(richBuilder.build());
     } else {
       progressCell.setValue(visual.text).setFontColor('#9CA3AF');
