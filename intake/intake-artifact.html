@@ -1,0 +1,1313 @@
+<div id="root">
+<style>
+  :root {
+    --indigo-deep: #4338CA;
+    --indigo-navy: #312E81;
+    --purple: #8B5CF6;
+    --lavender: #DDD6FE;
+    --purple-tint: #F5F3FF;
+    --gray-50: #F9FAFB;
+    --gray-100: #F3F4F6;
+    --gray-200: #E5E7EB;
+    --gray-300: #D1D5DB;
+    --gray-500: #6B7280;
+    --gray-700: #374151;
+    --gray-900: #111827;
+    --green-500: #10B981;
+    --green-50: #ECFDF5;
+    --red-500: #EF4444;
+    --red-50: #FEF2F2;
+    --amber-500: #F59E0B;
+    --amber-50: #FFFBEB;
+  }
+
+  * { box-sizing: border-box; }
+
+  body, #root {
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    color: var(--gray-900);
+    background: var(--gray-50);
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.5;
+  }
+
+  .container {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 0 16px 80px;
+  }
+
+  /* ===== HEADER ===== */
+  .brand-header {
+    background: linear-gradient(135deg, var(--indigo-deep), var(--purple));
+    color: white;
+    padding: 28px 24px;
+    border-radius: 0 0 16px 16px;
+    margin-bottom: 20px;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(67, 56, 202, 0.2);
+  }
+  .brand-header h1 {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+  }
+  .brand-header p {
+    margin: 4px 0 0;
+    font-size: 13px;
+    opacity: 0.9;
+    font-style: italic;
+  }
+  .brand-header .tagline {
+    margin-top: 8px;
+    font-size: 11px;
+    opacity: 0.75;
+    font-style: normal;
+  }
+
+  /* ===== ACTIONS BAR ===== */
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  button {
+    cursor: pointer;
+    border: none;
+    border-radius: 10px;
+    padding: 11px 18px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: inherit;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .btn-primary {
+    background: var(--indigo-deep);
+    color: white;
+    box-shadow: 0 2px 6px rgba(67, 56, 202, 0.25);
+  }
+  .btn-primary:hover:not(:disabled) {
+    background: var(--indigo-navy);
+    box-shadow: 0 4px 10px rgba(67, 56, 202, 0.35);
+    transform: translateY(-1px);
+  }
+
+  .btn-purple {
+    background: var(--purple);
+    color: white;
+    box-shadow: 0 2px 6px rgba(139, 92, 246, 0.25);
+  }
+  .btn-purple:hover:not(:disabled) {
+    background: #7C3AED;
+    box-shadow: 0 4px 10px rgba(139, 92, 246, 0.35);
+    transform: translateY(-1px);
+  }
+
+  .btn-secondary {
+    background: white;
+    color: var(--indigo-deep);
+    border: 1px solid var(--gray-300);
+  }
+  .btn-secondary:hover:not(:disabled) {
+    background: var(--purple-tint);
+    border-color: var(--indigo-deep);
+  }
+
+  .btn-success {
+    background: var(--green-500);
+    color: white;
+    padding: 14px 24px;
+    font-size: 15px;
+    box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3);
+  }
+  .btn-success:hover:not(:disabled) {
+    background: #059669;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+    transform: translateY(-1px);
+  }
+
+  /* ===== STATUS BAR ===== */
+  .status {
+    padding: 12px 16px;
+    border-radius: 10px;
+    margin-bottom: 16px;
+    font-size: 14px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    animation: slideIn 0.25s ease;
+  }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .status.info {
+    background: var(--purple-tint);
+    color: var(--indigo-navy);
+    border: 1px solid var(--lavender);
+  }
+  .status.success {
+    background: var(--green-50);
+    color: #065F46;
+    border: 1px solid #A7F3D0;
+  }
+  .status.error {
+    background: var(--red-50);
+    color: #991B1B;
+    border: 1px solid #FECACA;
+  }
+  .status.warning {
+    background: var(--amber-50);
+    color: #92400E;
+    border: 1px solid #FDE68A;
+  }
+  .status.hidden { display: none; }
+
+  .spinner {
+    width: 16px; height: 16px;
+    border: 2px solid currentColor;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    flex-shrink: 0;
+  }
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* ===== CARDS / SECTIONS ===== */
+  .card {
+    background: white;
+    border-radius: 12px;
+    margin-bottom: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02);
+    overflow: hidden;
+    border: 1px solid var(--gray-200);
+  }
+  .card-header {
+    background: var(--indigo-navy);
+    color: white;
+    padding: 12px 18px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card-body {
+    padding: 18px;
+  }
+
+  /* ===== FORM GRID ===== */
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  .grid-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 14px;
+  }
+  .grid-1 {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+  .col-span-2 { grid-column: span 2; }
+  .col-span-3 { grid-column: span 3; }
+
+  @media (max-width: 700px) {
+    .grid, .grid-3 { grid-template-columns: 1fr; }
+    .col-span-2, .col-span-3 { grid-column: span 1; }
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .field label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--gray-700);
+  }
+  .field .hint {
+    font-size: 11px;
+    color: var(--gray-500);
+    font-weight: 400;
+  }
+  .field input,
+  .field select,
+  .field textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--gray-300);
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    background: white;
+    color: var(--gray-900);
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .field input:focus,
+  .field select:focus,
+  .field textarea:focus {
+    outline: none;
+    border-color: var(--indigo-deep);
+    box-shadow: 0 0 0 3px rgba(67, 56, 202, 0.1);
+  }
+  .field textarea {
+    resize: vertical;
+    min-height: 80px;
+    font-family: inherit;
+  }
+
+  /* Highlight filled fields after auto-extract */
+  .field input.auto-filled,
+  .field select.auto-filled,
+  .field textarea.auto-filled {
+    background: #FEFCE8;
+    border-color: #FACC15;
+  }
+
+  /* ===== MODAL (for paste JSON) ===== */
+  .modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(17, 24, 39, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 100;
+    animation: fadeIn 0.15s ease;
+  }
+  @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
+  .modal {
+    background: white;
+    border-radius: 14px;
+    max-width: 600px;
+    width: 100%;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+  }
+  .modal-header {
+    background: var(--indigo-deep);
+    color: white;
+    padding: 14px 20px;
+    font-size: 15px;
+    font-weight: 600;
+  }
+  .modal-body {
+    padding: 18px 20px;
+    overflow-y: auto;
+    flex: 1;
+  }
+  .modal-body textarea {
+    width: 100%;
+    min-height: 220px;
+    padding: 12px;
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, monospace;
+    font-size: 12px;
+    border: 1px solid var(--gray-300);
+    border-radius: 8px;
+    resize: vertical;
+  }
+  .modal-footer {
+    padding: 14px 20px;
+    border-top: 1px solid var(--gray-200);
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    background: var(--gray-50);
+  }
+  .modal.hidden, .modal-overlay.hidden { display: none; }
+
+  /* ===== FOOTER ===== */
+  .submit-bar {
+    position: sticky;
+    bottom: 16px;
+    margin-top: 24px;
+    background: white;
+    border-radius: 14px;
+    padding: 14px 18px;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.06);
+    border: 1px solid var(--gray-200);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .submit-bar .summary {
+    font-size: 13px;
+    color: var(--gray-500);
+  }
+  .submit-bar .summary strong { color: var(--gray-900); }
+
+  /* ===== HELPERS ===== */
+  .hidden { display: none !important; }
+  .small { font-size: 11px; color: var(--gray-500); }
+  .pill {
+    display: inline-block;
+    background: var(--lavender);
+    color: var(--indigo-navy);
+    padding: 2px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+</style>
+
+<div class="container">
+
+  <header class="brand-header">
+    <h1>📋 MRFL Transactions — Intake System</h1>
+    <p>Gloria Grullon, Transaction Coordinator</p>
+    <div class="tagline">Upload a contract → review → submit. Done.</div>
+  </header>
+
+  <!-- ACTIONS -->
+  <div class="actions">
+    <button id="uploadPdfBtn" class="btn-primary">
+      <span>📄</span> Upload Contract PDF
+    </button>
+    <button id="importJsonBtn" class="btn-purple">
+      <span>📋</span> Paste JSON
+    </button>
+    <button id="resetBtn" class="btn-secondary">
+      <span>🔄</span> Reset Form
+    </button>
+    <input type="file" id="pdfFileInput" accept="application/pdf" style="display:none" />
+  </div>
+
+  <!-- STATUS -->
+  <div id="statusBar" class="status hidden"></div>
+
+  <!-- MANUAL FALLBACK PANEL (shown when API isn't reachable, or anytime user wants to copy text) -->
+  <div id="manualFallback" class="card hidden" style="border-color:#F59E0B">
+    <div class="card-header" style="background:#F59E0B">📋 Copy contract text → extract JSON in Claude chat</div>
+    <div class="card-body">
+      <p style="margin:0 0 12px;font-size:13px;color:var(--gray-700);line-height:1.5">
+        The Claude API isn't reachable directly from this artifact (CORS/network restriction).
+        No problem — your PDF was parsed locally. Here's the workflow:
+      </p>
+      <ol style="margin:0 0 14px;padding-left:22px;font-size:13px;color:var(--gray-700);line-height:1.7">
+        <li>Click <strong>Copy below</strong> — copies the contract text + ready prompt to your clipboard</li>
+        <li>Open a new Claude conversation (in your project) and paste</li>
+        <li>Claude returns JSON</li>
+        <li>Click <strong>📋 Paste JSON</strong> at the top of this form, paste, hit Apply</li>
+      </ol>
+      <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px">
+        <button id="copyTextBtn" class="btn-purple">📋 Copy text + prompt to clipboard</button>
+        <span id="copyConfirm" class="small hidden" style="color:var(--green-500);font-weight:600">✓ Copied to clipboard!</span>
+        <button id="dismissFallbackBtn" class="btn-secondary" style="margin-left:auto">Hide</button>
+      </div>
+      <details style="margin-top:8px">
+        <summary style="cursor:pointer;font-size:12px;color:var(--gray-500);font-weight:600">▸ Preview extracted text</summary>
+        <textarea id="extractedText" readonly style="width:100%;height:180px;margin-top:8px;font-family:ui-monospace,monospace;font-size:11px;padding:10px;border:1px solid var(--gray-200);border-radius:8px;background:var(--gray-50);resize:vertical"></textarea>
+      </details>
+    </div>
+  </div>
+
+  <!-- ===== SECTIONS ===== -->
+
+  <!-- Agent & Side -->
+  <div class="card">
+    <div class="card-header">🏷 Agent & Side Represented</div>
+    <div class="card-body">
+      <div class="grid">
+        <div class="field">
+          <label for="agent_ref">Agent Reference <span class="hint">(used as tab prefix)</span></label>
+          <input id="agent_ref" type="text" placeholder="e.g., Carlitos, Serf, Hilda, Krystal" />
+        </div>
+        <div class="field">
+          <label for="side_represented">Side Represented</label>
+          <select id="side_represented">
+            <option value="">— Select —</option>
+            <option value="Listing Side (Seller's Agent)">Listing Side (Seller's Agent)</option>
+            <option value="Buyer Side (Buyer's Agent)">Buyer Side (Buyer's Agent)</option>
+            <option value="Both (Dual Agency)">Both (Dual Agency)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Property -->
+  <div class="card">
+    <div class="card-header">🏠 Property</div>
+    <div class="card-body">
+      <div class="grid">
+        <div class="field col-span-2">
+          <label for="prop_address">Property Address</label>
+          <input id="prop_address" type="text" placeholder="123 Main St, Miami, FL 33101" />
+        </div>
+        <div class="field">
+          <label for="prop_tax_id">Property Tax ID (Folio)</label>
+          <input id="prop_tax_id" type="text" />
+        </div>
+        <div class="field">
+          <label for="purchase_price">Purchase Price</label>
+          <input id="purchase_price" type="text" placeholder="$XXX,XXX.XX" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dates & Financing -->
+  <div class="card">
+    <div class="card-header">📅 Dates & Financing</div>
+    <div class="card-body">
+      <div class="grid">
+        <div class="field">
+          <label for="effective_date">Effective Date</label>
+          <input id="effective_date" type="date" />
+        </div>
+        <div class="field">
+          <label for="closing_date">Closing Date</label>
+          <input id="closing_date" type="date" />
+        </div>
+        <div class="field">
+          <label for="financing_type">Financing Type</label>
+          <select id="financing_type">
+            <option value="">— Select —</option>
+            <option>Cash</option>
+            <option>Conventional</option>
+            <option>FHA</option>
+            <option>VA</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="loan_days">Loan Approval Days <span class="hint">(blank = 30)</span></label>
+          <input id="loan_days" type="number" min="0" />
+        </div>
+        <div class="field">
+          <label for="escrow_amount">Initial Escrow Amount</label>
+          <input id="escrow_amount" type="text" placeholder="$X,XXX.XX" />
+        </div>
+        <div class="field">
+          <label for="escrow_days">Escrow Days <span class="hint">(blank = 3)</span></label>
+          <input id="escrow_days" type="number" min="0" />
+        </div>
+        <div class="field">
+          <label for="inspection_days">Inspection Days <span class="hint">(blank = 15)</span></label>
+          <input id="inspection_days" type="number" min="0" />
+        </div>
+        <div class="field">
+          <label for="loanapp_days">Loan Application Days <span class="hint">(blank = 5)</span></label>
+          <input id="loanapp_days" type="number" min="0" />
+        </div>
+        <div class="field">
+          <label for="title_days">Title Commitment Days <span class="hint">(blank = 15)</span></label>
+          <input id="title_days" type="number" min="0" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sellers -->
+  <div class="card">
+    <div class="card-header">🧑‍💼 Sellers</div>
+    <div class="card-body">
+      <div class="grid">
+        <div class="field col-span-2">
+          <label for="seller_names">Seller Name(s) <span class="hint">(full legal)</span></label>
+          <input id="seller_names" type="text" />
+        </div>
+        <div class="field">
+          <label for="seller_email">Seller Email</label>
+          <input id="seller_email" type="email" />
+        </div>
+        <div class="field">
+          <label for="seller_phone">Seller Phone</label>
+          <input id="seller_phone" type="tel" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Listing Agent -->
+  <div class="card">
+    <div class="card-header">🏠 Listing Agent</div>
+    <div class="card-body">
+      <div class="grid">
+        <div class="field">
+          <label for="lst_agent_name">Agent Name</label>
+          <input id="lst_agent_name" type="text" />
+        </div>
+        <div class="field">
+          <label for="lst_agent_lic">License #</label>
+          <input id="lst_agent_lic" type="text" />
+        </div>
+        <div class="field">
+          <label for="lst_agent_phone">Agent Phone</label>
+          <input id="lst_agent_phone" type="tel" />
+        </div>
+        <div class="field">
+          <label for="lst_agent_email">Agent Email</label>
+          <input id="lst_agent_email" type="email" />
+        </div>
+        <div class="field col-span-2">
+          <label for="lst_brokerage">Brokerage</label>
+          <input id="lst_brokerage" type="text" />
+        </div>
+        <div class="field">
+          <label for="lst_office_addr">Office Address</label>
+          <input id="lst_office_addr" type="text" />
+        </div>
+        <div class="field">
+          <label for="lst_office_phone">Office Phone</label>
+          <input id="lst_office_phone" type="tel" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Buyers -->
+  <div class="card">
+    <div class="card-header">👤 Buyers</div>
+    <div class="card-body">
+      <div class="grid">
+        <div class="field col-span-2">
+          <label for="buyer_names">Buyer Name(s) <span class="hint">(full legal)</span></label>
+          <input id="buyer_names" type="text" />
+        </div>
+        <div class="field">
+          <label for="buyer_email">Buyer Email</label>
+          <input id="buyer_email" type="email" />
+        </div>
+        <div class="field">
+          <label for="buyer_phone">Buyer Phone</label>
+          <input id="buyer_phone" type="tel" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Buyer's Agent -->
+  <div class="card">
+    <div class="card-header">🤝 Buyer's Agent</div>
+    <div class="card-body">
+      <div class="grid">
+        <div class="field">
+          <label for="byr_agent_name">Agent Name</label>
+          <input id="byr_agent_name" type="text" />
+        </div>
+        <div class="field">
+          <label for="byr_agent_lic">License #</label>
+          <input id="byr_agent_lic" type="text" />
+        </div>
+        <div class="field">
+          <label for="byr_agent_phone">Agent Phone</label>
+          <input id="byr_agent_phone" type="tel" />
+        </div>
+        <div class="field">
+          <label for="byr_agent_email">Agent Email</label>
+          <input id="byr_agent_email" type="email" />
+        </div>
+        <div class="field col-span-2">
+          <label for="byr_brokerage">Brokerage</label>
+          <input id="byr_brokerage" type="text" />
+        </div>
+        <div class="field">
+          <label for="byr_office_addr">Office Address</label>
+          <input id="byr_office_addr" type="text" />
+        </div>
+        <div class="field">
+          <label for="byr_office_phone">Office Phone</label>
+          <input id="byr_office_phone" type="tel" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Title & Escrow -->
+  <div class="card">
+    <div class="card-header">📜 Title & Escrow (Buyer Side)</div>
+    <div class="card-body">
+      <div class="grid">
+        <div class="field col-span-2">
+          <label for="byr_title_company">Title Company</label>
+          <input id="byr_title_company" type="text" />
+        </div>
+        <div class="field">
+          <label for="byr_title_contact">Contact</label>
+          <input id="byr_title_contact" type="text" />
+        </div>
+        <div class="field">
+          <label for="byr_title_phone">Phone</label>
+          <input id="byr_title_phone" type="tel" />
+        </div>
+        <div class="field col-span-2">
+          <label for="byr_title_email">Email</label>
+          <input id="byr_title_email" type="email" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loan Officer -->
+  <div class="card">
+    <div class="card-header">💼 Loan Officer</div>
+    <div class="card-body">
+      <div class="grid">
+        <div class="field">
+          <label for="lo_company">Company</label>
+          <input id="lo_company" type="text" />
+        </div>
+        <div class="field">
+          <label for="lo_contact">Contact</label>
+          <input id="lo_contact" type="text" />
+        </div>
+        <div class="field">
+          <label for="lo_phone">Phone</label>
+          <input id="lo_phone" type="tel" />
+        </div>
+        <div class="field">
+          <label for="lo_email">Email</label>
+          <input id="lo_email" type="email" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Concessions -->
+  <div class="card">
+    <div class="card-header">💸 Concessions / Special Terms</div>
+    <div class="card-body">
+      <div class="field">
+        <label for="concessions">Concessions <span class="hint">(one per line)</span></label>
+        <textarea id="concessions" rows="4" placeholder="• Seller contributes $X,XXX toward buyer's closing costs&#10;• ..."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUBMIT BAR -->
+  <div class="submit-bar">
+    <div class="summary">
+      <span id="fieldsFilled" class="pill">0 / 42 fields</span>
+      <span style="margin-left:10px"><strong id="propAddrPreview">—</strong></span>
+    </div>
+    <button id="submitBtn" class="btn-success">
+      <span>🚀</span> Submit to Webhook
+    </button>
+  </div>
+
+</div>
+
+<!-- ===== MODAL: PASTE JSON ===== -->
+<div id="jsonModal" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-header">📋 Paste JSON from Claude</div>
+    <div class="modal-body">
+      <div class="small" style="margin-bottom:10px">
+        Paste the JSON object Claude extracted (with or without the <code>```json</code> fence).
+        Form fields will populate automatically.
+      </div>
+      <textarea id="jsonPasteArea" placeholder='{"prop_address": "...", "purchase_price": "$XXX,XXX.XX", ...}'></textarea>
+    </div>
+    <div class="modal-footer">
+      <button id="cancelImportBtn" class="btn-secondary">Cancel</button>
+      <button id="applyImportBtn" class="btn-primary">Apply</button>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+(function() {
+  // ============ CONFIG ============
+  // Configure PDF.js worker
+  if (typeof pdfjsLib !== 'undefined') {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  }
+
+  const WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbwrx-iYJmTKFtFotFdluL2-DVb7ZkR587IoFZFfoKabiLZjobFqcWakUEgMwTvpjakrWQ/exec';
+
+  const FIELDS = [
+    'agent_ref','side_represented','prop_address','prop_tax_id','purchase_price',
+    'financing_type','loan_days','effective_date','closing_date','escrow_amount',
+    'escrow_days','inspection_days','loanapp_days','title_days',
+    'seller_names','seller_email','seller_phone',
+    'lst_agent_name','lst_agent_lic','lst_agent_phone','lst_agent_email','lst_brokerage','lst_office_addr','lst_office_phone',
+    'buyer_names','buyer_email','buyer_phone',
+    'byr_agent_name','byr_agent_lic','byr_agent_phone','byr_agent_email','byr_brokerage','byr_office_addr','byr_office_phone',
+    'byr_title_company','byr_title_contact','byr_title_email','byr_title_phone',
+    'lo_company','lo_contact','lo_email','lo_phone',
+    'concessions'
+  ];
+
+  const EXTRACTION_PROMPT = `You are extracting intake data from a Florida real estate contract for a Transaction Coordinator (Gloria Grullon, MRFL Transactions).
+
+Output ONLY a single JSON object inside a \`\`\`json code fence. No commentary before or after.
+
+Use STRICT mode: only fill fields whose values are clearly visible in the contract. Leave unknown values as empty strings (""). Do not guess. The TC will manually review before submitting.
+
+Required JSON schema (use these exact keys):
+{
+  "agent_ref": "",
+  "side_represented": "",
+  "prop_address": "",
+  "prop_tax_id": "",
+  "purchase_price": "$XXX,XXX.XX",
+  "financing_type": "Cash | Conventional | FHA | VA | Other",
+  "loan_days": "",
+  "effective_date": "YYYY-MM-DD",
+  "closing_date": "YYYY-MM-DD",
+  "escrow_amount": "$X,XXX.XX",
+  "escrow_days": "",
+  "inspection_days": "",
+  "loanapp_days": "",
+  "title_days": "",
+  "seller_names": "FULL LEGAL NAMES",
+  "seller_email": "",
+  "seller_phone": "",
+  "lst_agent_name": "",
+  "lst_agent_lic": "",
+  "lst_agent_phone": "",
+  "lst_agent_email": "",
+  "lst_brokerage": "",
+  "lst_office_addr": "",
+  "lst_office_phone": "",
+  "buyer_names": "FULL LEGAL NAMES",
+  "buyer_email": "",
+  "buyer_phone": "",
+  "byr_agent_name": "",
+  "byr_agent_lic": "",
+  "byr_agent_phone": "",
+  "byr_agent_email": "",
+  "byr_brokerage": "",
+  "byr_office_addr": "",
+  "byr_office_phone": "",
+  "byr_title_company": "",
+  "byr_title_contact": "",
+  "byr_title_email": "",
+  "byr_title_phone": "",
+  "lo_company": "",
+  "lo_contact": "",
+  "lo_email": "",
+  "lo_phone": "",
+  "concessions": []
+}
+
+Rules:
+- effective_date = the date the LAST party signed the main contract (Paragraph 3(b)). Format YYYY-MM-DD.
+- closing_date = Paragraph 4 closing date. Format YYYY-MM-DD.
+- financing_type: pick the SINGLE most likely value based on which financing rider is fully completed. If both Conventional and FHA boxes are checked but only the FHA rider is signed/initialed, choose FHA.
+- escrow_amount, purchase_price: include "$" and commas, e.g. "$515,000.00".
+- loan_days, escrow_days, etc: just the number as a string ("21"), or "" if not specified.
+- concessions: one short string per concession from Paragraph 20 / additional terms / GG rider. Do NOT include standard contract language. Examples: "Seller contributes $5,000 toward buyer's closing costs", "Seller pays Buyer's Broker 2% per Rider GG".
+- agent_ref: leave "" — TC will fill manually.
+- side_represented: leave "" — TC will fill manually.
+- Be terse. Empty strings, not null.
+
+Output the JSON now.`;
+
+  // ============ DOM REFS ============
+  const $ = id => document.getElementById(id);
+  const statusBar = $('statusBar');
+
+  // ============ STATUS ============
+  function showStatus(msg, type = 'info', spinner = false) {
+    statusBar.className = 'status ' + type;
+    statusBar.innerHTML = (spinner ? '<span class="spinner"></span>' : '') + escapeHtml(msg);
+    statusBar.classList.remove('hidden');
+  }
+  function hideStatus() {
+    statusBar.classList.add('hidden');
+  }
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  // ============ FORM HELPERS ============
+  function getValue(id) {
+    const el = $(id);
+    if (!el) return '';
+    return el.value || '';
+  }
+  function setValue(id, val, markAuto = false) {
+    const el = $(id);
+    if (!el) return;
+    if (id === 'concessions' && Array.isArray(val)) {
+      el.value = val.join('\n');
+    } else {
+      el.value = val == null ? '' : String(val);
+    }
+    if (markAuto && el.value) {
+      el.classList.add('auto-filled');
+    }
+  }
+  function clearAll() {
+    FIELDS.forEach(id => {
+      const el = $(id);
+      if (!el) return;
+      el.value = '';
+      el.classList.remove('auto-filled');
+    });
+    updateSummary();
+  }
+  function collectFormData() {
+    const data = {};
+    FIELDS.forEach(id => {
+      const v = getValue(id);
+      if (id === 'concessions') {
+        data[id] = v.split('\n').map(s => s.trim()).filter(Boolean);
+      } else {
+        data[id] = v.trim();
+      }
+    });
+    return data;
+  }
+  function updateSummary() {
+    let filled = 0;
+    FIELDS.forEach(id => {
+      const v = getValue(id).trim();
+      if (v) filled++;
+    });
+    $('fieldsFilled').textContent = filled + ' / ' + FIELDS.length + ' fields';
+    $('propAddrPreview').textContent = getValue('prop_address') || '—';
+  }
+
+  // Listen for input changes to update summary
+  FIELDS.forEach(id => {
+    const el = $(id);
+    if (el) {
+      el.addEventListener('input', () => {
+        el.classList.remove('auto-filled');
+        updateSummary();
+      });
+    }
+  });
+
+  // ============ FILE → ARRAYBUFFER ============
+  function fileToArrayBuffer(file) {
+    return new Promise((res, rej) => {
+      const reader = new FileReader();
+      reader.onload = () => res(reader.result);
+      reader.onerror = () => rej(new Error('Failed to read file'));
+      reader.readAsArrayBuffer(file);
+    });
+  }
+
+  // ============ PDF → TEXT (via pdf.js, runs in browser) ============
+  async function extractTextFromPdf(arrayBuffer) {
+    if (typeof pdfjsLib === 'undefined') {
+      throw new Error('PDF.js library failed to load. Check your network connection or use Paste JSON.');
+    }
+    const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+    const pdf = await loadingTask.promise;
+    const pages = [];
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      const pageText = content.items.map(item => item.str).join(' ');
+      pages.push('--- Page ' + i + ' ---\n' + pageText);
+    }
+    return pages.join('\n\n');
+  }
+
+  // ============ EXTRACT INTAKE DATA via Anthropic API (text-only request) ============
+  async function extractDataFromText(contractText) {
+    let response;
+    try {
+      response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 1000,
+          messages: [{
+            role: 'user',
+            content: EXTRACTION_PROMPT + '\n\n=== CONTRACT TEXT ===\n\n' + contractText
+          }]
+        })
+      });
+    } catch (netErr) {
+      throw new Error('Network error reaching Claude API: ' + netErr.message);
+    }
+
+    if (!response.ok) {
+      const errText = await response.text().catch(() => '');
+      throw new Error('Claude API returned ' + response.status + (errText ? ': ' + errText.slice(0, 200) : ''));
+    }
+
+    const data = await response.json();
+    if (!data.content || !Array.isArray(data.content)) {
+      throw new Error('Unexpected API response format');
+    }
+
+    const text = data.content
+      .filter(c => c.type === 'text')
+      .map(c => c.text)
+      .join('\n');
+
+    return parseJsonFromText(text);
+  }
+
+  function parseJsonFromText(text) {
+    // Try fenced code block first
+    let m = text.match(/```(?:json)?\s*([\s\S]*?)```/);
+    let raw = m ? m[1] : null;
+
+    // Fall back to first {...} block
+    if (!raw) {
+      const start = text.indexOf('{');
+      const end = text.lastIndexOf('}');
+      if (start >= 0 && end > start) {
+        raw = text.slice(start, end + 1);
+      }
+    }
+
+    if (!raw) {
+      throw new Error('No JSON found in response');
+    }
+
+    raw = raw.trim().replace(/,\s*([}\]])/g, '$1'); // trailing commas
+
+    try {
+      return JSON.parse(raw);
+    } catch (e) {
+      throw new Error('Could not parse JSON: ' + e.message);
+    }
+  }
+
+  // ============ POPULATE FORM FROM JSON ============
+  function applyJsonToForm(json) {
+    let count = 0;
+    Object.keys(json).forEach(key => {
+      if (FIELDS.includes(key)) {
+        const v = json[key];
+        if (v !== '' && v != null && !(Array.isArray(v) && v.length === 0)) {
+          setValue(key, v, true);
+          count++;
+        } else {
+          setValue(key, v); // still set but don't highlight
+        }
+      }
+    });
+    updateSummary();
+    return count;
+  }
+
+  // ============ EVENT: UPLOAD PDF ============
+  $('uploadPdfBtn').addEventListener('click', () => {
+    $('pdfFileInput').click();
+  });
+
+  // ============ LOCAL PATTERN-MATCHING (no API needed) ============
+  // Extract obvious fields with regex so the form gets prefilled even if the API never works
+  function localPatternExtract(text) {
+    const result = {};
+
+    // Helper: clean a captured value
+    const clean = s => (s || '').replace(/\s+/g, ' ').trim();
+
+    // Property address: "Street address, city, zip:" — ASIS contract layout
+    let m = text.match(/Street address[,\s]*city[,\s]*zip[:\s]+([^\n]{8,150}?)(?:\s+Located|\s+\d{5}\s|$)/i);
+    if (m) {
+      let addr = clean(m[1]);
+      // Often the city + zip get pulled separately. Try to also grab them.
+      const zipMatch = text.match(/Located\s+in[:\s]*([A-Z][a-z]+)\s+County/i);
+      const zipDigits = text.match(/,?\s*(\d{5}(?:-\d{4})?)\s*\(b\)/);
+      if (zipMatch && !addr.includes(zipMatch[1])) {
+        // best-effort
+      }
+      result.prop_address = addr;
+    }
+
+    // Tax ID: "Property Tax ID #: 514035122290"
+    m = text.match(/Tax\s*ID\s*#?[:\s]+([0-9][0-9\-]{6,30})/i);
+    if (m) result.prop_tax_id = clean(m[1]);
+
+    // Purchase price: looks for "PURCHASE PRICE ... $ 515,000.00"
+    m = text.match(/PURCHASE\s*PRICE[^$]{0,100}\$\s*([\d,]+\.?\d{0,2})/i);
+    if (m) result.purchase_price = '$' + m[1];
+
+    // Initial deposit / escrow
+    m = text.match(/Initial deposit[^$]{0,80}\$\s*([\d,]+\.?\d{0,2})/i);
+    if (m) result.escrow_amount = '$' + m[1];
+
+    // Closing date: "Closing shall occur on [or before] June 09, 2026"
+    m = text.match(/Closing shall occur on[^A-Za-z]*([A-Za-z]+\s+\d{1,2},?\s+\d{4})/i);
+    if (m) {
+      const d = new Date(m[1]);
+      if (!isNaN(d)) result.closing_date = d.toISOString().slice(0, 10);
+    }
+
+    // Sellers
+    m = text.match(/Seller\(s\)[:\s]+([A-Z][^\n]{3,120}?)(?=\s+(?:Seller's Agent|Buyer\(s\)|Seller's))/);
+    if (m) result.seller_names = clean(m[1].replace(/\(.*$/, ''));
+
+    // Buyers
+    m = text.match(/Buyer\(s\)[:\s]+([A-Z][^\n]{3,120}?)(?=\s+(?:Buyer's Agent|Buyer's |Seller's|\(BUYER\)))/);
+    if (m) result.buyer_names = clean(m[1].replace(/\(.*$/, ''));
+
+    // Listing agent: look for "Listing Sales Associate" line
+    m = text.match(/Listing Sales Associate[:\s]*([A-Z][a-zA-Z\s\.]{3,60})/);
+    if (m) result.lst_agent_name = clean(m[1]);
+
+    // Listing broker
+    m = text.match(/Listing Broker[:\s]*([A-Z][a-zA-Z\s,\.&\-]{3,80}?)(?:\n|Cooperating|$)/);
+    if (m) result.lst_brokerage = clean(m[1]);
+
+    // Cooperating (buyer's) agent
+    m = text.match(/Cooperating Sales Associate[,\s]*if any[:\s]*([A-Z][a-zA-Z\s\.]{3,60})/);
+    if (m) result.byr_agent_name = clean(m[1]);
+
+    // Cooperating broker
+    m = text.match(/Cooperating Broker[,\s]*if any[:\s]*([A-Z][a-zA-Z\s,\.&\-]{3,80}?)(?:\n|$)/);
+    if (m) result.byr_brokerage = clean(m[1]);
+
+    // Loan approval period (days)
+    m = text.match(/Loan Approval Period["\)]*\s*[:\s]*\(?\s*(\d{1,3})\s*\)?/);
+    if (m) result.loan_days = m[1];
+
+    // Inspection days
+    m = text.match(/Inspection Period["\)]*\s*[:\s]*\(?\s*(\d{1,3})\s*\)?/);
+    if (m) result.inspection_days = m[1];
+
+    // Title days (X days prior to Closing Date)
+    m = text.match(/(\d+)\s*days prior to Closing Date/);
+    if (m) result.title_days = m[1];
+
+    // Financing type
+    if (/cash transaction with no financing/i.test(text)) {
+      result.financing_type = 'Cash';
+    } else if (/✓\s*FHA|FHA Financing|FHA[\s\)]*Financing/i.test(text) && /FHA Rider|HUD\/FHA/i.test(text)) {
+      result.financing_type = 'FHA';
+    } else if (/VA Financing/i.test(text)) {
+      result.financing_type = 'VA';
+    } else if (/conventional/i.test(text)) {
+      result.financing_type = 'Conventional';
+    }
+
+    return result;
+  }
+
+  // ============ SHOW MANUAL FALLBACK PANEL ============
+  function showManualFallback(contractText) {
+    const promptText =
+      "Extract intake JSON for this Florida AS IS Residential Contract per my standard MRFL Transactions format. " +
+      "Use STRICT mode — don't guess any field. Output ONLY a single JSON object inside a ```json fence. " +
+      "Use the field schema we've established (agent_ref, side_represented, prop_address, prop_tax_id, purchase_price, " +
+      "financing_type, loan_days, effective_date, closing_date, escrow_amount, escrow_days, inspection_days, " +
+      "loanapp_days, title_days, seller_names, seller_email, seller_phone, lst_agent_name, lst_agent_lic, " +
+      "lst_agent_phone, lst_agent_email, lst_brokerage, lst_office_addr, lst_office_phone, buyer_names, buyer_email, " +
+      "buyer_phone, byr_agent_name, byr_agent_lic, byr_agent_phone, byr_agent_email, byr_brokerage, byr_office_addr, " +
+      "byr_office_phone, byr_title_company, byr_title_contact, byr_title_email, byr_title_phone, lo_company, " +
+      "lo_contact, lo_email, lo_phone, concessions).\n\n" +
+      "=== CONTRACT TEXT ===\n\n" + contractText;
+    $('extractedText').value = promptText;
+    $('manualFallback').classList.remove('hidden');
+    $('manualFallback').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  // Copy-to-clipboard handler
+  $('copyTextBtn').addEventListener('click', async () => {
+    const text = $('extractedText').value;
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch (err) {
+      // Fallback for older browsers / restricted clipboard API
+      $('extractedText').focus();
+      $('extractedText').select();
+      try { document.execCommand('copy'); } catch (e2) {
+        alert('Could not copy automatically. Click the text box, press Ctrl/Cmd+A, then Ctrl/Cmd+C.');
+        return;
+      }
+    }
+    $('copyConfirm').classList.remove('hidden');
+    setTimeout(() => $('copyConfirm').classList.add('hidden'), 2500);
+  });
+
+  $('dismissFallbackBtn').addEventListener('click', () => {
+    $('manualFallback').classList.add('hidden');
+  });
+
+  $('pdfFileInput').addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    e.target.value = ''; // reset so same file can be picked again
+
+    if (file.type !== 'application/pdf') {
+      showStatus('Please select a PDF file.', 'error');
+      return;
+    }
+
+    showStatus('Reading "' + file.name + '" (' + (file.size/1024/1024).toFixed(1) + ' MB)...', 'info', true);
+    $('uploadPdfBtn').disabled = true;
+
+    let contractText = '';
+    let localCount = 0;
+
+    try {
+      // Step 1: Read PDF as ArrayBuffer
+      const arrayBuffer = await fileToArrayBuffer(file);
+
+      // Step 2: Extract text in browser using PDF.js
+      showStatus('Extracting text from PDF...', 'info', true);
+      contractText = await extractTextFromPdf(arrayBuffer);
+
+      if (!contractText || contractText.trim().length < 200) {
+        throw new Error(
+          'Could not extract enough text from this PDF. It may be scanned/image-based. ' +
+          'Try uploading the PDF in a Claude chat to get JSON, then use Paste JSON here.'
+        );
+      }
+
+      // Step 2.5: Local pattern-match prefill (no network needed)
+      const localData = localPatternExtract(contractText);
+      localCount = applyJsonToForm(localData);
+
+      // Step 3: Try Claude API for full extraction
+      showStatus('Got ' + localCount + ' fields from text patterns. Asking Claude API for the rest...', 'info', true);
+      try {
+        const json = await extractDataFromText(contractText);
+        const apiCount = applyJsonToForm(json);
+        showStatus(
+          '✓ API extraction complete (' + apiCount + ' fields). Review yellow-highlighted cells, then click Submit.',
+          'success'
+        );
+      } catch (apiErr) {
+        // API failed — fall back to manual workflow
+        console.warn('API call failed, falling back to manual:', apiErr);
+        showManualFallback(contractText);
+        if (localCount > 0) {
+          showStatus(
+            '⚠ Auto-extract via API unavailable, but I prefilled ' + localCount + ' fields locally. ' +
+            'Use the panel above to copy the contract text and finish in Claude chat.',
+            'warning'
+          );
+        } else {
+          showStatus(
+            '⚠ Auto-extract via API unavailable. Use the panel above to copy contract text and extract JSON in Claude chat.',
+            'warning'
+          );
+        }
+      }
+    } catch (err) {
+      console.error('PDF extraction error:', err);
+      showStatus('✗ ' + (err.message || String(err)), 'error');
+      // If we got text out, still show the fallback so they can use it
+      if (contractText && contractText.length > 200) {
+        showManualFallback(contractText);
+      }
+    } finally {
+      $('uploadPdfBtn').disabled = false;
+    }
+  });
+
+  // ============ EVENT: PASTE JSON MODAL ============
+  $('importJsonBtn').addEventListener('click', () => {
+    $('jsonPasteArea').value = '';
+    $('jsonModal').classList.remove('hidden');
+    setTimeout(() => $('jsonPasteArea').focus(), 50);
+  });
+  $('cancelImportBtn').addEventListener('click', () => {
+    $('jsonModal').classList.add('hidden');
+  });
+  $('applyImportBtn').addEventListener('click', () => {
+    const txt = $('jsonPasteArea').value.trim();
+    if (!txt) {
+      showStatus('Paste a JSON object first.', 'error');
+      return;
+    }
+    try {
+      const json = parseJsonFromText(txt.startsWith('{') ? txt : '{' + txt.replace(/^[^\{]*/, '').replace(/[^\}]*$/, '') + '}');
+      const count = applyJsonToForm(json);
+      $('jsonModal').classList.add('hidden');
+      showStatus('✓ Imported ' + count + ' fields from JSON. Review the highlighted yellow cells, then click Submit.', 'success');
+    } catch (err) {
+      showStatus('Could not parse JSON: ' + err.message, 'error');
+    }
+  });
+
+  // ============ EVENT: RESET ============
+  $('resetBtn').addEventListener('click', () => {
+    if (!confirm('Clear all form fields? This cannot be undone.')) return;
+    clearAll();
+    hideStatus();
+  });
+
+  // ============ EVENT: SUBMIT ============
+  $('submitBtn').addEventListener('click', async () => {
+    const data = collectFormData();
+
+    // Required field check
+    const missing = [];
+    if (!data.prop_address) missing.push('Property Address');
+    if (!data.purchase_price) missing.push('Purchase Price');
+    if (!data.effective_date) missing.push('Effective Date');
+    if (!data.closing_date) missing.push('Closing Date');
+    if (!data.agent_ref) missing.push('Agent Reference');
+    if (!data.side_represented) missing.push('Side Represented');
+
+    if (missing.length) {
+      showStatus('Missing required: ' + missing.join(', '), 'error');
+      return;
+    }
+
+    showStatus('Submitting to webhook...', 'info', true);
+    $('submitBtn').disabled = true;
+
+    try {
+      // Use text/plain to avoid CORS preflight (Apps Script doesn't support OPTIONS)
+      const res = await fetch(WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(data)
+      });
+
+      if (!res.ok) {
+        throw new Error('Webhook returned ' + res.status);
+      }
+
+      const responseText = await res.text();
+      let parsed;
+      try { parsed = JSON.parse(responseText); } catch (e) { parsed = null; }
+
+      if (parsed && parsed.success === false) {
+        throw new Error(parsed.error || 'Webhook reported failure');
+      }
+
+      showStatus('✓ Submitted successfully! Tab created in your sheet, calendar events scheduled, dashboard refreshed. ' +
+                 (parsed && parsed.tab_url ? 'Open: ' + parsed.tab_url : ''), 'success');
+    } catch (err) {
+      showStatus('Submission failed: ' + err.message, 'error');
+    } finally {
+      $('submitBtn').disabled = false;
+    }
+  });
+
+  // ============ INIT ============
+  updateSummary();
+})();
+</script>
+</div>
