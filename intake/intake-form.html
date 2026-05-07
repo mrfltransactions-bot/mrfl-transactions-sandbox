@@ -998,6 +998,147 @@
   .import-result.show { display: block; }
   .import-result.success { background: rgba(110, 231, 183, 0.15); color: var(--success); border: 1px solid rgba(110, 231, 183, 0.3); }
   .import-result.error { background: rgba(248, 113, 113, 0.15); color: var(--error); border: 1px solid rgba(248, 113, 113, 0.3); }
+
+  /* ---------- Upload progress overlay ---------- */
+  .upload-progress-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 13, 36, 0.55);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    z-index: 200;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+    padding: 24px;
+  }
+  .upload-progress-overlay.active {
+    display: flex;
+    opacity: 1;
+  }
+  .upload-progress-card {
+    background: var(--paper);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 32px 40px;
+    width: 100%;
+    max-width: 440px;
+    box-shadow: 0 24px 60px rgba(15, 13, 36, 0.4);
+    animation: progress-card-in 0.3s ease-out;
+  }
+  @keyframes progress-card-in {
+    from { opacity: 0; transform: translateY(8px) scale(0.97); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  .upload-progress-card h3 {
+    margin: 0 0 6px;
+    font-family: 'Manrope', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: -0.01em;
+  }
+  .upload-progress-card .progress-sub {
+    margin: 0 0 22px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .progress-steps {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .progress-step {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    font-size: 14px;
+    color: var(--muted);
+    font-family: 'Manrope', sans-serif;
+    transition: color 0.25s ease;
+  }
+  .progress-step.active { color: var(--ink); font-weight: 600; }
+  .progress-step.done { color: var(--success); }
+  .progress-step.error { color: var(--error); }
+  .step-icon {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    border: 2px solid currentColor;
+    flex-shrink: 0;
+    position: relative;
+    box-sizing: border-box;
+  }
+  .progress-step.pending .step-icon {
+    border-color: rgba(120, 118, 140, 0.3);
+  }
+  .progress-step.active .step-icon {
+    border-color: var(--accent);
+    border-top-color: transparent;
+    animation: step-spin 0.85s linear infinite;
+  }
+  .progress-step.done .step-icon {
+    background: var(--success);
+    border-color: var(--success);
+  }
+  .progress-step.done .step-icon::after {
+    content: "";
+    position: absolute;
+    left: 6px;
+    top: 2px;
+    width: 5px;
+    height: 10px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+  }
+  .progress-step.error .step-icon {
+    background: var(--error);
+    border-color: var(--error);
+  }
+  .progress-step.error .step-icon::after {
+    content: "!";
+    position: absolute;
+    inset: 0;
+    color: white;
+    font-size: 14px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+  }
+  @keyframes step-spin {
+    to { transform: rotate(360deg); }
+  }
+  .progress-hint {
+    font-size: 12px;
+    color: var(--muted);
+    text-align: center;
+    margin: 16px 0 0;
+    border-top: 1px solid var(--border);
+    padding-top: 14px;
+    line-height: 1.5;
+  }
+  :root[data-theme="dark"] .upload-progress-card {
+    background: #1A1A2E;
+    border-color: rgba(167, 139, 250, 0.2);
+  }
+  :root[data-theme="dark"] .upload-progress-card h3 {
+    color: #C4B5FD;
+  }
+  :root[data-theme="dark"] .progress-step.active .step-icon {
+    border-color: #A78BFA;
+    border-top-color: transparent;
+  }
+  :root[data-theme="dark"] .progress-hint {
+    border-top-color: rgba(167, 139, 250, 0.15);
+  }
 </style>
 
 <div class="hero">
@@ -1036,6 +1177,29 @@
       <span class="contact-divider">•</span>
       <span class="contact-item">✉ MRFLTransactions@gmail.com</span>
     </div>
+  </div>
+</div>
+
+<!-- ============ UPLOAD PROGRESS OVERLAY ============ -->
+<div class="upload-progress-overlay" id="upload_progress_overlay" role="status" aria-live="polite" aria-hidden="true">
+  <div class="upload-progress-card">
+    <h3 id="progress_title">Extracting Contract Data</h3>
+    <p class="progress-sub" id="progress_sub">Reading your PDF and filling the form…</p>
+    <ul class="progress-steps">
+      <li id="step_read" class="progress-step pending">
+        <span class="step-icon" aria-hidden="true"></span>
+        <span class="step-label">Reading PDF file</span>
+      </li>
+      <li id="step_extract" class="progress-step pending">
+        <span class="step-icon" aria-hidden="true"></span>
+        <span class="step-label">Extracting text from contract</span>
+      </li>
+      <li id="step_api" class="progress-step pending">
+        <span class="step-icon" aria-hidden="true"></span>
+        <span class="step-label">Asking Claude to fill the form</span>
+      </li>
+    </ul>
+    <p class="progress-hint" id="progress_hint">Most contracts take 5–15 seconds. Don't close this window.</p>
   </div>
 </div>
 
@@ -2888,6 +3052,52 @@ CANONICAL JSON SCHEMA (output exactly these keys, in this order):
     $('pdf_file_input').click();
   });
 
+  // ---- Progress overlay helpers ----
+  const _PROGRESS_STEPS = ['step_read', 'step_extract', 'step_api'];
+  function _progressShow(hasApiKey) {
+    _PROGRESS_STEPS.forEach(id => {
+      const el = $(id);
+      if (!el) return;
+      el.classList.remove('active', 'done', 'error');
+      el.classList.add('pending');
+      el.style.display = '';
+    });
+    if (!hasApiKey) {
+      const apiStep = $('step_api');
+      if (apiStep) apiStep.style.display = 'none';
+    }
+    $('progress_title').textContent = 'Extracting Contract Data';
+    $('progress_sub').textContent = hasApiKey
+      ? 'Reading your PDF and filling the form…'
+      : 'Reading your PDF…';
+    $('progress_hint').textContent = hasApiKey
+      ? 'Most contracts take 5–15 seconds. Don’t close this window.'
+      : 'Almost done — you’ll finish extraction in Claude chat.';
+    const ov = $('upload_progress_overlay');
+    ov.classList.add('active');
+    ov.setAttribute('aria-hidden', 'false');
+  }
+  function _progressStep(id, state) {
+    const el = $(id);
+    if (!el) return;
+    el.classList.remove('pending', 'active', 'done', 'error');
+    el.classList.add(state);
+  }
+  function _progressHide(delayMs) {
+    const ov = $('upload_progress_overlay');
+    setTimeout(() => {
+      ov.classList.remove('active');
+      ov.setAttribute('aria-hidden', 'true');
+    }, delayMs || 0);
+  }
+  function _progressFail(stepId, message) {
+    if (stepId) _progressStep(stepId, 'error');
+    if (message) {
+      $('progress_title').textContent = 'Extraction Failed';
+      $('progress_sub').textContent = message;
+    }
+  }
+
   // ---- File picker → run the pipeline ----
   $('pdf_file_input').addEventListener('change', async (e) => {
     const file = e.target.files[0];
@@ -2905,30 +3115,42 @@ CANONICAL JSON SCHEMA (output exactly these keys, in this order):
     btn.disabled = true;
     if (labelEl) labelEl.textContent = 'Reading...';
 
+    const apiKey = getStoredApiKey();
+    _progressShow(!!apiKey);
+    _progressStep('step_read', 'active');
+
     let contractText = '';
 
     try {
       const buf = await _pdfFileToArrayBuffer(file);
+      _progressStep('step_read', 'done');
+      _progressStep('step_extract', 'active');
       if (labelEl) labelEl.textContent = 'Extracting...';
       contractText = await _pdfExtractText(buf);
 
       if (!contractText || contractText.trim().length < 200) {
+        _progressFail('step_extract',
+          'Could not extract enough text — this PDF looks scanned/image-based.');
+        _progressHide(2000);
         throw new Error(
           'Could not extract enough text from this PDF. It may be scanned/image-based. ' +
           'Use Import from Claude with a chat-extracted JSON instead.'
         );
       }
+      _progressStep('step_extract', 'done');
 
       const data = _pdfPatternExtract(contractText);
       const filledCount = _pdfApplyToForm(data);
 
       // ---- Try API extraction if user has a key configured ----
-      const apiKey = getStoredApiKey();
       if (apiKey) {
+        _progressStep('step_api', 'active');
         if (labelEl) labelEl.textContent = 'Extracting via API…';
         try {
           const apiData = await _pdfApiExtract(contractText, apiKey);
           const apiCount = _pdfApplyToForm(apiData);
+          _progressStep('step_api', 'done');
+          _progressHide(700);
           showToast(
             '✓ Extracted ' + apiCount + ' field' + (apiCount === 1 ? '' : 's') +
             ' via Claude API. Review the form and submit.'
@@ -2936,6 +3158,9 @@ CANONICAL JSON SCHEMA (output exactly these keys, in this order):
           return;
         } catch (apiErr) {
           console.warn('[API Extract] Failed, falling back to manual workflow:', apiErr);
+          _progressFail('step_api',
+            'API extraction failed — falling back to manual chat workflow.');
+          _progressHide(1800);
           showToast(
             'API extraction failed (' + (apiErr.message || 'unknown') + '). ' +
             'Falling back to manual chat workflow.',
@@ -2945,6 +3170,9 @@ CANONICAL JSON SCHEMA (output exactly these keys, in this order):
         }
       }
 
+      // No API key path (or API failed and we fell through) — close the overlay
+      // before showing the fallback panel so the user can interact with it.
+      _progressHide(apiKey ? 0 : 500);
       _pdfShowFallback(contractText, filledCount);
       showToast(
         '✓ Got ' + filledCount + ' field' + (filledCount === 1 ? '' : 's') +
@@ -2952,6 +3180,9 @@ CANONICAL JSON SCHEMA (output exactly these keys, in this order):
       );
     } catch (err) {
       console.error('[PDF Upload]', err);
+      // Surface failure on the overlay then auto-dismiss
+      _progressFail(null, 'PDF extraction failed: ' + (err.message || String(err)));
+      _progressHide(2200);
       showToast('PDF extraction failed: ' + (err.message || String(err)), true);
       // If we got SOME text, still show the fallback so the user can copy and continue
       if (contractText && contractText.length > 200) {
