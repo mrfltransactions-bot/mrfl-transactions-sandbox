@@ -1,174 +1,302 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>MRFL Transactions — Intake System</title>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
-    --indigo-deep: #4338CA; --indigo-navy: #312E81; --purple: #8B5CF6;
-    --lavender: #DDD6FE; --purple-tint: #F5F3FF; --light-gray: #F3F4F6;
-    --border: #E5E7EB; --dark-gray: #374151; --mid-gray: #6B7280;
-    --green: #10B981; --red: #EF4444;
+    --indigo-deep: #4338CA;
+    --indigo-navy: #312E81;
+    --purple: #8B5CF6;
+    --lavender: #DDD6FE;
+    --purple-tint: #F5F3FF;
+    --gray-50: #F9FAFB;
+    --gray-100: #F3F4F6;
+    --gray-200: #E5E7EB;
+    --gray-300: #D1D5DB;
+    --gray-500: #6B7280;
+    --gray-700: #374151;
+    --gray-900: #111827;
+    --green-500: #10B981;
+    --green-50: #ECFDF5;
+    --red-500: #EF4444;
+    --red-50: #FEF2F2;
+    --amber-500: #F59E0B;
+    --amber-50: #FFFBEB;
   }
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-    background: linear-gradient(135deg, #F5F3FF 0%, #EDE9FE 100%);
-    color: var(--dark-gray); line-height: 1.5; min-height: 100vh; padding: 24px 16px;
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    color: var(--gray-900);
+    background: var(--gray-50);
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.5;
   }
-  .container { max-width: 1100px; margin: 0 auto; }
-  header.brand {
-    background: linear-gradient(135deg, var(--indigo-deep) 0%, var(--purple) 100%);
-    color: #fff; padding: 28px 32px; border-radius: 16px 16px 0 0;
-    box-shadow: 0 4px 20px rgba(67,56,202,0.18);
+
+  .container {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 0 16px 80px;
   }
-  header.brand h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.3px; }
-  header.brand .tagline { font-size: 13px; opacity: 0.9; margin-top: 4px; }
-  header.brand .subtitle { font-size: 14px; margin-top: 8px; font-weight: 500; opacity: 0.95; }
-  .quick-start {
-    background: #fff; padding: 20px 32px; border-bottom: 2px solid var(--lavender);
-    border-left: 1px solid var(--border); border-right: 1px solid var(--border);
+
+  /* ===== HEADER ===== */
+  .brand-header {
+    background: linear-gradient(135deg, var(--indigo-deep), var(--purple));
+    color: white;
+    padding: 28px 24px;
+    border-radius: 0 0 16px 16px;
+    margin-bottom: 20px;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(67, 56, 202, 0.2);
   }
-  .quick-start h2 {
-    font-size: 11px; font-weight: 700; color: var(--indigo-navy);
-    letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 12px;
+  .brand-header h1 { margin: 0; font-size: 22px; font-weight: 700; letter-spacing: 0.3px; }
+  .brand-header p { margin: 4px 0 0; font-size: 13px; opacity: 0.9; font-style: italic; }
+  .brand-header .tagline { margin-top: 8px; font-size: 11px; opacity: 0.75; font-style: normal; }
+
+  /* ===== ACTIONS BAR ===== */
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px;
   }
-  .actions { display: flex; gap: 10px; flex-wrap: wrap; }
-  .btn {
-    padding: 11px 18px; border: none; border-radius: 10px; font-size: 13px;
-    font-weight: 600; cursor: pointer; transition: all 0.15s ease;
-    display: inline-flex; align-items: center; gap: 6px; font-family: inherit;
+
+  button {
+    cursor: pointer;
+    border: none;
+    border-radius: 10px;
+    padding: 11px 18px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: inherit;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
   }
-  .btn-primary { background: var(--indigo-deep); color: #fff; box-shadow: 0 2px 6px rgba(67,56,202,0.3); }
-  .btn-primary:hover { background: var(--indigo-navy); transform: translateY(-1px); }
-  .btn-secondary { background: #fff; color: var(--indigo-deep); border: 1.5px solid var(--lavender); }
-  .btn-secondary:hover { background: var(--purple-tint); border-color: var(--purple); }
-  .btn-tertiary { background: transparent; color: var(--mid-gray); border: 1px solid var(--border); }
-  .btn-tertiary:hover { background: var(--light-gray); }
-  .btn-success { background: var(--green); color: #fff; box-shadow: 0 2px 6px rgba(16,185,129,0.3); }
-  .btn-success:hover { background: #059669; transform: translateY(-1px); }
-  .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
-  #status {
-    margin-top: 14px; padding: 12px 16px; border-radius: 10px;
-    font-size: 13px; font-weight: 500; display: none;
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .btn-primary {
+    background: var(--indigo-deep); color: white;
+    box-shadow: 0 2px 6px rgba(67, 56, 202, 0.25);
   }
-  #status.show { display: flex; align-items: center; gap: 10px; }
-  #status.info { background: var(--purple-tint); color: var(--indigo-deep); border: 1px solid var(--lavender); }
-  #status.success { background: #ECFDF5; color: #047857; border: 1px solid #A7F3D0; }
-  #status.error { background: #FEF2F2; color: #B91C1C; border: 1px solid #FECACA; }
+  .btn-primary:hover:not(:disabled) {
+    background: var(--indigo-navy);
+    box-shadow: 0 4px 10px rgba(67, 56, 202, 0.35);
+    transform: translateY(-1px);
+  }
+
+  .btn-purple {
+    background: var(--purple); color: white;
+    box-shadow: 0 2px 6px rgba(139, 92, 246, 0.25);
+  }
+  .btn-purple:hover:not(:disabled) {
+    background: #7C3AED;
+    box-shadow: 0 4px 10px rgba(139, 92, 246, 0.35);
+    transform: translateY(-1px);
+  }
+
+  .btn-secondary {
+    background: white; color: var(--indigo-deep);
+    border: 1px solid var(--gray-300);
+  }
+  .btn-secondary:hover:not(:disabled) {
+    background: var(--purple-tint);
+    border-color: var(--indigo-deep);
+  }
+
+  .btn-success {
+    background: var(--green-500); color: white;
+    padding: 14px 24px; font-size: 15px;
+    box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3);
+  }
+  .btn-success:hover:not(:disabled) {
+    background: #059669;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+    transform: translateY(-1px);
+  }
+
+  /* ===== STATUS BAR ===== */
+  .status {
+    padding: 12px 16px;
+    border-radius: 10px;
+    margin-bottom: 16px;
+    font-size: 14px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    animation: slideIn 0.25s ease;
+  }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .status.info {
+    background: var(--purple-tint); color: var(--indigo-navy);
+    border: 1px solid var(--lavender);
+  }
+  .status.success {
+    background: var(--green-50); color: #065F46;
+    border: 1px solid #A7F3D0;
+  }
+  .status.error {
+    background: var(--red-50); color: #991B1B;
+    border: 1px solid #FECACA;
+  }
+  .status.warning {
+    background: var(--amber-50); color: #92400E;
+    border: 1px solid #FDE68A;
+  }
+  .status.hidden { display: none; }
+
   .spinner {
-    width: 14px; height: 14px; border: 2px solid currentColor; border-top-color: transparent;
-    border-radius: 50%; display: inline-block; animation: spin 0.7s linear infinite;
+    width: 16px; height: 16px;
+    border: 2px solid currentColor;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    flex-shrink: 0;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
-  form#intakeForm {
-    background: #fff; padding: 8px 32px 32px; border-radius: 0 0 16px 16px;
-    border-left: 1px solid var(--border); border-right: 1px solid var(--border);
-    border-bottom: 1px solid var(--border); box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+
+  /* ===== CARDS / SECTIONS ===== */
+  .card {
+    background: white;
+    border-radius: 12px;
+    margin-bottom: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02);
+    overflow: hidden;
+    border: 1px solid var(--gray-200);
   }
-  fieldset { border: none; padding: 18px 0 8px; border-top: 1px solid var(--border); margin-top: 12px; }
-  fieldset:first-of-type { border-top: none; padding-top: 24px; margin-top: 0; }
-  legend {
-    font-size: 11px; font-weight: 700; color: var(--indigo-navy);
-    letter-spacing: 1.5px; text-transform: uppercase; background: var(--purple-tint);
-    padding: 5px 10px; border-radius: 6px; margin-bottom: 14px;
+  .card-header {
+    background: var(--indigo-navy); color: white;
+    padding: 12px 18px;
+    font-size: 13px; font-weight: 600; letter-spacing: 0.4px;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
-  .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px 16px; }
-  .grid-4 { grid-template-columns: repeat(4, 1fr); }
-  .full { grid-column: 1 / -1; }
-  .span-2 { grid-column: span 2; }
+  .card-body { padding: 18px; }
+
+  /* ===== FORM GRID ===== */
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .col-span-2 { grid-column: span 2; }
+
   @media (max-width: 700px) {
-    .grid, .grid-4 { grid-template-columns: 1fr; }
-    .span-2 { grid-column: span 1; }
+    .grid { grid-template-columns: 1fr; }
+    .col-span-2 { grid-column: span 1; }
   }
-  .field { display: flex; flex-direction: column; gap: 4px; }
-  label {
-    font-size: 11px; font-weight: 600; color: var(--mid-gray);
-    text-transform: uppercase; letter-spacing: 0.5px;
+
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field label {
+    font-size: 12px; font-weight: 600; color: var(--gray-700);
   }
-  label .req { color: var(--red); margin-left: 2px; }
-  input[type="text"], input[type="email"], input[type="tel"], input[type="date"],
-  input[type="number"], select, textarea {
-    width: 100%; padding: 9px 11px; border: 1.5px solid var(--border);
-    border-radius: 8px; font-size: 13px; font-family: inherit;
-    color: var(--dark-gray); background: #fff;
-    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  .field .hint { font-size: 11px; color: var(--gray-500); font-weight: 400; }
+  .field input, .field select, .field textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--gray-300);
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    background: white;
+    color: var(--gray-900);
+    transition: border-color 0.15s, box-shadow 0.15s;
   }
-  input:focus, select:focus, textarea:focus {
-    outline: none; border-color: var(--purple);
-    box-shadow: 0 0 0 3px rgba(139,92,246,0.15);
+  .field input:focus, .field select:focus, .field textarea:focus {
+    outline: none;
+    border-color: var(--indigo-deep);
+    box-shadow: 0 0 0 3px rgba(67, 56, 202, 0.1);
   }
-  input.filled, select.filled, textarea.filled {
-    background: #FAFAFF; border-color: var(--lavender);
+  .field textarea { resize: vertical; min-height: 80px; }
+
+  .field input.auto-filled,
+  .field select.auto-filled,
+  .field textarea.auto-filled {
+    background: #FEFCE8;
+    border-color: #FACC15;
   }
-  textarea { resize: vertical; min-height: 70px; font-family: inherit; }
-  .submit-bar {
-    margin-top: 28px; padding-top: 24px; border-top: 2px solid var(--lavender);
-    display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap;
+
+  /* ===== MODAL ===== */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(17, 24, 39, 0.5);
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px; z-index: 100;
+    animation: fadeIn 0.15s ease;
   }
-  .submit-bar .right { display: flex; gap: 10px; }
+  @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
   .modal {
-    display: none; position: fixed; inset: 0; background: rgba(49,46,129,0.55);
-    z-index: 100; align-items: center; justify-content: center; padding: 20px;
-    backdrop-filter: blur(4px);
-  }
-  .modal.show { display: flex; }
-  .modal-content {
-    background: #fff; border-radius: 16px; width: 100%; max-width: 600px;
-    max-height: 90vh; overflow: hidden; display: flex; flex-direction: column;
-    box-shadow: 0 20px 60px rgba(49,46,129,0.4);
+    background: white;
+    border-radius: 14px;
+    max-width: 600px; width: 100%;
+    max-height: 80vh;
+    display: flex; flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.3);
   }
   .modal-header {
-    background: linear-gradient(135deg, var(--indigo-deep) 0%, var(--purple) 100%);
-    color: #fff; padding: 18px 24px;
-    display: flex; justify-content: space-between; align-items: center;
+    background: var(--indigo-deep); color: white;
+    padding: 14px 20px;
+    font-size: 15px; font-weight: 600;
   }
-  .modal-header h3 { font-size: 16px; font-weight: 700; }
-  .modal-close {
-    background: none; border: none; color: #fff; font-size: 24px;
-    cursor: pointer; padding: 0; width: 30px; height: 30px;
-    line-height: 1; border-radius: 6px; opacity: 0.8;
+  .modal-body {
+    padding: 18px 20px;
+    overflow-y: auto;
+    flex: 1;
   }
-  .modal-close:hover { background: rgba(255,255,255,0.18); opacity: 1; }
-  .modal-body { padding: 22px 24px; overflow-y: auto; flex: 1; }
+  .modal-body textarea {
+    width: 100%;
+    min-height: 220px;
+    padding: 12px;
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, monospace;
+    font-size: 12px;
+    border: 1px solid var(--gray-300);
+    border-radius: 8px;
+    resize: vertical;
+  }
   .modal-footer {
-    padding: 14px 24px; border-top: 1px solid var(--border);
-    display: flex; justify-content: flex-end; gap: 10px; background: var(--light-gray);
+    padding: 14px 20px;
+    border-top: 1px solid var(--gray-200);
+    display: flex; justify-content: flex-end; gap: 10px;
+    background: var(--gray-50);
   }
-  .dropzone {
-    border: 2px dashed var(--lavender); border-radius: 12px; padding: 36px 24px;
-    text-align: center; background: var(--purple-tint); transition: all 0.2s;
-    cursor: pointer; display: block;
+  .modal.hidden, .modal-overlay.hidden { display: none; }
+
+  /* ===== SUBMIT BAR ===== */
+  .submit-bar {
+    position: sticky;
+    bottom: 16px;
+    margin-top: 24px;
+    background: white;
+    border-radius: 14px;
+    padding: 14px 18px;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.06);
+    border: 1px solid var(--gray-200);
+    display: flex; flex-wrap: wrap;
+    align-items: center; justify-content: space-between;
+    gap: 12px;
   }
-  .dropzone:hover, .dropzone.dragover { border-color: var(--purple); background: #EEE9FF; }
-  .dropzone-icon { font-size: 36px; margin-bottom: 8px; }
-  .dropzone-text { font-weight: 600; color: var(--indigo-deep); margin-bottom: 4px; }
-  .dropzone-hint { font-size: 12px; color: var(--mid-gray); }
-  #fileInput { display: none; }
-  .file-info {
-    margin-top: 12px; padding: 10px 14px; background: #fff;
-    border: 1px solid var(--lavender); border-radius: 8px; font-size: 13px;
-    display: none; align-items: center; gap: 10px;
-  }
-  .file-info.show { display: flex; }
-  .file-info-name { font-weight: 600; color: var(--indigo-deep); }
-  .file-info-size { color: var(--mid-gray); font-size: 11px; }
-  .modal textarea#pasteJson {
-    width: 100%; min-height: 240px;
-    font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; font-size: 12px;
-  }
-  .help-text { font-size: 12px; color: var(--mid-gray); margin-bottom: 12px; line-height: 1.5; }
-  .help-text code { background: var(--light-gray); padding: 1px 5px; border-radius: 3px; font-size: 11px; }
-  .webhook-row {
-    background: var(--light-gray); padding: 10px 14px; border-radius: 8px;
-    font-size: 11px; color: var(--mid-gray);
-    display: flex; align-items: center; gap: 8px;
-  }
-  .webhook-row strong { color: var(--indigo-navy); }
-  .form-footer {
-    text-align: center; color: var(--mid-gray); font-size: 11px;
-    margin-top: 16px; padding-bottom: 24px;
+  .submit-bar .summary { font-size: 13px; color: var(--gray-500); }
+  .submit-bar .summary strong { color: var(--gray-900); }
+
+  /* ===== HELPERS ===== */
+  .hidden { display: none !important; }
+  .small { font-size: 11px; color: var(--gray-500); }
+  .pill {
+    display: inline-block;
+    background: var(--lavender);
+    color: var(--indigo-navy);
+    padding: 2px 10px;
+    border-radius: 999px;
+    font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.4px;
   }
 </style>
 </head>
@@ -176,597 +304,658 @@
 
 <div class="container">
 
-  <header class="brand">
-    <h1>📋 MRFL Transactions</h1>
-    <p class="tagline">"I handle the details so you can focus on what you do best — closing deals and building relationships."</p>
-    <p class="subtitle">Transaction Intake System</p>
+  <header class="brand-header">
+    <h1>📋 MRFL Transactions — Intake System</h1>
+    <p>Gloria Grullon, Transaction Coordinator</p>
+    <div class="tagline">Upload a contract → review → submit. Done.</div>
   </header>
 
-  <section class="quick-start">
-    <h2>⚡ Quick Start — Three ways to fill the form</h2>
-    <div class="actions">
-      <button type="button" class="btn btn-primary" onclick="openUploadModal()">📄 Upload Contract PDF</button>
-      <button type="button" class="btn btn-secondary" onclick="openPasteModal()">📋 Paste JSON from Claude</button>
-      <button type="button" class="btn btn-tertiary" onclick="resetForm()">🔄 Clear Form</button>
+  <!-- ACTIONS -->
+  <div class="actions">
+    <button id="uploadPdfBtn" class="btn-primary">
+      <span>📄</span> Upload Contract PDF
+    </button>
+    <button id="importJsonBtn" class="btn-purple">
+      <span>📋</span> Paste JSON
+    </button>
+    <button id="resetBtn" class="btn-secondary">
+      <span>🔄</span> Reset Form
+    </button>
+    <input type="file" id="pdfFileInput" accept="application/pdf" style="display:none" />
+  </div>
+
+  <!-- STATUS -->
+  <div id="statusBar" class="status hidden"></div>
+
+  <!-- MANUAL FALLBACK PANEL -->
+  <div id="manualFallback" class="card hidden" style="border-color:#F59E0B">
+    <div class="card-header" style="background:#F59E0B">📋 Copy contract text → extract JSON in Claude chat</div>
+    <div class="card-body">
+      <p style="margin:0 0 12px;font-size:13px;color:var(--gray-700);line-height:1.5">
+        Your PDF was parsed locally — here's the workflow to get full extraction:
+      </p>
+      <ol style="margin:0 0 14px;padding-left:22px;font-size:13px;color:var(--gray-700);line-height:1.7">
+        <li>Click <strong>Copy below</strong> — copies the contract text + ready prompt to your clipboard</li>
+        <li>Open a Claude conversation (in your MRFL Transactions project) and paste</li>
+        <li>Claude returns JSON</li>
+        <li>Click <strong>📋 Paste JSON</strong> at the top of this form, paste, hit Apply</li>
+      </ol>
+      <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap">
+        <button id="copyTextBtn" class="btn-purple">📋 Copy text + prompt to clipboard</button>
+        <span id="copyConfirm" class="small hidden" style="color:var(--green-500);font-weight:600">✓ Copied to clipboard!</span>
+        <button id="dismissFallbackBtn" class="btn-secondary" style="margin-left:auto">Hide</button>
+      </div>
+      <details style="margin-top:8px">
+        <summary style="cursor:pointer;font-size:12px;color:var(--gray-500);font-weight:600">▸ Preview extracted text</summary>
+        <textarea id="extractedText" readonly style="width:100%;height:180px;margin-top:8px;font-family:ui-monospace,monospace;font-size:11px;padding:10px;border:1px solid var(--gray-200);border-radius:8px;background:var(--gray-50);resize:vertical"></textarea>
+      </details>
     </div>
-    <div id="status"></div>
-  </section>
+  </div>
 
-  <form id="intakeForm" onsubmit="submitToWebhook(event)">
+  <!-- ===== SECTIONS ===== -->
 
-    <fieldset>
-      <legend>📋 Property Details</legend>
+  <div class="card">
+    <div class="card-header">🏷 Agent & Side Represented</div>
+    <div class="card-body">
       <div class="grid">
         <div class="field">
-          <label for="agent_ref">Agent Reference <span class="req">*</span></label>
-          <input type="text" id="agent_ref" name="agent_ref" placeholder="Carlitos, Serf, Hilda, Martha, Krystal..." required>
+          <label for="agent_ref">Agent Reference <span class="hint">(used as tab prefix)</span></label>
+          <input id="agent_ref" type="text" placeholder="e.g., Carlitos, Serf, Hilda, Krystal" />
         </div>
         <div class="field">
-          <label for="side_represented">Side Represented <span class="req">*</span></label>
-          <select id="side_represented" name="side_represented" required>
-            <option value="">— select —</option>
-            <option value="Listing Side">Listing Side</option>
-            <option value="Buyer Side">Buyer Side</option>
+          <label for="side_represented">Side Represented</label>
+          <select id="side_represented">
+            <option value="">— Select —</option>
+            <option value="Listing Side (Seller's Agent)">Listing Side (Seller's Agent)</option>
+            <option value="Buyer Side (Buyer's Agent)">Buyer Side (Buyer's Agent)</option>
             <option value="Both (Dual Agency)">Both (Dual Agency)</option>
           </select>
         </div>
-        <div class="field full">
-          <label for="prop_address">Property Address <span class="req">*</span></label>
-          <input type="text" id="prop_address" name="prop_address" placeholder="123 Main St, City, FL 12345" required>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">🏠 Property</div>
+    <div class="card-body">
+      <div class="grid">
+        <div class="field col-span-2">
+          <label for="prop_address">Property Address</label>
+          <input id="prop_address" type="text" placeholder="123 Main St, Miami, FL 33101" />
         </div>
         <div class="field">
-          <label for="prop_tax_id">Property Tax ID</label>
-          <input type="text" id="prop_tax_id" name="prop_tax_id">
+          <label for="prop_tax_id">Property Tax ID (Folio)</label>
+          <input id="prop_tax_id" type="text" />
         </div>
         <div class="field">
-          <label for="purchase_price">Purchase Price <span class="req">*</span></label>
-          <input type="text" id="purchase_price" name="purchase_price" placeholder="$XXX,XXX.XX" required>
+          <label for="purchase_price">Purchase Price</label>
+          <input id="purchase_price" type="text" placeholder="$XXX,XXX.XX" />
         </div>
       </div>
-    </fieldset>
+    </div>
+  </div>
 
-    <fieldset>
-      <legend>💰 Financing</legend>
+  <div class="card">
+    <div class="card-header">📅 Dates & Financing</div>
+    <div class="card-body">
       <div class="grid">
         <div class="field">
-          <label for="financing_type">Financing Type <span class="req">*</span></label>
-          <select id="financing_type" name="financing_type" required>
-            <option value="">— select —</option>
-            <option value="Cash">Cash</option>
-            <option value="Conventional">Conventional</option>
-            <option value="FHA">FHA</option>
-            <option value="VA">VA</option>
-            <option value="Other">Other</option>
+          <label for="effective_date">Effective Date</label>
+          <input id="effective_date" type="date" />
+        </div>
+        <div class="field">
+          <label for="closing_date">Closing Date</label>
+          <input id="closing_date" type="date" />
+        </div>
+        <div class="field">
+          <label for="financing_type">Financing Type</label>
+          <select id="financing_type">
+            <option value="">— Select —</option>
+            <option>Cash</option>
+            <option>Conventional</option>
+            <option>FHA</option>
+            <option>VA</option>
+            <option>Other</option>
           </select>
         </div>
         <div class="field">
-          <label for="loan_days">Loan Approval Days</label>
-          <input type="number" id="loan_days" name="loan_days" placeholder="30" min="0">
+          <label for="loan_days">Loan Approval Days <span class="hint">(blank = 30)</span></label>
+          <input id="loan_days" type="number" min="0" />
+        </div>
+        <div class="field">
+          <label for="escrow_amount">Initial Escrow Amount</label>
+          <input id="escrow_amount" type="text" placeholder="$X,XXX.XX" />
+        </div>
+        <div class="field">
+          <label for="escrow_days">Escrow Days <span class="hint">(blank = 3)</span></label>
+          <input id="escrow_days" type="number" min="0" />
+        </div>
+        <div class="field">
+          <label for="inspection_days">Inspection Days <span class="hint">(blank = 15)</span></label>
+          <input id="inspection_days" type="number" min="0" />
+        </div>
+        <div class="field">
+          <label for="loanapp_days">Loan Application Days <span class="hint">(blank = 5)</span></label>
+          <input id="loanapp_days" type="number" min="0" />
+        </div>
+        <div class="field">
+          <label for="title_days">Title Commitment Days <span class="hint">(blank = 15)</span></label>
+          <input id="title_days" type="number" min="0" />
         </div>
       </div>
-    </fieldset>
+    </div>
+  </div>
 
-    <fieldset>
-      <legend>📅 Key Dates &amp; Periods</legend>
+  <div class="card">
+    <div class="card-header">🧑‍💼 Sellers</div>
+    <div class="card-body">
       <div class="grid">
-        <div class="field">
-          <label for="effective_date">Effective Date <span class="req">*</span></label>
-          <input type="date" id="effective_date" name="effective_date" required>
-        </div>
-        <div class="field">
-          <label for="closing_date">Closing Date <span class="req">*</span></label>
-          <input type="date" id="closing_date" name="closing_date" required>
-        </div>
-      </div>
-      <div class="grid grid-4" style="margin-top:12px;">
-        <div class="field">
-          <label for="escrow_amount">Escrow Amount</label>
-          <input type="text" id="escrow_amount" name="escrow_amount" placeholder="$X,XXX.XX">
-        </div>
-        <div class="field">
-          <label for="escrow_days">Escrow Days</label>
-          <input type="number" id="escrow_days" name="escrow_days" placeholder="3" min="0">
-        </div>
-        <div class="field">
-          <label for="inspection_days">Inspection Days</label>
-          <input type="number" id="inspection_days" name="inspection_days" placeholder="15" min="0">
-        </div>
-        <div class="field">
-          <label for="loanapp_days">Loan App Days</label>
-          <input type="number" id="loanapp_days" name="loanapp_days" placeholder="5" min="0">
-        </div>
-        <div class="field">
-          <label for="title_days">Title Commit Days (Prior to Closing)</label>
-          <input type="number" id="title_days" name="title_days" placeholder="15" min="0">
-        </div>
-      </div>
-    </fieldset>
-
-    <fieldset>
-      <legend>👥 Seller</legend>
-      <div class="grid">
-        <div class="field full">
-          <label for="seller_names">Seller Name(s) <span class="req">*</span></label>
-          <input type="text" id="seller_names" name="seller_names" placeholder="FULL LEGAL NAMES" required>
+        <div class="field col-span-2">
+          <label for="seller_names">Seller Name(s) <span class="hint">(full legal)</span></label>
+          <input id="seller_names" type="text" />
         </div>
         <div class="field">
           <label for="seller_email">Seller Email</label>
-          <input type="email" id="seller_email" name="seller_email">
+          <input id="seller_email" type="email" />
         </div>
         <div class="field">
           <label for="seller_phone">Seller Phone</label>
-          <input type="tel" id="seller_phone" name="seller_phone">
+          <input id="seller_phone" type="tel" />
         </div>
       </div>
-    </fieldset>
+    </div>
+  </div>
 
-    <fieldset>
-      <legend>🏠 Listing Side (Seller's Agent)</legend>
+  <div class="card">
+    <div class="card-header">🏠 Listing Agent</div>
+    <div class="card-body">
       <div class="grid">
-        <div class="field"><label for="lst_agent_name">Agent Name</label><input type="text" id="lst_agent_name"></div>
-        <div class="field"><label for="lst_agent_lic">License #</label><input type="text" id="lst_agent_lic"></div>
-        <div class="field"><label for="lst_agent_phone">Agent Phone</label><input type="tel" id="lst_agent_phone"></div>
-        <div class="field"><label for="lst_agent_email">Agent Email</label><input type="email" id="lst_agent_email"></div>
-        <div class="field full"><label for="lst_brokerage">Brokerage</label><input type="text" id="lst_brokerage"></div>
-        <div class="field span-2"><label for="lst_office_addr">Office Address</label><input type="text" id="lst_office_addr"></div>
-        <div class="field"><label for="lst_office_phone">Office Phone</label><input type="tel" id="lst_office_phone"></div>
+        <div class="field"><label for="lst_agent_name">Agent Name</label><input id="lst_agent_name" type="text" /></div>
+        <div class="field"><label for="lst_agent_lic">License #</label><input id="lst_agent_lic" type="text" /></div>
+        <div class="field"><label for="lst_agent_phone">Agent Phone</label><input id="lst_agent_phone" type="tel" /></div>
+        <div class="field"><label for="lst_agent_email">Agent Email</label><input id="lst_agent_email" type="email" /></div>
+        <div class="field col-span-2"><label for="lst_brokerage">Brokerage</label><input id="lst_brokerage" type="text" /></div>
+        <div class="field"><label for="lst_office_addr">Office Address</label><input id="lst_office_addr" type="text" /></div>
+        <div class="field"><label for="lst_office_phone">Office Phone</label><input id="lst_office_phone" type="tel" /></div>
       </div>
-    </fieldset>
+    </div>
+  </div>
 
-    <fieldset>
-      <legend>👥 Buyer</legend>
+  <div class="card">
+    <div class="card-header">👤 Buyers</div>
+    <div class="card-body">
       <div class="grid">
-        <div class="field full">
-          <label for="buyer_names">Buyer Name(s) <span class="req">*</span></label>
-          <input type="text" id="buyer_names" name="buyer_names" placeholder="FULL LEGAL NAMES" required>
-        </div>
-        <div class="field"><label for="buyer_email">Buyer Email</label><input type="email" id="buyer_email"></div>
-        <div class="field"><label for="buyer_phone">Buyer Phone</label><input type="tel" id="buyer_phone"></div>
+        <div class="field col-span-2"><label for="buyer_names">Buyer Name(s) <span class="hint">(full legal)</span></label><input id="buyer_names" type="text" /></div>
+        <div class="field"><label for="buyer_email">Buyer Email</label><input id="buyer_email" type="email" /></div>
+        <div class="field"><label for="buyer_phone">Buyer Phone</label><input id="buyer_phone" type="tel" /></div>
       </div>
-    </fieldset>
+    </div>
+  </div>
 
-    <fieldset>
-      <legend>🤝 Buyer Side (Buyer's Agent)</legend>
+  <div class="card">
+    <div class="card-header">🤝 Buyer's Agent</div>
+    <div class="card-body">
       <div class="grid">
-        <div class="field"><label for="byr_agent_name">Agent Name</label><input type="text" id="byr_agent_name"></div>
-        <div class="field"><label for="byr_agent_lic">License #</label><input type="text" id="byr_agent_lic"></div>
-        <div class="field"><label for="byr_agent_phone">Agent Phone</label><input type="tel" id="byr_agent_phone"></div>
-        <div class="field"><label for="byr_agent_email">Agent Email</label><input type="email" id="byr_agent_email"></div>
-        <div class="field full"><label for="byr_brokerage">Brokerage</label><input type="text" id="byr_brokerage"></div>
-        <div class="field span-2"><label for="byr_office_addr">Office Address</label><input type="text" id="byr_office_addr"></div>
-        <div class="field"><label for="byr_office_phone">Office Phone</label><input type="tel" id="byr_office_phone"></div>
+        <div class="field"><label for="byr_agent_name">Agent Name</label><input id="byr_agent_name" type="text" /></div>
+        <div class="field"><label for="byr_agent_lic">License #</label><input id="byr_agent_lic" type="text" /></div>
+        <div class="field"><label for="byr_agent_phone">Agent Phone</label><input id="byr_agent_phone" type="tel" /></div>
+        <div class="field"><label for="byr_agent_email">Agent Email</label><input id="byr_agent_email" type="email" /></div>
+        <div class="field col-span-2"><label for="byr_brokerage">Brokerage</label><input id="byr_brokerage" type="text" /></div>
+        <div class="field"><label for="byr_office_addr">Office Address</label><input id="byr_office_addr" type="text" /></div>
+        <div class="field"><label for="byr_office_phone">Office Phone</label><input id="byr_office_phone" type="tel" /></div>
       </div>
-    </fieldset>
+    </div>
+  </div>
 
-    <fieldset>
-      <legend>📜 Title &amp; Escrow</legend>
+  <div class="card">
+    <div class="card-header">📜 Title & Escrow (Buyer Side)</div>
+    <div class="card-body">
       <div class="grid">
-        <div class="field"><label for="byr_title_company">Title Company</label><input type="text" id="byr_title_company"></div>
-        <div class="field"><label for="byr_title_contact">Contact Name</label><input type="text" id="byr_title_contact"></div>
-        <div class="field"><label for="byr_title_phone">Phone</label><input type="tel" id="byr_title_phone"></div>
-        <div class="field"><label for="byr_title_email">Email</label><input type="email" id="byr_title_email"></div>
+        <div class="field col-span-2"><label for="byr_title_company">Title Company</label><input id="byr_title_company" type="text" /></div>
+        <div class="field"><label for="byr_title_contact">Contact</label><input id="byr_title_contact" type="text" /></div>
+        <div class="field"><label for="byr_title_phone">Phone</label><input id="byr_title_phone" type="tel" /></div>
+        <div class="field col-span-2"><label for="byr_title_email">Email</label><input id="byr_title_email" type="email" /></div>
       </div>
-    </fieldset>
+    </div>
+  </div>
 
-    <fieldset>
-      <legend>💼 Loan Officer</legend>
+  <div class="card">
+    <div class="card-header">💼 Loan Officer</div>
+    <div class="card-body">
       <div class="grid">
-        <div class="field"><label for="lo_company">Company</label><input type="text" id="lo_company"></div>
-        <div class="field"><label for="lo_contact">Contact Name</label><input type="text" id="lo_contact"></div>
-        <div class="field"><label for="lo_phone">Phone</label><input type="tel" id="lo_phone"></div>
-        <div class="field"><label for="lo_email">Email</label><input type="email" id="lo_email"></div>
+        <div class="field"><label for="lo_company">Company</label><input id="lo_company" type="text" /></div>
+        <div class="field"><label for="lo_contact">Contact</label><input id="lo_contact" type="text" /></div>
+        <div class="field"><label for="lo_phone">Phone</label><input id="lo_phone" type="tel" /></div>
+        <div class="field"><label for="lo_email">Email</label><input id="lo_email" type="email" /></div>
       </div>
-    </fieldset>
+    </div>
+  </div>
 
-    <fieldset>
-      <legend>💸 Concessions / Special Terms</legend>
+  <div class="card">
+    <div class="card-header">💸 Concessions / Special Terms</div>
+    <div class="card-body">
       <div class="field">
-        <label for="concessions">One concession per line</label>
-        <textarea id="concessions" name="concessions" placeholder="e.g., Seller contributes $5,000 toward buyer's closing costs&#10;Seller agrees to pay buyer's broker 2% per Compensation Agreement"></textarea>
-      </div>
-    </fieldset>
-
-    <div class="submit-bar">
-      <div class="webhook-row">
-        <span>📡 Webhook:</span>
-        <strong>v6 Apps Script</strong>
-        <span style="color:var(--green);">●</span> Configured
-      </div>
-      <div class="right">
-        <button type="button" class="btn btn-tertiary" onclick="copyJsonOnly()">📋 Copy JSON</button>
-        <button type="submit" class="btn btn-success">🚀 Submit to Sheet</button>
+        <label for="concessions">Concessions <span class="hint">(one per line)</span></label>
+        <textarea id="concessions" rows="4" placeholder="• Seller contributes $X,XXX toward buyer's closing costs&#10;• ..."></textarea>
       </div>
     </div>
+  </div>
 
-  </form>
-
-  <p class="form-footer">
-    MRFL Transactions  •  Gloria Grullon, Transaction Coordinator  •  401.282.8414  •  MRFLTransactions@gmail.com
-  </p>
+  <div class="submit-bar">
+    <div class="summary">
+      <span id="fieldsFilled" class="pill">0 / 42 fields</span>
+      <span style="margin-left:10px"><strong id="propAddrPreview">—</strong></span>
+    </div>
+    <button id="submitBtn" class="btn-success">
+      <span>🚀</span> Submit to Webhook
+    </button>
+  </div>
 
 </div>
 
-<!-- UPLOAD MODAL -->
-<div id="uploadModal" class="modal" onclick="if(event.target===this)closeUploadModal()">
-  <div class="modal-content">
-    <div class="modal-header">
-      <h3>📄 Upload Contract PDF</h3>
-      <button type="button" class="modal-close" onclick="closeUploadModal()" aria-label="Close">×</button>
-    </div>
+<!-- Paste JSON modal -->
+<div id="jsonModal" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-header">📋 Paste JSON from Claude</div>
     <div class="modal-body">
-      <p class="help-text">
-        Drop a Florida AS IS Residential Contract PDF below. Claude reads it and auto-fills the entire form. Strict mode is on — fields without clear values stay blank for you to fill manually.
-      </p>
-      <label for="fileInput" class="dropzone" id="dropzone">
-        <div class="dropzone-icon">📄</div>
-        <div class="dropzone-text">Click to browse or drag a PDF here</div>
-        <div class="dropzone-hint">Florida AS IS Residential Contract • Max ~30 MB</div>
-      </label>
-      <input type="file" id="fileInput" accept="application/pdf,.pdf">
-      <div class="file-info" id="fileInfo">
-        <span style="font-size:18px;">📎</span>
-        <div style="flex:1;">
-          <div class="file-info-name" id="fileName"></div>
-          <div class="file-info-size" id="fileSize"></div>
-        </div>
-        <button type="button" class="btn btn-tertiary" onclick="clearFile()" style="padding:5px 10px;font-size:12px;">Remove</button>
+      <div class="small" style="margin-bottom:10px">
+        Paste the JSON object Claude extracted (with or without the <code>```json</code> fence).
+        Form fields will populate automatically.
       </div>
+      <textarea id="jsonPasteArea" placeholder='{"prop_address": "...", "purchase_price": "$XXX,XXX.XX", ...}'></textarea>
     </div>
     <div class="modal-footer">
-      <button type="button" class="btn btn-tertiary" onclick="closeUploadModal()">Cancel</button>
-      <button type="button" class="btn btn-primary" id="extractBtn" onclick="extractFromPDF()" disabled>✨ Extract with Claude</button>
+      <button id="cancelImportBtn" class="btn-secondary">Cancel</button>
+      <button id="applyImportBtn" class="btn-primary">Apply</button>
     </div>
   </div>
 </div>
 
-<!-- PASTE MODAL -->
-<div id="pasteModal" class="modal" onclick="if(event.target===this)closePasteModal()">
-  <div class="modal-content">
-    <div class="modal-header">
-      <h3>📋 Paste JSON from Claude</h3>
-      <button type="button" class="modal-close" onclick="closePasteModal()" aria-label="Close">×</button>
-    </div>
-    <div class="modal-body">
-      <p class="help-text">
-        Paste the JSON object Claude generated. Code fences (<code>```json</code>) and trailing commas are auto-handled.
-      </p>
-      <textarea id="pasteJson" placeholder='{&#10;  "prop_address": "...",&#10;  "purchase_price": "...",&#10;  ...&#10;}'></textarea>
-    </div>
-    <div class="modal-footer">
-      <button type="button" class="btn btn-tertiary" onclick="closePasteModal()">Cancel</button>
-      <button type="button" class="btn btn-primary" onclick="applyPasted()">✨ Apply to Form</button>
-    </div>
-  </div>
-</div>
+<!-- PDF.js for in-browser text extraction -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 
 <script>
-const WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbwrx-iYJmTKFtFotFdluL2-DVb7ZkR587IoFZFfoKabiLZjobFqcWakUEgMwTvpjakrWQ/exec';
+(function() {
+  // ============ CONFIG — UPDATE THIS WHEN YOU REDEPLOY THE WEBHOOK ============
+  const WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbwrx-iYJmTKFtFotFdluL2-DVb7ZkR587IoFZFfoKabiLZjobFqcWakUEgMwTvpjakrWQ/exec';
 
-const ALL_FIELD_IDS = [
-  'agent_ref', 'side_represented', 'prop_address', 'prop_tax_id', 'purchase_price',
-  'financing_type', 'loan_days',
-  'effective_date', 'closing_date', 'escrow_amount', 'escrow_days',
-  'inspection_days', 'loanapp_days', 'title_days',
-  'seller_names', 'seller_email', 'seller_phone',
-  'lst_agent_name', 'lst_agent_lic', 'lst_agent_phone', 'lst_agent_email',
-  'lst_brokerage', 'lst_office_addr', 'lst_office_phone',
-  'buyer_names', 'buyer_email', 'buyer_phone',
-  'byr_agent_name', 'byr_agent_lic', 'byr_agent_phone', 'byr_agent_email',
-  'byr_brokerage', 'byr_office_addr', 'byr_office_phone',
-  'byr_title_company', 'byr_title_contact', 'byr_title_email', 'byr_title_phone',
-  'lo_company', 'lo_contact', 'lo_email', 'lo_phone',
-  'concessions'
-];
+  // Configure PDF.js worker
+  if (typeof pdfjsLib !== 'undefined') {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  }
 
-const EXTRACTION_PROMPT = `You are extracting intake data from a Florida real estate AS IS Residential Contract for Sale and Purchase (FloridaRealtors/FloridaBar-ASIS-7x).
+  const FIELDS = [
+    'agent_ref','side_represented','prop_address','prop_tax_id','purchase_price',
+    'financing_type','loan_days','effective_date','closing_date','escrow_amount',
+    'escrow_days','inspection_days','loanapp_days','title_days',
+    'seller_names','seller_email','seller_phone',
+    'lst_agent_name','lst_agent_lic','lst_agent_phone','lst_agent_email',
+    'lst_brokerage','lst_office_addr','lst_office_phone',
+    'buyer_names','buyer_email','buyer_phone',
+    'byr_agent_name','byr_agent_lic','byr_agent_phone','byr_agent_email',
+    'byr_brokerage','byr_office_addr','byr_office_phone',
+    'byr_title_company','byr_title_contact','byr_title_email','byr_title_phone',
+    'lo_company','lo_contact','lo_email','lo_phone',
+    'concessions'
+  ];
 
-Output ONLY a single valid JSON object — no markdown code fences, no preamble, no commentary, no summary. Just the raw JSON.
+  const $ = id => document.getElementById(id);
+  const statusBar = $('statusBar');
 
-Use this EXACT structure with these EXACT keys:
-{
-  "agent_ref": "",
-  "side_represented": "",
-  "prop_address": "",
-  "prop_tax_id": "",
-  "purchase_price": "",
-  "financing_type": "",
-  "loan_days": "",
-  "effective_date": "",
-  "closing_date": "",
-  "escrow_amount": "",
-  "escrow_days": "",
-  "inspection_days": "",
-  "loanapp_days": "",
-  "title_days": "",
-  "seller_names": "",
-  "seller_email": "",
-  "seller_phone": "",
-  "lst_agent_name": "",
-  "lst_agent_lic": "",
-  "lst_agent_phone": "",
-  "lst_agent_email": "",
-  "lst_brokerage": "",
-  "lst_office_addr": "",
-  "lst_office_phone": "",
-  "buyer_names": "",
-  "buyer_email": "",
-  "buyer_phone": "",
-  "byr_agent_name": "",
-  "byr_agent_lic": "",
-  "byr_agent_phone": "",
-  "byr_agent_email": "",
-  "byr_brokerage": "",
-  "byr_office_addr": "",
-  "byr_office_phone": "",
-  "byr_title_company": "",
-  "byr_title_contact": "",
-  "byr_title_email": "",
-  "byr_title_phone": "",
-  "lo_company": "",
-  "lo_contact": "",
-  "lo_email": "",
-  "lo_phone": "",
-  "concessions": []
-}
+  // ============ STATUS BAR ============
+  function showStatus(msg, type = 'info', spinner = false) {
+    statusBar.className = 'status ' + type;
+    statusBar.innerHTML = (spinner ? '<span class="spinner"></span>' : '') + escapeHtml(msg);
+    statusBar.classList.remove('hidden');
+  }
+  function hideStatus() { statusBar.classList.add('hidden'); }
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
 
-RULES:
-1. STRICT MODE — only fill fields whose values are clearly visible. Leave unknown fields as empty strings (or empty array for concessions). Never guess.
-2. side_represented: leave empty (TC sets manually).
-3. agent_ref: suggest the FIRST NAME of the cooperating/buyer's broker (e.g., "Krystal", "Carlos", "Martha").
-4. effective_date: YYYY-MM-DD. Date when LAST one of buyer/seller signed the main contract per Paragraph 3(b).
-5. closing_date: YYYY-MM-DD. From Paragraph 4 (often "or before [date]").
-6. purchase_price: format as "$XXX,XXX.XX".
-7. escrow_amount: format as "$X,XXX.XX".
-8. Days fields: numeric string only (e.g., "21").
-9. financing_type: "Cash" | "Conventional" | "FHA" | "VA" | "Other". If both Conv and FHA boxes checked, choose based on which rider is fully executed.
-10. concessions: extract from Paragraph 20 (Additional Terms) AND any executed rider with seller obligations (e.g., GG Compensation Agreement). Array of strings.
-11. byr_title_contact: only fill if explicitly spelled out. Don't infer from email handles.
-
-OUTPUT THE JSON OBJECT NOW — nothing else.`;
-
-let selectedFile = null;
-
-function setStatus(msg, type, spinner) {
-  const s = document.getElementById('status');
-  s.className = 'show ' + (type || 'info');
-  s.innerHTML = (spinner ? '<span class="spinner"></span>' : '') + '<span>' + msg + '</span>';
-}
-function clearStatus() { document.getElementById('status').className = ''; }
-
-function populateForm(data) {
-  let filled = 0;
-  ALL_FIELD_IDS.forEach(function(id) {
-    if (!(id in data)) return;
-    const el = document.getElementById(id);
+  // ============ FORM HELPERS ============
+  function getValue(id) {
+    const el = $(id);
+    return el ? (el.value || '') : '';
+  }
+  function setValue(id, val, markAuto = false) {
+    const el = $(id);
     if (!el) return;
-    let value = data[id];
-    if (id === 'concessions' && Array.isArray(value)) value = value.join('\n');
-    if (value !== null && value !== undefined && value !== '') {
-      el.value = value;
-      el.classList.add('filled');
-      filled++;
-    }
-  });
-  return filled;
-}
-
-function resetForm() {
-  if (!confirm('Clear all form fields?')) return;
-  document.getElementById('intakeForm').reset();
-  ALL_FIELD_IDS.forEach(function(id) {
-    const el = document.getElementById(id);
-    if (el) el.classList.remove('filled');
-  });
-  clearStatus();
-}
-
-function gatherFormData() {
-  const data = {};
-  ALL_FIELD_IDS.forEach(function(id) {
-    const el = document.getElementById(id);
-    if (!el) return;
-    if (id === 'concessions') {
-      const lines = (el.value || '').split('\n').map(function(l) { return l.trim(); }).filter(Boolean);
-      data[id] = lines;
+    if (id === 'concessions' && Array.isArray(val)) {
+      el.value = val.join('\n');
     } else {
-      data[id] = el.value || '';
+      el.value = val == null ? '' : String(val);
     }
-  });
-  return data;
-}
-
-function openUploadModal() { document.getElementById('uploadModal').classList.add('show'); }
-function closeUploadModal() { document.getElementById('uploadModal').classList.remove('show'); }
-
-const dropzone = document.getElementById('dropzone');
-const fileInput = document.getElementById('fileInput');
-
-fileInput.addEventListener('change', function(e) {
-  if (e.target.files && e.target.files[0]) handleFile(e.target.files[0]);
-});
-
-['dragenter', 'dragover'].forEach(function(ev) {
-  dropzone.addEventListener(ev, function(e) {
-    e.preventDefault(); e.stopPropagation();
-    dropzone.classList.add('dragover');
-  });
-});
-['dragleave', 'drop'].forEach(function(ev) {
-  dropzone.addEventListener(ev, function(e) {
-    e.preventDefault(); e.stopPropagation();
-    dropzone.classList.remove('dragover');
-  });
-});
-dropzone.addEventListener('drop', function(e) {
-  if (e.dataTransfer.files && e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
-});
-
-function handleFile(file) {
-  if (!file.type.includes('pdf') && !file.name.toLowerCase().endsWith('.pdf')) {
-    alert('Please upload a PDF file.');
-    return;
+    if (markAuto && el.value) el.classList.add('auto-filled');
   }
-  selectedFile = file;
-  document.getElementById('fileName').textContent = file.name;
-  document.getElementById('fileSize').textContent = formatBytes(file.size);
-  document.getElementById('fileInfo').classList.add('show');
-  document.getElementById('extractBtn').disabled = false;
-}
-
-function clearFile() {
-  selectedFile = null;
-  fileInput.value = '';
-  document.getElementById('fileInfo').classList.remove('show');
-  document.getElementById('extractBtn').disabled = true;
-}
-
-function formatBytes(bytes) {
-  if (bytes < 1024) return bytes + ' B';
-  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
-  return (bytes / 1024 / 1024).toFixed(1) + ' MB';
-}
-
-function fileToBase64(file) {
-  return new Promise(function(resolve, reject) {
-    const reader = new FileReader();
-    reader.onload = function() { resolve(reader.result.split(',')[1]); };
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}
-
-async function extractFromPDF() {
-  if (!selectedFile) return;
-  const btn = document.getElementById('extractBtn');
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span> Extracting...';
-  closeUploadModal();
-  setStatus('Reading PDF and extracting transaction data with Claude...', 'info', true);
-
-  try {
-    const base64 = await fileToBase64(selectedFile);
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        messages: [{
-          role: 'user',
-          content: [
-            { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: base64 } },
-            { type: 'text', text: EXTRACTION_PROMPT }
-          ]
-        }]
-      })
+  function clearAll() {
+    FIELDS.forEach(id => {
+      const el = $(id);
+      if (!el) return;
+      el.value = '';
+      el.classList.remove('auto-filled');
     });
+    updateSummary();
+  }
+  function collectFormData() {
+    const data = {};
+    FIELDS.forEach(id => {
+      const v = getValue(id);
+      if (id === 'concessions') {
+        data[id] = v.split('\n').map(s => s.trim()).filter(Boolean);
+      } else {
+        data[id] = v.trim();
+      }
+    });
+    return data;
+  }
+  function updateSummary() {
+    let filled = 0;
+    FIELDS.forEach(id => { if (getValue(id).trim()) filled++; });
+    $('fieldsFilled').textContent = filled + ' / ' + FIELDS.length + ' fields';
+    $('propAddrPreview').textContent = getValue('prop_address') || '—';
+  }
+  FIELDS.forEach(id => {
+    const el = $(id);
+    if (el) el.addEventListener('input', () => {
+      el.classList.remove('auto-filled');
+      updateSummary();
+    });
+  });
 
-    if (!response.ok) {
-      const errText = await response.text();
-      throw new Error('API ' + response.status + ': ' + errText.slice(0, 200));
+  // ============ FILE → ARRAYBUFFER ============
+  function fileToArrayBuffer(file) {
+    return new Promise((res, rej) => {
+      const reader = new FileReader();
+      reader.onload = () => res(reader.result);
+      reader.onerror = () => rej(new Error('Failed to read file'));
+      reader.readAsArrayBuffer(file);
+    });
+  }
+
+  // ============ PDF → TEXT (via PDF.js, fully local) ============
+  async function extractTextFromPdf(arrayBuffer) {
+    if (typeof pdfjsLib === 'undefined') {
+      throw new Error('PDF.js library failed to load. Check internet connection.');
+    }
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    const pages = [];
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      pages.push('--- Page ' + i + ' ---\n' + content.items.map(item => item.str).join(' '));
+    }
+    return pages.join('\n\n');
+  }
+
+  // ============ LOCAL PATTERN-MATCHING (no network) ============
+  function localPatternExtract(text) {
+    const result = {};
+    const clean = s => (s || '').replace(/\s+/g, ' ').trim();
+    let m;
+
+    m = text.match(/Street address[,\s]*city[,\s]*zip[:\s]+([^\n]{8,150}?)(?:\s+Located|\s+\d{5}\s|$)/i);
+    if (m) result.prop_address = clean(m[1]);
+
+    m = text.match(/Tax\s*ID\s*#?[:\s]+([0-9][0-9\-]{6,30})/i);
+    if (m) result.prop_tax_id = clean(m[1]);
+
+    m = text.match(/PURCHASE\s*PRICE[^$]{0,100}\$\s*([\d,]+\.?\d{0,2})/i);
+    if (m) result.purchase_price = '$' + m[1];
+
+    m = text.match(/Initial deposit[^$]{0,80}\$\s*([\d,]+\.?\d{0,2})/i);
+    if (m) result.escrow_amount = '$' + m[1];
+
+    m = text.match(/Closing shall occur on[^A-Za-z]*([A-Za-z]+\s+\d{1,2},?\s+\d{4})/i);
+    if (m) {
+      const d = new Date(m[1]);
+      if (!isNaN(d)) result.closing_date = d.toISOString().slice(0, 10);
     }
 
-    const data = await response.json();
-    const text = (data.content || [])
-      .filter(function(b) { return b.type === 'text'; })
-      .map(function(b) { return b.text; })
-      .join('\n');
+    m = text.match(/Seller\(s\)[:\s]+([A-Z][^\n]{3,120}?)(?=\s+(?:Seller's Agent|Buyer\(s\)|Seller's))/);
+    if (m) result.seller_names = clean(m[1].replace(/\(.*$/, ''));
 
-    if (!text) throw new Error('Empty response from Claude');
+    m = text.match(/Buyer\(s\)[:\s]+([A-Z][^\n]{3,120}?)(?=\s+(?:Buyer's Agent|Buyer's |Seller's|\(BUYER\)))/);
+    if (m) result.buyer_names = clean(m[1].replace(/\(.*$/, ''));
 
-    const json = parseJsonFromText(text);
-    if (!json) throw new Error('Could not find a valid JSON object in the response');
+    m = text.match(/Listing Sales Associate[:\s]*([A-Z][a-zA-Z\s\.]{3,60})/);
+    if (m) result.lst_agent_name = clean(m[1]);
 
-    const filled = populateForm(json);
-    setStatus('✓ Extracted! ' + filled + ' field' + (filled === 1 ? '' : 's') + ' filled. Review the form below — fields with light backgrounds came from Claude.', 'success');
-    clearFile();
-  } catch (err) {
-    console.error(err);
-    setStatus('✗ Extraction failed: ' + (err.message || err), 'error');
-  } finally {
-    btn.disabled = false;
-    btn.innerHTML = '✨ Extract with Claude';
+    m = text.match(/Listing Broker[:\s]*([A-Z][a-zA-Z\s,\.&\-]{3,80}?)(?:\n|Cooperating|$)/);
+    if (m) result.lst_brokerage = clean(m[1]);
+
+    m = text.match(/Cooperating Sales Associate[,\s]*if any[:\s]*([A-Z][a-zA-Z\s\.]{3,60})/);
+    if (m) result.byr_agent_name = clean(m[1]);
+
+    m = text.match(/Cooperating Broker[,\s]*if any[:\s]*([A-Z][a-zA-Z\s,\.&\-]{3,80}?)(?:\n|$)/);
+    if (m) result.byr_brokerage = clean(m[1]);
+
+    m = text.match(/Loan Approval Period["\)]*\s*[:\s]*\(?\s*(\d{1,3})\s*\)?/);
+    if (m) result.loan_days = m[1];
+
+    m = text.match(/Inspection Period["\)]*\s*[:\s]*\(?\s*(\d{1,3})\s*\)?/);
+    if (m) result.inspection_days = m[1];
+
+    m = text.match(/(\d+)\s*days prior to Closing Date/);
+    if (m) result.title_days = m[1];
+
+    if (/cash transaction with no financing/i.test(text)) {
+      result.financing_type = 'Cash';
+    } else if (/FHA Rider|HUD\/FHA/i.test(text)) {
+      result.financing_type = 'FHA';
+    } else if (/VA Financing/i.test(text)) {
+      result.financing_type = 'VA';
+    } else if (/conventional/i.test(text)) {
+      result.financing_type = 'Conventional';
+    }
+
+    return result;
   }
-}
 
-function openPasteModal() {
-  document.getElementById('pasteModal').classList.add('show');
-  setTimeout(function() { document.getElementById('pasteJson').focus(); }, 50);
-}
-function closePasteModal() { document.getElementById('pasteModal').classList.remove('show'); }
-
-function parseJsonFromText(raw) {
-  if (!raw) return null;
-  let cleaned = raw.replace(/```(?:json)?\s*/gi, '').replace(/```\s*$/g, '').trim();
-  const start = cleaned.indexOf('{');
-  const end = cleaned.lastIndexOf('}');
-  if (start < 0 || end < 0 || end <= start) {
-    cleaned = '{' + cleaned + '}';
-  } else {
-    cleaned = cleaned.slice(start, end + 1);
+  // ============ JSON PARSING ============
+  function parseJsonFromText(text) {
+    let m = text.match(/```(?:json)?\s*([\s\S]*?)```/);
+    let raw = m ? m[1] : null;
+    if (!raw) {
+      const start = text.indexOf('{');
+      const end = text.lastIndexOf('}');
+      if (start >= 0 && end > start) raw = text.slice(start, end + 1);
+    }
+    if (!raw) throw new Error('No JSON found in response');
+    raw = raw.trim().replace(/,\s*([}\]])/g, '$1');
+    return JSON.parse(raw);
   }
-  cleaned = cleaned.replace(/,\s*([}\]])/g, '$1');
-  try { return JSON.parse(cleaned); }
-  catch (e) { return null; }
-}
 
-function applyPasted() {
-  const raw = document.getElementById('pasteJson').value;
-  const json = parseJsonFromText(raw);
-  if (!json) {
-    alert('Could not parse JSON. Make sure the input contains a valid JSON object.');
-    return;
-  }
-  const filled = populateForm(json);
-  closePasteModal();
-  document.getElementById('pasteJson').value = '';
-  setStatus('✓ Applied! ' + filled + ' field' + (filled === 1 ? '' : 's') + ' filled from pasted JSON.', 'success');
-}
-
-function copyJsonOnly() {
-  const data = gatherFormData();
-  const json = JSON.stringify(data, null, 2);
-  navigator.clipboard.writeText(json).then(function() {
-    setStatus('✓ JSON copied to clipboard.', 'success');
-  }).catch(function() {
-    const ta = document.createElement('textarea');
-    ta.value = json;
-    document.body.appendChild(ta);
-    ta.select();
-    try { document.execCommand('copy'); setStatus('✓ JSON copied.', 'success'); }
-    catch (e) { setStatus('Copy failed — your browser blocked clipboard access.', 'error'); }
-    document.body.removeChild(ta);
-  });
-}
-
-async function submitToWebhook(event) {
-  event.preventDefault();
-  const data = gatherFormData();
-  setStatus('Submitting to Google Sheet via webhook...', 'info', true);
-
-  try {
-    await fetch(WEBHOOK_URL, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify(data)
+  // ============ APPLY JSON TO FORM ============
+  function applyJsonToForm(json) {
+    let count = 0;
+    Object.keys(json).forEach(key => {
+      if (FIELDS.includes(key)) {
+        const v = json[key];
+        if (v !== '' && v != null && !(Array.isArray(v) && v.length === 0)) {
+          setValue(key, v, true);
+          count++;
+        } else {
+          setValue(key, v);
+        }
+      }
     });
-    setStatus('✓ Submitted! "' + (data.prop_address || 'Property') + '" has been sent to the webhook. Check your Google Sheet — a new tab should appear shortly with calendar reminders.', 'success');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  } catch (err) {
-    console.error(err);
-    setStatus('✗ Submit failed: ' + (err.message || err) + '. Try copying the JSON and pasting into the sheet manually.', 'error');
+    updateSummary();
+    return count;
   }
-}
 
-ALL_FIELD_IDS.forEach(function(id) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  el.addEventListener('input', function() {
-    if (el.value && el.value.trim()) el.classList.add('filled');
-    else el.classList.remove('filled');
+  // ============ MANUAL FALLBACK PANEL ============
+  function showManualFallback(contractText) {
+    const promptText =
+      "Extract intake JSON for this Florida AS IS Residential Contract per my standard MRFL Transactions format. " +
+      "Use STRICT mode — don't guess any field. Output ONLY a single JSON object inside a ```json fence. " +
+      "Use the field schema we've established (agent_ref, side_represented, prop_address, prop_tax_id, purchase_price, " +
+      "financing_type, loan_days, effective_date, closing_date, escrow_amount, escrow_days, inspection_days, " +
+      "loanapp_days, title_days, seller_names, seller_email, seller_phone, lst_agent_name, lst_agent_lic, " +
+      "lst_agent_phone, lst_agent_email, lst_brokerage, lst_office_addr, lst_office_phone, buyer_names, buyer_email, " +
+      "buyer_phone, byr_agent_name, byr_agent_lic, byr_agent_phone, byr_agent_email, byr_brokerage, byr_office_addr, " +
+      "byr_office_phone, byr_title_company, byr_title_contact, byr_title_email, byr_title_phone, lo_company, " +
+      "lo_contact, lo_email, lo_phone, concessions).\n\n" +
+      "=== CONTRACT TEXT ===\n\n" + contractText;
+    $('extractedText').value = promptText;
+    $('manualFallback').classList.remove('hidden');
+    $('manualFallback').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  $('copyTextBtn').addEventListener('click', async () => {
+    const text = $('extractedText').value;
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch (err) {
+      $('extractedText').focus();
+      $('extractedText').select();
+      try { document.execCommand('copy'); } catch (e2) {
+        alert('Could not copy automatically. Click the text box, press Ctrl/Cmd+A, then Ctrl/Cmd+C.');
+        return;
+      }
+    }
+    $('copyConfirm').classList.remove('hidden');
+    setTimeout(() => $('copyConfirm').classList.add('hidden'), 2500);
   });
-});
+
+  $('dismissFallbackBtn').addEventListener('click', () => {
+    $('manualFallback').classList.add('hidden');
+  });
+
+  // ============ UPLOAD PDF HANDLER ============
+  $('uploadPdfBtn').addEventListener('click', () => $('pdfFileInput').click());
+
+  $('pdfFileInput').addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    e.target.value = '';
+
+    if (file.type !== 'application/pdf') {
+      showStatus('Please select a PDF file.', 'error');
+      return;
+    }
+
+    showStatus('Reading "' + file.name + '" (' + (file.size/1024/1024).toFixed(1) + ' MB)...', 'info', true);
+    $('uploadPdfBtn').disabled = true;
+
+    let contractText = '';
+
+    try {
+      const arrayBuffer = await fileToArrayBuffer(file);
+      showStatus('Extracting text from PDF...', 'info', true);
+      contractText = await extractTextFromPdf(arrayBuffer);
+
+      if (!contractText || contractText.trim().length < 200) {
+        throw new Error(
+          'Could not extract enough text from this PDF. It may be scanned/image-based. ' +
+          'Try the Paste JSON option after using Claude chat to extract.'
+        );
+      }
+
+      // Local pattern-match prefill (no network)
+      const localData = localPatternExtract(contractText);
+      const localCount = applyJsonToForm(localData);
+
+      // Show manual fallback panel with text + prompt ready to copy
+      showManualFallback(contractText);
+
+      showStatus(
+        '✓ Got ' + localCount + ' fields from text patterns. Use the orange panel above to finish in Claude chat.',
+        'success'
+      );
+    } catch (err) {
+      console.error(err);
+      showStatus('✗ ' + (err.message || String(err)), 'error');
+      if (contractText && contractText.length > 200) {
+        showManualFallback(contractText);
+      }
+    } finally {
+      $('uploadPdfBtn').disabled = false;
+    }
+  });
+
+  // ============ PASTE JSON MODAL ============
+  $('importJsonBtn').addEventListener('click', () => {
+    $('jsonPasteArea').value = '';
+    $('jsonModal').classList.remove('hidden');
+    setTimeout(() => $('jsonPasteArea').focus(), 50);
+  });
+  $('cancelImportBtn').addEventListener('click', () => $('jsonModal').classList.add('hidden'));
+  $('applyImportBtn').addEventListener('click', () => {
+    const txt = $('jsonPasteArea').value.trim();
+    if (!txt) {
+      showStatus('Paste a JSON object first.', 'error');
+      return;
+    }
+    try {
+      const json = parseJsonFromText(txt);
+      const count = applyJsonToForm(json);
+      $('jsonModal').classList.add('hidden');
+      showStatus('✓ Imported ' + count + ' fields from JSON. Review the highlighted yellow cells, then click Submit.', 'success');
+    } catch (err) {
+      showStatus('Could not parse JSON: ' + err.message, 'error');
+    }
+  });
+
+  // ============ RESET ============
+  $('resetBtn').addEventListener('click', () => {
+    if (!confirm('Clear all form fields? This cannot be undone.')) return;
+    clearAll();
+    hideStatus();
+    $('manualFallback').classList.add('hidden');
+  });
+
+  // ============ SUBMIT ============
+  $('submitBtn').addEventListener('click', async () => {
+    const data = collectFormData();
+    const missing = [];
+    if (!data.prop_address) missing.push('Property Address');
+    if (!data.purchase_price) missing.push('Purchase Price');
+    if (!data.effective_date) missing.push('Effective Date');
+    if (!data.closing_date) missing.push('Closing Date');
+    if (!data.agent_ref) missing.push('Agent Reference');
+    if (!data.side_represented) missing.push('Side Represented');
+
+    if (missing.length) {
+      showStatus('Missing required: ' + missing.join(', '), 'error');
+      return;
+    }
+
+    showStatus('Submitting to webhook...', 'info', true);
+    $('submitBtn').disabled = true;
+
+    try {
+      // text/plain to avoid Apps Script CORS preflight
+      const res = await fetch(WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(data)
+      });
+
+      if (!res.ok) throw new Error('Webhook returned ' + res.status);
+
+      const responseText = await res.text();
+      let parsed;
+      try { parsed = JSON.parse(responseText); } catch (e) { parsed = null; }
+
+      if (parsed && parsed.success === false) {
+        throw new Error(parsed.error || 'Webhook reported failure');
+      }
+
+      showStatus(
+        '✓ Submitted successfully! Tab created in your sheet, calendar events scheduled, dashboard refreshed. ' +
+        (parsed && parsed.tab_url ? 'Open: ' + parsed.tab_url : ''),
+        'success'
+      );
+    } catch (err) {
+      showStatus('Submission failed: ' + err.message, 'error');
+    } finally {
+      $('submitBtn').disabled = false;
+    }
+  });
+
+  updateSummary();
+})();
 </script>
 </body>
 </html>
