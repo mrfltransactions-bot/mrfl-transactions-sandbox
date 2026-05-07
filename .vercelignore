@@ -1,0 +1,13 @@
+# Don't ship the Claude-artifact variant — it has a hardcoded webhook URL.
+# The standalone intake-form.html (which prompts for the webhook URL) is the
+# only HTML we want publicly reachable.
+intake/intake-artifact.html
+
+# Don't ship Python builders, Apps Script source, or docs to the static host.
+deliverables/
+webhook/
+docs/
+samples/
+assets/
+CHANGELOG.md
+README.md
