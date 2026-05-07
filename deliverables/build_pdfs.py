@@ -17,7 +17,7 @@ from reportlab.platypus import (
 from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_RIGHT
 
 # Reuse the transaction data from the portfolio script
-sys.path.insert(0, '/home/claude')
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from build_portfolio import TRANSACTIONS
 
 # ============ BRAND COLORS ============
@@ -579,7 +579,7 @@ def build_pdf_for_transaction(t, output_path):
 
 
 # ============ BUILD ALL PDFs ============
-output_dir = "/mnt/user-data/outputs"
+output_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "output")
 os.makedirs(output_dir, exist_ok=True)
 
 print(f"Building {len(TRANSACTIONS)} transaction PDFs...\n")

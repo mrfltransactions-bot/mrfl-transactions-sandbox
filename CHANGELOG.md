@@ -7,6 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.1.0] — 2026-05-07
+
+### Added — In-form PDF extraction via Anthropic API
+
+- `intake/intake-form.html`: optional one-click PDF → all 60+ fields extraction.
+  After PDF.js extracts text and the regex prefill runs, if an Anthropic API
+  key is configured the form sends the contract text to Claude Sonnet 4.6
+  with the canonical extraction system prompt and applies the returned JSON
+  to all matching form fields.
+- New "Anthropic API Key" field in the Connection Settings panel
+  (password-masked, persisted to `localStorage` under `mrfl_anthropic_api_key`).
+  Includes Save and Test buttons; Test makes a tiny call to `claude-haiku-4-5`
+  to verify the key is valid.
+- Prompt caching enabled on the system prompt → ~90% off the system-prompt
+  tokens after the first extraction in a 5-minute window. Per-extraction
+  cost: ~$0.02 with cache, ~$0.04 cold.
+- All existing flows preserved: if no API key is configured, or the API call
+  fails for any reason (network, invalid key, malformed JSON), the form
+  falls back to the existing "Copy text + prompt" manual chat workflow with
+  an error toast explaining what happened.
+
+### Fixed — Sandbox-leftover paths in Python builders
+
+- `deliverables/build_portfolio.py`: removed hardcoded
+  `/mnt/user-data/outputs/` path, now writes to `deliverables/output/`
+  next to the script.
+- `deliverables/build_pdfs.py`: same fix; also removed dead
+  `sys.path.insert(0, '/home/claude')` line, replaced with a path to the
+  script's own directory so the import of `build_portfolio` resolves
+  on any machine.
+
+---
+
 ## [1.0.0] — 2026-05-07
 
 First production release. Captures the system as it has been running and

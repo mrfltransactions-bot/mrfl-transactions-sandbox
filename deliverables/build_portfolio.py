@@ -967,7 +967,10 @@ for i, t in enumerate(TRANSACTIONS, start=1):
     ws.row_dimensions[r].height = 20
 
 # ============ SAVE ============
-output_path = "/mnt/user-data/outputs/Transaction_Portfolio_Summary.xlsx"
+import os
+output_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "output")
+os.makedirs(output_dir, exist_ok=True)
+output_path = os.path.join(output_dir, "Transaction_Portfolio_Summary.xlsx")
 wb.save(output_path)
 print(f"✓ Saved: {output_path}")
 print(f"  Total tabs: {len(wb.sheetnames)}")

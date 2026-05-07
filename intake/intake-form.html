@@ -416,9 +416,20 @@
   .toast.show { opacity: 1; }
 
   /* connection status indicator */
-  .connection-status {
+  /* ---------- Hero controls row (flex container for top-right buttons + status) ---------- */
+  .hero-controls {
     position: absolute;
-    top: 24px; right: 32px;
+    top: 24px;
+    right: 32px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    z-index: 2;
+    max-width: calc(100% - 64px);
+  }
+  .connection-status {
     display: flex; align-items: center; gap: 8px;
     background: rgba(250, 246, 238, 0.08);
     border: 1px solid rgba(250, 246, 238, 0.15);
@@ -426,7 +437,6 @@
     font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
     font-weight: 600;
     backdrop-filter: blur(8px);
-    z-index: 2;
   }
   .status-dot {
     width: 8px; height: 8px; border-radius: 50%;
@@ -611,8 +621,7 @@
   }
   /* ---------- THEME TOGGLE ---------- */
   .theme-toggle {
-    position: absolute;
-    top: 24px; right: 180px;
+    position: relative;
     background: rgba(250, 246, 238, 0.08);
     border: 1px solid rgba(250, 246, 238, 0.15);
     color: var(--cream);
@@ -623,8 +632,8 @@
     font-size: 16px;
     backdrop-filter: blur(8px);
     transition: all 0.2s ease;
-    z-index: 2;
     line-height: 1;
+    flex: 0 0 auto;
   }
   .theme-toggle:hover {
     background: rgba(250, 246, 238, 0.15);
@@ -639,7 +648,7 @@
   :root[data-theme="dark"] .theme-toggle .moon-icon { opacity: 0; transform: scale(0.5); }
   :root[data-theme="dark"] .theme-toggle .sun-icon { opacity: 1; transform: scale(1); }
   @media (max-width: 768px) {
-    .theme-toggle { right: 130px; width: 34px; height: 34px; font-size: 14px; }
+    .theme-toggle { width: 34px; height: 34px; font-size: 14px; }
   }
   /* ---------- DARK MODE LEGIBILITY OVERRIDES ---------- */
   :root[data-theme="dark"] .section-title {
@@ -730,8 +739,6 @@
   }
   /* ---------- IMPORT BUTTON ---------- */
   .import-btn {
-    position: absolute;
-    top: 24px; right: 240px;
     background: rgba(167, 139, 250, 0.18);
     border: 1px solid rgba(167, 139, 250, 0.4);
     color: var(--cream);
@@ -745,7 +752,8 @@
     letter-spacing: 0.05em;
     backdrop-filter: blur(8px);
     transition: all 0.2s ease;
-    z-index: 2;
+    flex: 0 0 auto;
+    white-space: nowrap;
   }
   .import-btn:hover {
     background: rgba(167, 139, 250, 0.35);
@@ -755,16 +763,13 @@
   .import-icon { font-size: 14px; }
   @media (max-width: 768px) {
     .import-btn {
-      right: 180px;
       padding: 6px 10px;
     }
     .import-label { display: none; }
   }
 
-  /* ---------- Upload PDF button (sibling of import-btn, positioned left of it) ---------- */
+  /* ---------- Upload PDF button (sibling of import-btn within hero-controls) ---------- */
   .upload-btn {
-    position: absolute;
-    top: 24px; right: 410px;
     background: rgba(167, 139, 250, 0.18);
     border: 1px solid rgba(167, 139, 250, 0.4);
     color: var(--cream);
@@ -778,7 +783,8 @@
     letter-spacing: 0.05em;
     backdrop-filter: blur(8px);
     transition: all 0.2s ease;
-    z-index: 2;
+    flex: 0 0 auto;
+    white-space: nowrap;
   }
   .upload-btn:hover {
     background: rgba(167, 139, 250, 0.35);
@@ -790,11 +796,8 @@
     cursor: wait;
     transform: none;
   }
-  @media (max-width: 1024px) {
-    .upload-btn { right: 350px; }
-  }
   @media (max-width: 768px) {
-    .upload-btn { right: 280px; padding: 6px 10px; }
+    .upload-btn { padding: 6px 10px; }
   }
 
   /* ---------- Fallback panel (shown after PDF upload, with copy-to-clipboard) ---------- */
@@ -998,22 +1001,24 @@
 </style>
 
 <div class="hero">
-  <button type="button" class="upload-btn" id="upload_pdf_btn" title="Extract contract data directly from PDF in your browser">
-    <span class="import-icon">📄</span>
-    <span class="import-label">Upload Contract PDF</span>
-  </button>
   <input type="file" id="pdf_file_input" accept="application/pdf" style="display:none" />
-  <button type="button" class="import-btn" id="import_btn" title="Import data from Claude-extracted contract">
-    <span class="import-icon">📥</span>
-    <span class="import-label">Import from Claude</span>
-  </button>
-  <button type="button" class="theme-toggle" id="theme_toggle" aria-label="Toggle dark mode" title="Toggle dark mode">
-    <span class="moon-icon">🌙</span>
-    <span class="sun-icon">☀️</span>
-  </button>
-  <div class="connection-status" id="connection_status">
-    <span class="status-dot"></span>
-    <span id="status_text">Manual Mode</span>
+  <div class="hero-controls">
+    <button type="button" class="upload-btn" id="upload_pdf_btn" title="Extract contract data directly from PDF in your browser">
+      <span class="import-icon">📄</span>
+      <span class="import-label">Upload Contract PDF</span>
+    </button>
+    <button type="button" class="import-btn" id="import_btn" title="Import data from Claude-extracted contract">
+      <span class="import-icon">📥</span>
+      <span class="import-label">Import from Claude</span>
+    </button>
+    <button type="button" class="theme-toggle" id="theme_toggle" aria-label="Toggle dark mode" title="Toggle dark mode">
+      <span class="moon-icon">🌙</span>
+      <span class="sun-icon">☀️</span>
+    </button>
+    <div class="connection-status" id="connection_status">
+      <span class="status-dot"></span>
+      <span id="status_text">Manual Mode</span>
+    </div>
   </div>
   <div class="hero-content">
     <div class="brand-row">
@@ -1520,6 +1525,24 @@
           <button type="button" class="btn-copy" id="save_webhook" style="white-space: nowrap;">Save</button>
         </div>
         <div class="test-result" id="test_result"></div>
+
+        <div style="height: 24px;"></div>
+
+        <p style="font-size: 13px; color: var(--muted); line-height: 1.6; margin-bottom: 16px;">
+          <strong>In-form PDF extraction (optional).</strong> Add an Anthropic API key to extract all ~60 fields from a contract PDF in one click — no chat copy/paste needed. Approx <strong>$0.02 per contract</strong> with prompt caching.
+        </p>
+        <div class="settings-row">
+          <div class="field">
+            <label>Anthropic API Key</label>
+            <input id="api_key" type="password" placeholder="sk-ant-api03-..." autocomplete="off" />
+          </div>
+          <button type="button" class="btn-secondary" id="test_api_key" style="white-space: nowrap;">Test</button>
+          <button type="button" class="btn-copy" id="save_api_key" style="white-space: nowrap;">Save</button>
+        </div>
+        <div class="test-result" id="api_test_result"></div>
+        <p style="font-size: 12px; color: var(--muted); line-height: 1.5; margin-top: 12px;">
+          ⚠ Your key is stored in this browser's localStorage and sent directly from this page to api.anthropic.com. Don't enter your key on a shared computer. <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">Get an API key</a>.
+        </p>
       </div>
     </div>
 
@@ -2077,6 +2100,62 @@
     r.className = 'test-result show ' + type;
   }
 
+  // ============ ANTHROPIC API KEY PERSISTENCE ============
+  const API_KEY_STORAGE = 'mrfl_anthropic_api_key';
+  function getStoredApiKey() {
+    try { return localStorage.getItem(API_KEY_STORAGE) || ''; } catch (e) { return ''; }
+  }
+  function setStoredApiKey(key) {
+    try {
+      if (key) localStorage.setItem(API_KEY_STORAGE, key);
+      else localStorage.removeItem(API_KEY_STORAGE);
+    } catch (e) {}
+  }
+
+  $('api_key').value = getStoredApiKey();
+
+  $('save_api_key').addEventListener('click', () => {
+    const key = $('api_key').value.trim();
+    setStoredApiKey(key);
+    showApiTestResult(key ? 'API key saved.' : 'API key cleared — using manual chat workflow.', 'success');
+  });
+
+  $('test_api_key').addEventListener('click', async () => {
+    const key = $('api_key').value.trim();
+    if (!key) { showApiTestResult('Enter an API key first.', 'error'); return; }
+    showApiTestResult('Testing key…', 'loading');
+    try {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': key,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true'
+        },
+        body: JSON.stringify({
+          model: 'claude-haiku-4-5',
+          max_tokens: 16,
+          messages: [{ role: 'user', content: 'hi' }]
+        })
+      });
+      if (res.ok) {
+        showApiTestResult('✓ Connected. API key is valid.', 'success');
+      } else {
+        const err = await res.text().catch(() => '');
+        showApiTestResult('Test failed (' + res.status + '): ' + err.slice(0, 200), 'error');
+      }
+    } catch (err) {
+      showApiTestResult('Network error: ' + err.message, 'error');
+    }
+  });
+
+  function showApiTestResult(msg, type) {
+    const r = $('api_test_result');
+    r.textContent = msg;
+    r.className = 'test-result show ' + type;
+  }
+
   // ============ SUBMIT VIA WEBHOOK ============
   async function submitViaWebhook(payload) {
     const url = getStoredUrl();
@@ -2437,6 +2516,203 @@
     return pages.join('\n\n');
   }
 
+  // ---- Anthropic API extraction (full ~60-field JSON in one call) ----
+  const EXTRACTION_SYSTEM_PROMPT = `You are an extraction assistant for Gloria Grullon, a Florida real estate Transaction Coordinator (MRFL Transactions). Your job: take a Florida AS IS Residential Contract For Sale And Purchase (FloridaRealtors/FloridaBar-ASIS-7x) and produce a single JSON object matching the canonical schema below.
+
+OUTPUT RULES (non-negotiable):
+1. Output ONLY one JSON object inside a \`\`\`json code fence. No commentary before the fence.
+2. After the closing fence, you MAY add a brief summary (3-5 lines max) noting:
+   - How many fields were populated vs left empty
+   - Anything unusual (dual agency, both financing boxes checked, missing lender, etc.)
+   - Source paragraph references for any non-obvious extractions
+3. Use STRICT mode: only fill fields whose values are clearly visible in the contract. Leave unknown values as empty strings (""). Never guess.
+4. All values are strings except \`concessions\` which is a string array.
+5. Empty values are "", never null, never undefined.
+
+EXTRACTION RULES:
+
+A) effective_date — Per Paragraph 3(b), this is the date the LAST party signed the main contract document (not addenda or post-execution disclosures like Flood Disclosure). Look at signatures on the signature page, plus any later initials on the contract pages themselves (page 1-13 of the AS IS form). If buyer initialed something on a later date as part of accepting an addendum or counter-offer, use that date. If the only later date is on a separate disclosure (Flood, etc.), use the main contract's last signature date. Format: YYYY-MM-DD.
+
+B) closing_date — Per Paragraph 4. Often phrased "or before [date]". Format: YYYY-MM-DD.
+
+C) financing_type — Per Paragraph 8. 8(a) checked → "Cash". 8(b) checked → look at which loan rider sub-checkbox AND which rider is fully completed. If multiple boxes appear checked (e.g., both Conventional and FHA), pick the SINGLE one whose Rider (E for FHA/VA, etc.) is filled in and signed by all parties. If unclear, default to the one whose rider is signed; otherwise leave blank.
+
+D) purchase_price — Paragraph 2. Format: "$XXX,XXX.XX" with $, commas, two decimals.
+
+E) escrow_amount — Paragraph 2(a) "Initial deposit". Same format as purchase_price.
+
+F) escrow_days — Paragraph 2(a) "made within ____ days after Effective Date". Just the number as a string ("3"). Empty if not specified.
+
+G) add_escrow_amount / add_escrow_days — Paragraph 2(b) "Additional deposit". Same formats.
+
+H) inspection_days — Paragraph 12(a) "Buyer shall have ____ days". Number as string.
+
+I) loanapp_days — Paragraph 8(b)(i) "make application for Financing within ____ days".
+
+J) loan_days — Paragraph 8(b) "Loan Approval Period" days. Number as string.
+
+K) title_days — Paragraph 9(c) "At least ____ days prior to Closing Date".
+
+L) hoa_app_days, hoa_approval_days — From Rider B if attached, else blank.
+
+M) seller_names, buyer_names — Full legal names from page 1, ampersand-separated.
+
+N) Listing/buyer agents — Pull from the BROKER section at the bottom of the signature page (Listing Sales Associate / Cooperating Sales Associate). License numbers go in the \`_lic\` field with "Lic#" / "S.L." prefixes stripped — digits only.
+
+O) Brokerages — Listing Broker / Cooperating Broker on the signature page.
+
+P) Co-listing / co-buyer agents — Only populate \`co_lst_*\` / \`co_byr_*\` if the contract actually lists a co-agent. Leave blank otherwise.
+
+Q) Title companies — Paragraph 9(c) determines who designates closing agent: 9(c)(i) → Seller designates → byr_title_* fields are the seller-designated company. 9(c)(ii) → Buyer designates → byr_title_* fields are the buyer-designated company. 9(c)(iii) [Miami-Dade/Broward] → Buyer designates closing agent and pays for owner's policy. The Escrow Agent block on page 1 is who holds the deposit — that's the byr_title_* contact unless contract explicitly splits buyer-side and seller-side title. Only populate \`slr_title_*\` if seller has a separate title company explicitly named.
+
+R) Loan officer — From the contract or any attached Pre-Approval letter / addendum. The primary contact at the lender goes in lo_*. If a separate loan processor is named, put them in lp_*; otherwise leave lp_* blank.
+
+S) concessions — From Paragraph 20 "ADDITIONAL TERMS" plus any signed riders that create seller obligations beyond standard contract terms. Examples to capture: Seller closing cost contributions ("Seller agrees to contribute $X,XXX..."); Seller agreements to clear title/permit issues; Rider GG (Seller's Agreement w/ Buyer's Broker Compensation): if signed, capture as "Seller agrees to pay Buyer's Broker (X) Y% of the gross purchase price per Rider GG"; Concessions from buyer agent kickbacks. Each concession is one short string. Do NOT include standard contract language. Empty array [] if no concessions found.
+
+T) agent_ref, side_represented — Always leave as empty strings. The TC fills these manually based on which agent's account submitted the contract.
+
+U) date_submitted — Use the date provided in the user message (today's date in YYYY-MM-DD format).
+
+CANONICAL JSON SCHEMA (output exactly these keys, in this order):
+
+{
+  "agent_ref": "",
+  "side_represented": "",
+  "date_submitted": "YYYY-MM-DD",
+  "prop_address": "",
+  "prop_tax_id": "",
+  "purchase_price": "",
+  "financing_type": "",
+  "loan_days": "",
+  "effective_date": "",
+  "closing_date": "",
+  "escrow_amount": "",
+  "escrow_days": "",
+  "add_escrow_amount": "",
+  "add_escrow_days": "",
+  "inspection_days": "",
+  "loanapp_days": "",
+  "title_days": "",
+  "hoa_app_days": "",
+  "hoa_approval_days": "",
+  "seller_names": "",
+  "seller_email": "",
+  "seller_phone": "",
+  "lst_agent_name": "",
+  "lst_agent_lic": "",
+  "lst_agent_phone": "",
+  "lst_agent_email": "",
+  "lst_brokerage": "",
+  "lst_office_addr": "",
+  "lst_office_phone": "",
+  "co_lst_name": "",
+  "co_lst_lic": "",
+  "co_lst_phone": "",
+  "co_lst_email": "",
+  "co_lst_brokerage": "",
+  "co_lst_office_addr": "",
+  "co_lst_office_phone": "",
+  "buyer_names": "",
+  "buyer_email": "",
+  "buyer_phone": "",
+  "byr_agent_name": "",
+  "byr_agent_lic": "",
+  "byr_agent_phone": "",
+  "byr_agent_email": "",
+  "byr_brokerage": "",
+  "byr_office_addr": "",
+  "byr_office_phone": "",
+  "co_byr_name": "",
+  "co_byr_lic": "",
+  "co_byr_phone": "",
+  "co_byr_email": "",
+  "byr_title_company": "",
+  "byr_title_contact": "",
+  "byr_title_email": "",
+  "byr_title_phone": "",
+  "slr_title_company": "",
+  "slr_title_contact": "",
+  "slr_title_email": "",
+  "slr_title_phone": "",
+  "lo_company": "",
+  "lo_contact": "",
+  "lo_email": "",
+  "lo_phone": "",
+  "lp_company": "",
+  "lp_contact": "",
+  "lp_email": "",
+  "lp_phone": "",
+  "concessions": []
+}`;
+
+  async function _pdfApiExtract(contractText, apiKey) {
+    const today = new Date().toISOString().slice(0, 10);
+    const userMessage =
+      'Today is ' + today + '. Extract intake JSON from this contract.\n\n' +
+      '=== CONTRACT TEXT ===\n\n' + contractText;
+
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 2048,
+        system: [{
+          type: 'text',
+          text: EXTRACTION_SYSTEM_PROMPT,
+          cache_control: { type: 'ephemeral' }
+        }],
+        messages: [{ role: 'user', content: userMessage }]
+      })
+    });
+
+    if (!res.ok) {
+      const errBody = await res.text().catch(() => '');
+      throw new Error('API ' + res.status + ': ' + errBody.slice(0, 300));
+    }
+
+    const data = await res.json();
+    const text = (data.content || [])
+      .filter(c => c.type === 'text')
+      .map(c => c.text)
+      .join('\n');
+
+    if (data.usage) {
+      console.log('[API] tokens — input:', data.usage.input_tokens,
+                  'cache read:', data.usage.cache_read_input_tokens || 0,
+                  'cache write:', data.usage.cache_creation_input_tokens || 0,
+                  'output:', data.usage.output_tokens);
+    }
+
+    return _parseExtractedJson(text);
+  }
+
+  function _parseExtractedJson(text) {
+    let raw = null;
+    const fenceMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
+    if (fenceMatch) raw = fenceMatch[1];
+    if (!raw) {
+      const start = text.indexOf('{');
+      const end = text.lastIndexOf('}');
+      if (start >= 0 && end > start) raw = text.slice(start, end + 1);
+    }
+    if (!raw) throw new Error('No JSON found in API response');
+    raw = raw.trim().replace(/,(\s*[}\]])/g, '$1');
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      throw new Error('API response was not a JSON object');
+    }
+    const expectedKeys = ['prop_address', 'purchase_price', 'effective_date', 'closing_date', 'seller_names'];
+    const present = expectedKeys.filter(k => k in parsed).length;
+    if (present < 3) throw new Error('API response missing too many expected fields');
+    return parsed;
+  }
+
   // ---- Regex pattern extractor (Florida AS IS contract layout) ----
   function _pdfPatternExtract(text) {
     const out = {};
@@ -2631,8 +2907,31 @@
 
       const data = _pdfPatternExtract(contractText);
       const filledCount = _pdfApplyToForm(data);
-      _pdfShowFallback(contractText, filledCount);
 
+      // ---- Try API extraction if user has a key configured ----
+      const apiKey = getStoredApiKey();
+      if (apiKey) {
+        if (labelEl) labelEl.textContent = 'Extracting via API…';
+        try {
+          const apiData = await _pdfApiExtract(contractText, apiKey);
+          const apiCount = _pdfApplyToForm(apiData);
+          showToast(
+            '✓ Extracted ' + apiCount + ' field' + (apiCount === 1 ? '' : 's') +
+            ' via Claude API. Review the form and submit.'
+          );
+          return;
+        } catch (apiErr) {
+          console.warn('[API Extract] Failed, falling back to manual workflow:', apiErr);
+          showToast(
+            'API extraction failed (' + (apiErr.message || 'unknown') + '). ' +
+            'Falling back to manual chat workflow.',
+            true
+          );
+          // fall through to manual fallback panel below
+        }
+      }
+
+      _pdfShowFallback(contractText, filledCount);
       showToast(
         '✓ Got ' + filledCount + ' field' + (filledCount === 1 ? '' : 's') +
         ' from PDF text. See orange panel below to finish extraction in Claude chat.'

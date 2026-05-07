@@ -76,3 +76,9 @@ desktop.ini
 *.local
 secrets.json
 config.local.*
+
+# ===== Claude Code local state =====
+.claude/
+
+# ===== Generated output dirs =====
+deliverables/output/
