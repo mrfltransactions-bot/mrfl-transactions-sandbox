@@ -2012,29 +2012,19 @@
       <div class="email-step">
         <div class="email-step-head">
           <span class="email-step-num">STEP 01</span>
-          <span class="email-step-title">Open Gmail Compose</span>
+          <span class="email-step-title">Send to Gmail</span>
         </div>
-        <p class="email-step-desc">Opens a Gmail draft in a new tab with To, Cc, and Subject pre-filled.</p>
+        <p class="email-step-desc">One click: opens a Gmail draft with all parties addressed and copies the formatted body to your clipboard. Click into the Gmail body and paste with ⌘V — the deadlines table, ★ contributions section, and signature render with full formatting.</p>
         <div class="email-actions">
-          <button type="button" class="email-btn" id="email_open_gmail_btn">📨 Open Gmail Compose</button>
-        </div>
-      </div>
-
-      <div class="email-step">
-        <div class="email-step-head">
-          <span class="email-step-num">STEP 02</span>
-          <span class="email-step-title">Paste the Email Body</span>
-        </div>
-        <p class="email-step-desc">Copy the formatted body, then click into the Gmail draft and paste. The deadlines table and signature will keep their formatting.</p>
-        <div class="email-actions">
-          <button type="button" class="email-btn" id="email_copy_body_btn">📋 Copy Formatted Email Body</button>
+          <button type="button" class="email-btn" id="email_open_gmail_btn">📨 Open Gmail with Formatted Body</button>
+          <button type="button" class="email-btn-ghost" id="email_copy_body_btn">Copy Body Only</button>
           <button type="button" class="email-btn-ghost" id="email_view_html_btn">View / Copy HTML Source</button>
         </div>
       </div>
 
       <div class="email-step">
         <div class="email-step-head">
-          <span class="email-step-num">STEP 03</span>
+          <span class="email-step-num">STEP 02</span>
           <span class="email-step-title">Attach the Deliverables</span>
         </div>
         <p class="email-step-desc">Don't forget to attach these two files to the Gmail draft before sending.</p>
@@ -4104,7 +4094,9 @@ CANONICAL JSON SCHEMA (output exactly these keys, in this order):
     return firstChunk.replace(/[^A-Za-z0-9\s]/g, '').replace(/\s+/g, '_');
   }
 
-  // ---- Build a Gmail compose URL with To, Cc, Subject, plain-text body ----
+  // ---- Build a Gmail compose URL. plainBody is optional — when omitted, Gmail
+  //      opens with an empty body so the user can paste the rich HTML once
+  //      via clipboard (Gmail compose URLs accept only plain text in &body=). ----
   function _emailBuildGmailURL(recipients, subject, plainBody) {
     const to = recipients.to.map(r => r.email).join(',');
     const cc = recipients.cc.map(r => r.email).join(',');
@@ -4193,12 +4185,35 @@ CANONICAL JSON SCHEMA (output exactly these keys, in this order):
     showToast('First email generated. Review recipients, then open Gmail.');
   });
 
-  // ---- Open Gmail Compose ----
-  $('email_open_gmail_btn').addEventListener('click', () => {
+  // ---- Open Gmail Compose with formatted body on clipboard ----
+  // One-click flow: copy rich HTML to clipboard first, THEN open a Gmail
+  // draft with To/Cc/Subject populated and an empty body. User pastes once
+  // (⌘V) inside the Gmail body and the styled email — deadlines table, ★
+  // contributions section, signature — renders with full formatting.
+  // Gmail's compose URL has no &html= equivalent, so the clipboard route
+  // is the only way to get rich content into a Gmail draft.
+  $('email_open_gmail_btn').addEventListener('click', async () => {
     if (!_emailCurrentState) { showToast('Click "Generate First Email" first.', true); return; }
-    const { recipients, subject, plain } = _emailCurrentState;
-    const url = _emailBuildGmailURL(recipients, subject, plain);
+    const { recipients, subject, plain, html } = _emailCurrentState;
+
+    // 1. Copy the rich HTML to the clipboard before opening Gmail. Doing this
+    //    BEFORE window.open keeps the user-gesture context alive so the
+    //    Clipboard API permission check still passes on Safari and Chrome.
+    const result = await _emailCopyRichToClipboard(plain, html);
+
+    // 2. Open Gmail draft with empty body (no &body= param). User pastes once.
+    const url = _emailBuildGmailURL(recipients, subject);
     window.open(url, '_blank', 'noopener');
+
+    // 3. Surface the right instruction based on which clipboard stage worked.
+    if (result.stage === 'clipboard-api' || result.stage === 'execCommand') {
+      showToast('✓ Gmail opened — click into the body and paste (⌘V) to drop in the formatted email.');
+    } else {
+      // Auto-copy blocked. Pop the HTML modal so user can copy manually.
+      $('email_modal_textarea').value = html;
+      $('email_modal_overlay').classList.add('active');
+      showToast('Gmail opened — auto-copy was blocked. Use the modal to copy the body manually.', true);
+    }
   });
 
   // ---- Copy formatted body ----
