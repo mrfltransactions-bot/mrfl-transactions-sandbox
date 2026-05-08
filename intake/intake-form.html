@@ -2071,15 +2071,14 @@
           <p id="calendar_status" style="margin-top: 8px; font-size: 12px; color: var(--navy);"></p>
         </div>
 
-        <!-- Per-property deliverables created in your Drive (only shown when present in the response) -->
+        <!-- Per-property deliverable created in your Drive (only shown when present in the response) -->
         <div id="deliverables_section" style="display:none; margin-top: 16px; padding: 14px 18px; background: #F5F3FF; border: 1px solid #DDD6FE; border-radius: 8px;">
-          <div style="font-weight: 700; color: #312E81; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 10px;">📂 Deliverables created in your Drive</div>
+          <div style="font-weight: 700; color: #312E81; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 10px;">📂 Deliverable created in your Drive</div>
           <ul style="margin: 0; padding-left: 18px; line-height: 1.7;">
-            <li><a id="critical_deadlines_link" href="#" target="_blank" style="color: #4338CA; font-weight: 600;">Critical Deadlines (Google Sheet) →</a></li>
-            <li><a id="transaction_summary_link" href="#" target="_blank" style="color: #4338CA; font-weight: 600;">Transaction Summary (Google Sheet) →</a></li>
+            <li><a id="deliverable_link" href="#" target="_blank" style="color: #4338CA; font-weight: 600;">Transaction Summary — Deadlines + Summary (Google Sheet) →</a></li>
           </ul>
           <p style="font-size: 11px; color: #6B7280; margin: 10px 0 0; line-height: 1.5;">
-            ⚠ These sheets are private to your Drive. Open each one and click <strong>Share</strong> to give the email recipients access before forwarding the first email.
+            ⚠ This sheet is private to your Drive. Open it and click <strong>Share</strong> to give email recipients access before forwarding the first email.
           </p>
         </div>
 
@@ -2745,15 +2744,13 @@
         } else {
           calStatus.innerHTML = '';
         }
-        // Show per-property deliverables links if the webhook returned them
-        if (result.criticalDeadlinesUrl || result.transactionSummaryUrl) {
+        // Show the per-property deliverable link if the webhook returned it
+        if (result.deliverableUrl) {
           $('deliverables_section').style.display = 'block';
-          if (result.criticalDeadlinesUrl) $('critical_deadlines_link').href = result.criticalDeadlinesUrl;
-          if (result.transactionSummaryUrl) $('transaction_summary_link').href = result.transactionSummaryUrl;
-          // Stash on a global so the email composer Step 02 can read them later
+          $('deliverable_link').href = result.deliverableUrl;
+          // Stash on a global so the email composer Step 02 can read it later
           window._mrflLastDeliverables = {
-            criticalDeadlinesUrl: result.criticalDeadlinesUrl || '',
-            transactionSummaryUrl: result.transactionSummaryUrl || ''
+            deliverableUrl: result.deliverableUrl
           };
         } else {
           $('deliverables_section').style.display = 'none';
@@ -4187,26 +4184,21 @@ CANONICAL JSON SCHEMA (output exactly these keys, in this order):
     const slug = _emailShortAddress(propAddress);
     const ul = $('email_attachments_list');
     // If the form was just submitted to the webhook and the response carried
-    // back the two Google Sheet URLs, show them as clickable links + copy
-    // buttons. Otherwise fall back to the static filename hint so the user
-    // still sees what attachments are expected.
+    // back the deliverable URL, show it as a clickable link + copy button.
+    // Otherwise fall back to the static filename hint so the user still sees
+    // what attachment is expected.
     const deliv = (typeof window._mrflLastDeliverables === 'object') ? window._mrflLastDeliverables : null;
-    if (deliv && (deliv.criticalDeadlinesUrl || deliv.transactionSummaryUrl)) {
-      const linkRow = function(label, url) {
-        if (!url) return '';
-        const safeUrl = url.replace(/"/g, '&quot;');
-        return '<li style="margin-bottom: 8px;">' +
-          '<a href="' + safeUrl + '" target="_blank" style="color: #4338CA; font-weight: 600;">' + label + ' (Google Sheet) →</a> ' +
-          '<button type="button" class="email-btn-ghost" data-deliv-copy="' + safeUrl + '" style="padding: 4px 10px; font-size: 10px; margin-left: 8px;">Copy link</button>' +
-        '</li>';
-      };
+    if (deliv && deliv.deliverableUrl) {
+      const safeUrl = deliv.deliverableUrl.replace(/"/g, '&quot;');
       ul.innerHTML =
-        linkRow('Critical Deadlines', deliv.criticalDeadlinesUrl) +
-        linkRow('Transaction Summary', deliv.transactionSummaryUrl) +
+        '<li style="margin-bottom: 8px;">' +
+          '<a href="' + safeUrl + '" target="_blank" style="color: #4338CA; font-weight: 600;">Transaction Summary — Deadlines + Summary (Google Sheet) →</a> ' +
+          '<button type="button" class="email-btn-ghost" data-deliv-copy="' + safeUrl + '" style="padding: 4px 10px; font-size: 10px; margin-left: 8px;">Copy link</button>' +
+        '</li>' +
         '<li style="font-size: 11px; color: var(--muted); margin-top: 6px; list-style: none; margin-left: -18px;">' +
-          '⚠ Sheets are private — open each one and click <strong>Share</strong> to give the recipients access before sending.' +
+          '⚠ Sheet is private — open it and click <strong>Share</strong> to give the recipients access before sending.' +
         '</li>';
-      // Wire any "Copy link" buttons we just rendered
+      // Wire the Copy link button we just rendered
       ul.querySelectorAll('button[data-deliv-copy]').forEach(function(btn) {
         btn.addEventListener('click', async function() {
           const u = btn.getAttribute('data-deliv-copy');
@@ -4225,10 +4217,9 @@ CANONICAL JSON SCHEMA (output exactly these keys, in this order):
       });
     } else {
       ul.innerHTML =
-        '<li>Critical_Deadlines_' + slug + '.xlsx</li>' +
-        '<li>Transaction_Summary_' + slug + '.xlsx</li>' +
+        '<li>Transaction_Summary_' + slug + ' (deadlines + summary in one Google Sheet)</li>' +
         '<li style="font-size: 11px; color: var(--muted); margin-top: 6px; list-style: none; margin-left: -18px;">' +
-          '<em>Submit the form to the webhook to auto-create these as Google Sheets in your Drive.</em>' +
+          '<em>Submit the form to the webhook to auto-create this as a Google Sheet in your Drive.</em>' +
         '</li>';
     }
   }

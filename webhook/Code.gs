@@ -1062,20 +1062,17 @@ function doPost(e) {
       Logger.log('Dashboard error: ' + dashErr.toString());
     }
 
-    // ============ CREATE PER-PROPERTY DELIVERABLES ============
-    // Two private Google Sheets in the master sheet's parent Drive folder:
-    //   Critical_Deadlines_<address> — milestone table only
-    //   Transaction_Summary_<address> — full property/parties/title/loan info
-    // Sheets stay private (only owner has access) per locked policy 3B —
-    // Gloria shares manually with email recipients before forwarding.
-    let criticalDeadlinesUrl = null;
-    let transactionSummaryUrl = null;
+    // ============ CREATE PER-PROPERTY DELIVERABLE ============
+    // One private combined Google Sheet in the master sheet's parent folder:
+    //   Transaction_Summary_<address> — Critical Deadlines section first,
+    //   Transaction Summary section below, both stacked in a single tab.
+    // Sheet stays private (only owner has access) per locked policy 3B.
+    let deliverableUrl = null;
     try {
       const parentFolder = _getMasterParentFolder();
-      criticalDeadlinesUrl = _buildCriticalDeadlinesSheet(data, parentFolder);
-      transactionSummaryUrl = _buildTransactionSummarySheet(data, parentFolder);
+      deliverableUrl = _buildDeliverableSheet(data, parentFolder);
     } catch (delivErr) {
-      Logger.log('Deliverables error: ' + delivErr.toString());
+      Logger.log('Deliverable error: ' + delivErr.toString());
     }
 
     return jsonResponse({
@@ -1085,8 +1082,7 @@ function doPost(e) {
       calendarEventsCreated: calendarEventsCreated.length,
       calendarEvents: calendarEventsCreated,
       dashboardRebuilt: dashboardRebuilt,
-      criticalDeadlinesUrl: criticalDeadlinesUrl,
-      transactionSummaryUrl: transactionSummaryUrl
+      deliverableUrl: deliverableUrl
     });
 
   } catch (err) {
@@ -1113,24 +1109,29 @@ function _shortAddressSlug(addr) {
   return firstChunk.replace(/[^A-Za-z0-9\s]/g, '').replace(/\s+/g, '_');
 }
 
-// Create the Critical_Deadlines_<address> Google Sheet.
-// Renders one styled milestones table; returns the new sheet's URL.
-function _buildCriticalDeadlinesSheet(data, parentFolder) {
+// Build a single combined Transaction_Summary_<address> Google Sheet
+// with two stacked sections in one tab:
+//   1. CRITICAL DEADLINES — milestones table at top
+//   2. TRANSACTION SUMMARY — property/parties/title/loan info below
+// Returns the new sheet's URL. Five-column layout used throughout: deadlines
+// occupy all 5 columns, summary uses col 1 for labels and merges cols 2–5
+// for values so the unified look stays clean.
+function _buildDeliverableSheet(data, parentFolder) {
   const slug = _shortAddressSlug(data.propertyAddress);
-  const ss = SpreadsheetApp.create('Critical_Deadlines_' + slug);
+  const ss = SpreadsheetApp.create('Transaction_Summary_' + slug);
   const sheet = ss.getActiveSheet();
-  sheet.setName('Critical Deadlines');
+  sheet.setName('Transaction Summary');
 
-  // Column widths: Milestone | Deadline | Status | Amount | Timeframe
-  sheet.setColumnWidth(1, 200);
-  sheet.setColumnWidth(2, 220);
-  sheet.setColumnWidth(3, 80);
-  sheet.setColumnWidth(4, 150);
-  sheet.setColumnWidth(5, 200);
+  // Column widths — sized for the deadlines table
+  sheet.setColumnWidth(1, 220);  // Milestone / Label
+  sheet.setColumnWidth(2, 220);  // Deadline / Value (merged into 2-5 for summary)
+  sheet.setColumnWidth(3, 80);   // Status
+  sheet.setColumnWidth(4, 150);  // Amount
+  sheet.setColumnWidth(5, 200);  // Timeframe
 
   let row = 1;
 
-  // Property header bar
+  // ===== Property header bar =====
   sheet.getRange(row, 1, 1, 5).merge();
   sheet.getRange(row, 1)
     .setValue(data.propertyAddress || '')
@@ -1141,7 +1142,7 @@ function _buildCriticalDeadlinesSheet(data, parentFolder) {
   sheet.setRowHeight(row, 36);
   row++;
 
-  // Subtitle
+  // ===== SECTION 1: CRITICAL DEADLINES =====
   sheet.getRange(row, 1, 1, 5).merge();
   sheet.getRange(row, 1)
     .setValue('CRITICAL DEADLINES')
@@ -1156,7 +1157,7 @@ function _buildCriticalDeadlinesSheet(data, parentFolder) {
   sheet.setRowHeight(row, 8);
   row++;
 
-  // Table header row
+  // Deadlines table header
   sheet.getRange(row, 1, 1, 5)
     .setValues([['Milestone', 'Deadline', 'Status', 'Amount', 'Timeframe']])
     .setFontWeight('bold').setFontColor('#FFFFFF')
@@ -1204,11 +1205,9 @@ function _buildCriticalDeadlinesSheet(data, parentFolder) {
     });
   }
 
-  // Spacer
-  sheet.setRowHeight(row, 12);
+  // Notes immediately under the deadlines table
+  sheet.setRowHeight(row, 8);
   row++;
-
-  // Footer notes
   const notes = [
     'NOTES',
     '• All deadlines are calculated from the Effective Date unless otherwise noted (CD = Closing Date).',
@@ -1227,48 +1226,10 @@ function _buildCriticalDeadlinesSheet(data, parentFolder) {
     row++;
   });
 
-  // Spacer + signature
-  sheet.setRowHeight(row, 12);
+  // ===== SECTION 2: TRANSACTION SUMMARY =====
+  sheet.setRowHeight(row, 16);
   row++;
   sheet.getRange(row, 1, 1, 5).merge();
-  sheet.getRange(row, 1).setValue(
-    'MRFL Transactions  •  Gloria Grullon, TC  •  401.282.8414  •  MRFLTransactions@gmail.com'
-  ).setFontStyle('italic').setFontColor('#6B7280').setFontSize(9)
-   .setHorizontalAlignment('center');
-  sheet.setRowHeight(row, 20);
-
-  // Move to master parent folder
-  DriveApp.getFileById(ss.getId()).moveTo(parentFolder);
-
-  return ss.getUrl();
-}
-
-// Create the Transaction_Summary_<address> Google Sheet.
-// Mirrors the canonical first-email body sections; returns URL.
-function _buildTransactionSummarySheet(data, parentFolder) {
-  const slug = _shortAddressSlug(data.propertyAddress);
-  const ss = SpreadsheetApp.create('Transaction_Summary_' + slug);
-  const sheet = ss.getActiveSheet();
-  sheet.setName('Transaction Summary');
-
-  sheet.setColumnWidth(1, 220);
-  sheet.setColumnWidth(2, 460);
-
-  let row = 1;
-
-  // Property header bar
-  sheet.getRange(row, 1, 1, 2).merge();
-  sheet.getRange(row, 1)
-    .setValue(data.propertyAddress || '')
-    .setFontWeight('bold').setFontSize(14)
-    .setFontColor('#FFFFFF').setBackground(COLOR_INDIGO_DEEP)
-    .setHorizontalAlignment('center').setVerticalAlignment('middle')
-    .setFontFamily('Arial');
-  sheet.setRowHeight(row, 36);
-  row++;
-
-  // Subtitle
-  sheet.getRange(row, 1, 1, 2).merge();
   sheet.getRange(row, 1)
     .setValue('TRANSACTION SUMMARY')
     .setFontWeight('bold').setFontSize(11)
@@ -1278,20 +1239,13 @@ function _buildTransactionSummarySheet(data, parentFolder) {
   sheet.setRowHeight(row, 22);
   row++;
 
-  // Spacer
   sheet.setRowHeight(row, 8);
   row++;
 
-  // Render details lines as labeled rows.
-  // The form's payload has data.details as pre-formatted strings like
-  // "Property Address: 1001 NW 148th St..." — we split on the first colon
-  // and put label / value into two columns, with section headers (lines
-  // without ":" or in the known section list) styled distinctly.
-  const sectionStarts = [
-    "Seller(s):", "Seller's Agent:", "Co-Seller's Agent:",
-    "Buyer(s):", "Buyer's Agent:", "Co-Buyer's Agent:",
-    'Escrow Agent', 'Seller Title', 'Loan Officer', 'Loan Processor'
-  ];
+  // Render data.details as label/value rows. Section headers (e.g. "Loan
+  // Officer", "Escrow Agent / Buyer Title") get an indigo banner spanning
+  // all 5 columns; regular "Label: Value" lines split across col 1 (label,
+  // gray background) and merged cols 2–5 (value, white).
   const isSectionHeader = function(line) {
     if (line === 'Loan Officer' || line === 'Loan Processor' || line === 'Seller Title') return true;
     if (line.indexOf('Escrow Agent') === 0) return true;
@@ -1306,7 +1260,7 @@ function _buildTransactionSummarySheet(data, parentFolder) {
         return;
       }
       if (isSectionHeader(line)) {
-        sheet.getRange(row, 1, 1, 2).merge();
+        sheet.getRange(row, 1, 1, 5).merge();
         sheet.getRange(row, 1).setValue(line)
           .setFontWeight('bold').setFontColor('#FFFFFF')
           .setBackground('#312E81').setFontSize(10)
@@ -1329,23 +1283,25 @@ function _buildTransactionSummarySheet(data, parentFolder) {
         .setFontWeight('bold').setFontColor('#374151')
         .setBackground('#F3F4F6').setVerticalAlignment('middle')
         .setHorizontalAlignment('left').setFontSize(10);
+      // Value spans columns 2-5
+      sheet.getRange(row, 2, 1, 4).merge();
       sheet.getRange(row, 2).setValue(value)
         .setFontColor('#1A1F2E').setVerticalAlignment('middle')
         .setHorizontalAlignment('left').setFontSize(10);
       // Highlight the EFFECTIVE DATE: line in indigo
       if (line.indexOf('EFFECTIVE DATE') === 0) {
-        sheet.getRange(row, 1, 1, 2).setBackground('#DDD6FE').setFontColor('#312E81').setFontWeight('bold');
+        sheet.getRange(row, 1, 1, 5).setBackground('#DDD6FE').setFontColor('#312E81').setFontWeight('bold');
       }
       sheet.setRowHeight(row, 22);
       row++;
     });
   }
 
-  // Concessions
+  // Concessions block (only if present)
   if (data.concessions && data.concessions.length > 0) {
     sheet.setRowHeight(row, 12);
     row++;
-    sheet.getRange(row, 1, 1, 2).merge();
+    sheet.getRange(row, 1, 1, 5).merge();
     sheet.getRange(row, 1).setValue('★ CLOSING COST CONTRIBUTIONS / CONCESSIONS')
       .setFontWeight('bold').setFontColor('#FFFFFF')
       .setBackground('#4338CA').setFontSize(11)
@@ -1354,7 +1310,7 @@ function _buildTransactionSummarySheet(data, parentFolder) {
     sheet.setRowHeight(row, 24);
     row++;
     data.concessions.forEach(function(c) {
-      sheet.getRange(row, 1, 1, 2).merge();
+      sheet.getRange(row, 1, 1, 5).merge();
       sheet.getRange(row, 1).setValue('• ' + c)
         .setFontColor('#312E81').setVerticalAlignment('middle')
         .setHorizontalAlignment('left').setFontSize(10)
@@ -1364,10 +1320,10 @@ function _buildTransactionSummarySheet(data, parentFolder) {
     });
   }
 
-  // Spacer + signature
+  // ===== Footer signature =====
   sheet.setRowHeight(row, 14);
   row++;
-  sheet.getRange(row, 1, 1, 2).merge();
+  sheet.getRange(row, 1, 1, 5).merge();
   sheet.getRange(row, 1).setValue(
     'MRFL Transactions  •  Gloria Grullon, TC  •  401.282.8414  •  MRFLTransactions@gmail.com'
   ).setFontStyle('italic').setFontColor('#6B7280').setFontSize(9)
