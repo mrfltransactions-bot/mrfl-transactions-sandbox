@@ -1062,18 +1062,322 @@ function doPost(e) {
       Logger.log('Dashboard error: ' + dashErr.toString());
     }
 
+    // ============ CREATE PER-PROPERTY DELIVERABLES ============
+    // Two private Google Sheets in the master sheet's parent Drive folder:
+    //   Critical_Deadlines_<address> — milestone table only
+    //   Transaction_Summary_<address> — full property/parties/title/loan info
+    // Sheets stay private (only owner has access) per locked policy 3B —
+    // Gloria shares manually with email recipients before forwarding.
+    let criticalDeadlinesUrl = null;
+    let transactionSummaryUrl = null;
+    try {
+      const parentFolder = _getMasterParentFolder();
+      criticalDeadlinesUrl = _buildCriticalDeadlinesSheet(data, parentFolder);
+      transactionSummaryUrl = _buildTransactionSummarySheet(data, parentFolder);
+    } catch (delivErr) {
+      Logger.log('Deliverables error: ' + delivErr.toString());
+    }
+
     return jsonResponse({
       success: true,
       tabName: data.tabName,
       sheetUrl: sheetUrl,
       calendarEventsCreated: calendarEventsCreated.length,
       calendarEvents: calendarEventsCreated,
-      dashboardRebuilt: dashboardRebuilt
+      dashboardRebuilt: dashboardRebuilt,
+      criticalDeadlinesUrl: criticalDeadlinesUrl,
+      transactionSummaryUrl: transactionSummaryUrl
     });
 
   } catch (err) {
     return jsonResponse({ success: false, error: 'Server error: ' + err.toString() });
   }
+}
+
+// ============ PER-PROPERTY DELIVERABLES ============
+
+// Find the Drive folder containing the active master spreadsheet.
+// Falls back to the user's root if the master sheet is at root level.
+function _getMasterParentFolder() {
+  const masterId = SpreadsheetApp.getActiveSpreadsheet().getId();
+  const file = DriveApp.getFileById(masterId);
+  const parents = file.getParents();
+  return parents.hasNext() ? parents.next() : DriveApp.getRootFolder();
+}
+
+// Build a short address slug for filenames — strip non-alphanumerics from
+// the first comma-separated chunk. Matches the form's _emailShortAddress.
+function _shortAddressSlug(addr) {
+  if (!addr) return 'Property';
+  const firstChunk = String(addr).split(',')[0].trim();
+  return firstChunk.replace(/[^A-Za-z0-9\s]/g, '').replace(/\s+/g, '_');
+}
+
+// Create the Critical_Deadlines_<address> Google Sheet.
+// Renders one styled milestones table; returns the new sheet's URL.
+function _buildCriticalDeadlinesSheet(data, parentFolder) {
+  const slug = _shortAddressSlug(data.propertyAddress);
+  const ss = SpreadsheetApp.create('Critical_Deadlines_' + slug);
+  const sheet = ss.getActiveSheet();
+  sheet.setName('Critical Deadlines');
+
+  // Column widths: Milestone | Deadline | Status | Amount | Timeframe
+  sheet.setColumnWidth(1, 200);
+  sheet.setColumnWidth(2, 220);
+  sheet.setColumnWidth(3, 80);
+  sheet.setColumnWidth(4, 150);
+  sheet.setColumnWidth(5, 200);
+
+  let row = 1;
+
+  // Property header bar
+  sheet.getRange(row, 1, 1, 5).merge();
+  sheet.getRange(row, 1)
+    .setValue(data.propertyAddress || '')
+    .setFontWeight('bold').setFontSize(14)
+    .setFontColor('#FFFFFF').setBackground(COLOR_INDIGO_DEEP)
+    .setHorizontalAlignment('center').setVerticalAlignment('middle')
+    .setFontFamily('Arial');
+  sheet.setRowHeight(row, 36);
+  row++;
+
+  // Subtitle
+  sheet.getRange(row, 1, 1, 5).merge();
+  sheet.getRange(row, 1)
+    .setValue('CRITICAL DEADLINES')
+    .setFontWeight('bold').setFontSize(11)
+    .setFontColor('#FFFFFF').setBackground('#312E81')
+    .setHorizontalAlignment('center').setVerticalAlignment('middle')
+    .setFontFamily('Arial');
+  sheet.setRowHeight(row, 22);
+  row++;
+
+  // Spacer
+  sheet.setRowHeight(row, 8);
+  row++;
+
+  // Table header row
+  sheet.getRange(row, 1, 1, 5)
+    .setValues([['Milestone', 'Deadline', 'Status', 'Amount', 'Timeframe']])
+    .setFontWeight('bold').setFontColor('#FFFFFF')
+    .setBackground('#374151')
+    .setHorizontalAlignment('center').setVerticalAlignment('middle')
+    .setBorder(true, true, true, true, true, true);
+  sheet.setRowHeight(row, 26);
+  row++;
+
+  // Milestone rows
+  if (data.milestones && data.milestones.length > 0) {
+    data.milestones.forEach(function(m) {
+      const isEffective = m.name === 'Effective Date';
+      const isClosing = m.name === 'Closing Date';
+      const formattedAmt = formatCurrency(m.amount || '');
+
+      const range = sheet.getRange(row, 1, 1, 5);
+      range.setValues([[m.name || '', m.date || '', '', formattedAmt || '—', m.timeframe || '']])
+        .setVerticalAlignment('middle')
+        .setBorder(true, true, true, true, true, true);
+
+      sheet.getRange(row, 1).setHorizontalAlignment('left').setFontWeight('bold');
+      sheet.getRange(row, 2).setHorizontalAlignment('center');
+      sheet.getRange(row, 3).setHorizontalAlignment('center');
+      sheet.getRange(row, 4).setHorizontalAlignment('right');
+      sheet.getRange(row, 5).setHorizontalAlignment('left').setFontStyle('italic').setFontColor('#6B7280');
+
+      if (m.status === 'checkbox') {
+        sheet.getRange(row, 3).insertCheckboxes();
+      } else {
+        sheet.getRange(row, 3).setValue('—').setFontColor('#9CA3AF');
+      }
+
+      if (isEffective) {
+        range.setBackground('#DDD6FE').setFontColor('#312E81').setFontWeight('bold');
+        sheet.getRange(row, 5).setFontColor('#312E81');
+      } else if (isClosing) {
+        range.setBackground('#A7F3D0').setFontColor('#064E3B').setFontWeight('bold');
+        sheet.getRange(row, 5).setFontColor('#064E3B');
+      } else {
+        range.setBackground((row % 2 === 0) ? '#FFFFFF' : '#FAFAF7');
+      }
+      sheet.setRowHeight(row, 26);
+      row++;
+    });
+  }
+
+  // Spacer
+  sheet.setRowHeight(row, 12);
+  row++;
+
+  // Footer notes
+  const notes = [
+    'NOTES',
+    '• All deadlines are calculated from the Effective Date unless otherwise noted (CD = Closing Date).',
+    '• Any deadline that falls on a Saturday, Sunday, or national legal holiday shall extend to 5:00 PM of the next business day.'
+  ];
+  notes.forEach(function(line, i) {
+    sheet.getRange(row, 1, 1, 5).merge();
+    const cell = sheet.getRange(row, 1).setValue(line)
+      .setHorizontalAlignment('left').setVerticalAlignment('middle');
+    if (i === 0) {
+      cell.setFontWeight('bold').setFontColor('#312E81').setFontSize(11);
+    } else {
+      cell.setFontColor('#374151').setFontSize(10);
+    }
+    sheet.setRowHeight(row, 22);
+    row++;
+  });
+
+  // Spacer + signature
+  sheet.setRowHeight(row, 12);
+  row++;
+  sheet.getRange(row, 1, 1, 5).merge();
+  sheet.getRange(row, 1).setValue(
+    'MRFL Transactions  •  Gloria Grullon, TC  •  401.282.8414  •  MRFLTransactions@gmail.com'
+  ).setFontStyle('italic').setFontColor('#6B7280').setFontSize(9)
+   .setHorizontalAlignment('center');
+  sheet.setRowHeight(row, 20);
+
+  // Move to master parent folder
+  DriveApp.getFileById(ss.getId()).moveTo(parentFolder);
+
+  return ss.getUrl();
+}
+
+// Create the Transaction_Summary_<address> Google Sheet.
+// Mirrors the canonical first-email body sections; returns URL.
+function _buildTransactionSummarySheet(data, parentFolder) {
+  const slug = _shortAddressSlug(data.propertyAddress);
+  const ss = SpreadsheetApp.create('Transaction_Summary_' + slug);
+  const sheet = ss.getActiveSheet();
+  sheet.setName('Transaction Summary');
+
+  sheet.setColumnWidth(1, 220);
+  sheet.setColumnWidth(2, 460);
+
+  let row = 1;
+
+  // Property header bar
+  sheet.getRange(row, 1, 1, 2).merge();
+  sheet.getRange(row, 1)
+    .setValue(data.propertyAddress || '')
+    .setFontWeight('bold').setFontSize(14)
+    .setFontColor('#FFFFFF').setBackground(COLOR_INDIGO_DEEP)
+    .setHorizontalAlignment('center').setVerticalAlignment('middle')
+    .setFontFamily('Arial');
+  sheet.setRowHeight(row, 36);
+  row++;
+
+  // Subtitle
+  sheet.getRange(row, 1, 1, 2).merge();
+  sheet.getRange(row, 1)
+    .setValue('TRANSACTION SUMMARY')
+    .setFontWeight('bold').setFontSize(11)
+    .setFontColor('#FFFFFF').setBackground('#312E81')
+    .setHorizontalAlignment('center').setVerticalAlignment('middle')
+    .setFontFamily('Arial');
+  sheet.setRowHeight(row, 22);
+  row++;
+
+  // Spacer
+  sheet.setRowHeight(row, 8);
+  row++;
+
+  // Render details lines as labeled rows.
+  // The form's payload has data.details as pre-formatted strings like
+  // "Property Address: 1001 NW 148th St..." — we split on the first colon
+  // and put label / value into two columns, with section headers (lines
+  // without ":" or in the known section list) styled distinctly.
+  const sectionStarts = [
+    "Seller(s):", "Seller's Agent:", "Co-Seller's Agent:",
+    "Buyer(s):", "Buyer's Agent:", "Co-Buyer's Agent:",
+    'Escrow Agent', 'Seller Title', 'Loan Officer', 'Loan Processor'
+  ];
+  const isSectionHeader = function(line) {
+    if (line === 'Loan Officer' || line === 'Loan Processor' || line === 'Seller Title') return true;
+    if (line.indexOf('Escrow Agent') === 0) return true;
+    return false;
+  };
+
+  if (data.details && data.details.length > 0) {
+    data.details.forEach(function(line) {
+      if (line === '' || line === undefined) {
+        sheet.setRowHeight(row, 8);
+        row++;
+        return;
+      }
+      if (isSectionHeader(line)) {
+        sheet.getRange(row, 1, 1, 2).merge();
+        sheet.getRange(row, 1).setValue(line)
+          .setFontWeight('bold').setFontColor('#FFFFFF')
+          .setBackground('#312E81').setFontSize(10)
+          .setHorizontalAlignment('left').setVerticalAlignment('middle')
+          .setFontFamily('Arial');
+        sheet.setRowHeight(row, 22);
+        row++;
+        return;
+      }
+      const colonIdx = line.indexOf(':');
+      let label = line, value = '';
+      if (colonIdx > -1) {
+        label = line.substring(0, colonIdx + 1);
+        value = line.substring(colonIdx + 1).trim();
+        if (label === 'Purchase Price:') {
+          value = formatCurrency(value);
+        }
+      }
+      sheet.getRange(row, 1).setValue(label)
+        .setFontWeight('bold').setFontColor('#374151')
+        .setBackground('#F3F4F6').setVerticalAlignment('middle')
+        .setHorizontalAlignment('left').setFontSize(10);
+      sheet.getRange(row, 2).setValue(value)
+        .setFontColor('#1A1F2E').setVerticalAlignment('middle')
+        .setHorizontalAlignment('left').setFontSize(10);
+      // Highlight the EFFECTIVE DATE: line in indigo
+      if (line.indexOf('EFFECTIVE DATE') === 0) {
+        sheet.getRange(row, 1, 1, 2).setBackground('#DDD6FE').setFontColor('#312E81').setFontWeight('bold');
+      }
+      sheet.setRowHeight(row, 22);
+      row++;
+    });
+  }
+
+  // Concessions
+  if (data.concessions && data.concessions.length > 0) {
+    sheet.setRowHeight(row, 12);
+    row++;
+    sheet.getRange(row, 1, 1, 2).merge();
+    sheet.getRange(row, 1).setValue('★ CLOSING COST CONTRIBUTIONS / CONCESSIONS')
+      .setFontWeight('bold').setFontColor('#FFFFFF')
+      .setBackground('#4338CA').setFontSize(11)
+      .setHorizontalAlignment('center').setVerticalAlignment('middle')
+      .setFontFamily('Arial');
+    sheet.setRowHeight(row, 24);
+    row++;
+    data.concessions.forEach(function(c) {
+      sheet.getRange(row, 1, 1, 2).merge();
+      sheet.getRange(row, 1).setValue('• ' + c)
+        .setFontColor('#312E81').setVerticalAlignment('middle')
+        .setHorizontalAlignment('left').setFontSize(10)
+        .setBackground('#F5F3FF').setWrap(true);
+      sheet.setRowHeight(row, 26);
+      row++;
+    });
+  }
+
+  // Spacer + signature
+  sheet.setRowHeight(row, 14);
+  row++;
+  sheet.getRange(row, 1, 1, 2).merge();
+  sheet.getRange(row, 1).setValue(
+    'MRFL Transactions  •  Gloria Grullon, TC  •  401.282.8414  •  MRFLTransactions@gmail.com'
+  ).setFontStyle('italic').setFontColor('#6B7280').setFontSize(9)
+   .setHorizontalAlignment('center');
+  sheet.setRowHeight(row, 20);
+
+  // Move to master parent folder
+  DriveApp.getFileById(ss.getId()).moveTo(parentFolder);
+
+  return ss.getUrl();
 }
 
 // ============ HEALTH CHECK ============
