@@ -1,5 +1,5 @@
 /**
- * TRANSACTION COORDINATOR WEBHOOK — v5 (Master Dashboard)
+ * TRANSACTION COORDINATOR WEBHOOK — v6.2 (Master Dashboard + Widget Endpoint)
  *
  * Built on top of v4. Adds:
  *   1. A Master "📊 Dashboard" tab pinned to the front of the sheet
@@ -9,11 +9,15 @@
  *   5. Sorted by next deadline (most urgent at top, closed at bottom)
  *   6. Clickable property names that jump to the property's tab
  *
- * IMPORTANT: After updating to v5:
+ * IMPORTANT: After updating to v6.2:
  *   1. Save the script
  *   2. Deploy → Manage Deployments → pencil → New version → Deploy
  *   3. Refresh your Google Sheet — you'll see the new "🛠 TC Tools" menu
  *   4. Click TC Tools → Refresh Dashboard to build it for the first time
+ *
+ * v6.2 (May 2026): Added GET endpoint for iPhone widget consumption.
+ *   Returns next N days of upcoming deadlines as JSON. See
+ *   docs/WIDGET_ENDPOINT.md for contract and integration notes.
  */
 
 // ============ CONFIG ============
@@ -1336,20 +1340,199 @@ function _buildDeliverableSheet(data, parentFolder) {
   return ss.getUrl();
 }
 
-// ============ HEALTH CHECK ============
-function doGet(e) {
-  return ContentService
-    .createTextOutput(JSON.stringify({
-      status: 'ok',
-      message: 'Transaction Coordinator Webhook (v6.1 - auto-refresh + filter + progress bar) is live.',
-      timestamp: new Date().toISOString()
-    }))
-    .setMimeType(ContentService.MimeType.JSON);
-}
-
 // ============ HELPER ============
 function jsonResponse(obj) {
   return ContentService
     .createTextOutput(JSON.stringify(obj))
     .setMimeType(ContentService.MimeType.JSON);
+}
+
+// ============================================================
+// v6.2 — WIDGET GET ENDPOINT
+//
+// Reads the dashboard tab of the master sheet and returns the
+// next N days of upcoming deadlines as JSON. Designed for
+// consumption by a Scriptable iPhone home-screen widget.
+//
+// Coexists with v6.1 doPost — no breaking changes.
+// Replaces the previous v6.1 health-check doGet; calling this
+// endpoint with no params still returns useful JSON (summary
+// block doubles as a "script is alive" signal).
+// ============================================================
+
+const WIDGET_MASTER_SHEET_ID = '1HmBdzF8KRWvRFa01-QqmRIi9cKHF7Bh1-pf9jeDQ_7Y';
+const WIDGET_DASHBOARD_TAB = '';      // empty = first sheet; set to actual tab name if different
+const WIDGET_DEFAULT_DAYS = 4;        // default window if no ?days param
+
+function doGet(e) {
+  try {
+    const params = (e && e.parameter) || {};
+    const days = parseInt(params.days, 10) || WIDGET_DEFAULT_DAYS;
+    const agentFilter = params.agent || null;
+
+    const allDeals = widgetReadDashboard_();
+    const upcoming = widgetFilterUpcoming_(allDeals, days, agentFilter);
+    const summary = widgetComputeSummary_(allDeals);
+
+    const payload = {
+      generated_at: new Date().toISOString(),
+      days_window: days,
+      agent_filter: agentFilter,
+      summary: summary,
+      deadlines: upcoming
+    };
+
+    return ContentService
+      .createTextOutput(JSON.stringify(payload, null, 2))
+      .setMimeType(ContentService.MimeType.JSON);
+
+  } catch (err) {
+    return ContentService
+      .createTextOutput(JSON.stringify({
+        error: err.toString(),
+        stack: err.stack || null
+      }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function widgetReadDashboard_() {
+  const ss = SpreadsheetApp.openById(WIDGET_MASTER_SHEET_ID);
+  const sheet = WIDGET_DASHBOARD_TAB
+    ? ss.getSheetByName(WIDGET_DASHBOARD_TAB)
+    : ss.getSheets()[0];
+
+  if (!sheet) throw new Error('Dashboard tab not found');
+
+  const values = sheet.getDataRange().getValues();
+  if (values.length < 2) return [];
+
+  const headers = values[0].map(h => String(h).trim());
+  const col = {
+    property:     widgetFindCol_(headers, ['Property', 'Property Address', 'Address']),
+    agent:        widgetFindCol_(headers, ['Agent', 'Realtor']),
+    side:         widgetFindCol_(headers, ['Side', 'Representing']),
+    effective:    widgetFindCol_(headers, ['Effective', 'Effective Date']),
+    closing:      widgetFindCol_(headers, ['Closing', 'Closing Date']),
+    nextDeadline: widgetFindCol_(headers, ['Next Deadline', 'Next Milestone']),
+    date:         widgetFindCol_(headers, ['Date', 'Deadline Date', 'Due Date']),
+    daysUntil:    widgetFindCol_(headers, ['Days Until', 'Days Out']),
+    status:       widgetFindCol_(headers, ['Status'])
+  };
+
+  return values.slice(1)
+    .filter(row => row[col.property])
+    .map(row => ({
+      property:      String(row[col.property] || '').trim(),
+      agent:         String(row[col.agent] || '').trim(),
+      side:          String(row[col.side] || '').trim(),
+      effective:     row[col.effective],
+      closing:       row[col.closing],
+      next_deadline: String(row[col.nextDeadline] || '').trim(),
+      date_raw:      row[col.date],
+      date_iso:      widgetToIsoDate_(row[col.date]),
+      days_until:    widgetParseDaysUntil_(row[col.daysUntil]),
+      status:        String(row[col.status] || '').trim()
+    }));
+}
+
+function widgetFindCol_(headers, candidates) {
+  for (const c of candidates) {
+    const i = headers.findIndex(h => h.toLowerCase() === c.toLowerCase());
+    if (i >= 0) return i;
+  }
+  for (const c of candidates) {
+    const i = headers.findIndex(h => h.toLowerCase().includes(c.toLowerCase()));
+    if (i >= 0) return i;
+  }
+  return -1;
+}
+
+function widgetToIsoDate_(val) {
+  if (val instanceof Date && !isNaN(val.getTime())) {
+    const y = val.getFullYear();
+    const m = String(val.getMonth() + 1).padStart(2, '0');
+    const d = String(val.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }
+  if (typeof val === 'string' && val) {
+    const parsed = new Date(val);
+    if (!isNaN(parsed.getTime())) return widgetToIsoDate_(parsed);
+  }
+  return null;
+}
+
+function widgetParseDaysUntil_(val) {
+  if (typeof val === 'number') return val;
+  if (typeof val === 'string') {
+    const match = val.match(/^(-?\d+)/);
+    if (match) return parseInt(match[1], 10);
+  }
+  return null;
+}
+
+function widgetFilterUpcoming_(deals, daysWindow, agentFilter) {
+  const upcoming = deals.filter(d => {
+    const s = (d.status || '').toLowerCase();
+    if (s.includes('closed') || s.includes('cancel') || s.includes('hold')) return false;
+    if (d.days_until === null) return false;
+    if (d.days_until < 0 || d.days_until > daysWindow) return false;
+    return true;
+  });
+
+  const filtered = agentFilter
+    ? upcoming.filter(d => d.agent.toLowerCase().includes(agentFilter.toLowerCase()))
+    : upcoming;
+
+  filtered.sort((a, b) => a.days_until - b.days_until);
+
+  return filtered.map(d => ({
+    property:     d.property,
+    agent:        d.agent,
+    side:         d.side || null,
+    milestone:    d.next_deadline,
+    date:         d.date_iso,
+    days_until:   d.days_until,
+    urgency:      widgetClassifyUrgency_(d.days_until, d.status),
+    closing_date: widgetToIsoDate_(d.closing)
+  }));
+}
+
+function widgetClassifyUrgency_(daysUntil, status) {
+  const s = (status || '').toLowerCase();
+  if (s.includes('urgent') || daysUntil <= 2) return 'urgent';
+  if (s.includes('warning') || daysUntil <= 5) return 'warning';
+  return 'normal';
+}
+
+function widgetComputeSummary_(deals) {
+  let active = 0, urgent = 0, closingThisWeek = 0;
+  const agents = new Set();
+  const now = new Date();
+  const weekFromNow = new Date(now.getTime() + 7 * 86400000);
+
+  for (const d of deals) {
+    const s = (d.status || '').toLowerCase();
+    if (s.includes('closed') || s.includes('cancel') || s.includes('hold')) continue;
+    active++;
+    if (s.includes('urgent')) urgent++;
+    if (d.agent) agents.add(d.agent);
+    if (d.closing instanceof Date && d.closing >= now && d.closing <= weekFromNow) {
+      closingThisWeek++;
+    }
+  }
+
+  return {
+    active_deals: active,
+    urgent_count: urgent,
+    closing_this_week: closingThisWeek,
+    agents_count: agents.size
+  };
+}
+
+function widgetTest() {
+  const result = doGet({ parameter: { days: '4' } });
+  const json = JSON.parse(result.getContent());
+  Logger.log(JSON.stringify(json, null, 2));
+  return json;
 }

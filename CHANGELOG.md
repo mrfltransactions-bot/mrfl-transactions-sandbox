@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.2.0] — 2026-05-09
+
+### Added — webhook v6.2 GET endpoint
+
+- GET endpoint for iPhone widget consumption. Reads the dashboard tab of the
+  master sheet and returns upcoming deadlines (within N days) as JSON.
+  Default window: 4 days. Optional `?days` and `?agent` query params.
+  Endpoint coexists with the existing `doPost` — no breaking changes.
+- `widgetTest()` function for in-editor verification before deploy.
+- `docs/WIDGET_ENDPOINT.md` documenting the endpoint contract.
+
+### Notes
+
+- The v6.1 health-check `doGet` was replaced by the widget `doGet`. Calling
+  the URL with no params still returns useful JSON (summary block), so it
+  doubles as a "script is alive" signal.
+- Deployment is manual — Gloria pastes the updated `Code.gs` into the Apps
+  Script editor and redeploys via "Manage deployments → New version." The
+  deployment URL does not change.
+
+---
+
 ## [1.1.0] — 2026-05-07
 
 ### Added — In-form PDF extraction via Anthropic API
