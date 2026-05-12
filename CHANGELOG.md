@@ -26,6 +26,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Deployment is manual — Gloria pastes the updated `Code.gs` into the Apps
   Script editor and redeploys via "Manage deployments → New version." The
   deployment URL does not change.
+- Form's ⚙ Test button updated to recognize the widget response shape as a
+  healthy reply (previously hardcoded to look for `status: 'ok'` from the old
+  v6.1 health-check).
 
 ---
 

@@ -2588,7 +2588,7 @@
       const txt = await res.text();
       try {
         const json = JSON.parse(txt);
-        if (json.status === 'ok') {
+        if (json.status === 'ok' || json.generated_at) {
           showTestResult('✓ Connected. Webhook is responding.', 'success');
         } else {
           showTestResult('Webhook responded but with unexpected payload: ' + txt.substring(0, 200), 'error');
