@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="MRFL">
+<meta name="theme-color" content="#1E1B4B">
+<title>MRFL</title>
+<style>
+  :root {
+    --bg: #1E1B4B;
+    --panel: #312E81;
+    --panel-soft: #3F37A0;
+    --text: #FFFFFF;
+    --text-secondary: #C7D2FE;
+    --text-muted: #818CF8;
+    --urgent: #EF4444;
+    --warning: #F59E0B;
+    --normal: #10B981;
+    --accent: #A78BFA;
+    --lavender: #DDD6FE;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+    overflow-x: hidden;
+  }
+  body {
+    padding: max(env(safe-area-inset-top), 16px) 16px max(env(safe-area-inset-bottom), 16px);
+    display: flex;
+    flex-direction: column;
+  }
+  /* HEADER */
+  header.app-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(167, 139, 250, 0.15);
+  }
+  .brand {
+    font-weight: 700;
+    font-size: 18px;
+    letter-spacing: 0.5px;
+  }
+  .brand .active {
+    color: var(--text-secondary);
+    font-weight: 400;
+    margin-left: 8px;
+    font-size: 14px;
+  }
+  .urgent-pill {
+    background: var(--urgent);
+    color: #FFFFFF;
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    display: none;
+  }
+  .urgent-pill.show { display: inline-block; }
+  /* DEADLINE LIST */
+  main {
+    flex: 1;
+    overflow-y: auto;
+  }
+  .deadline {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 4px;
+    border-bottom: 1px solid rgba(167, 139, 250, 0.08);
+    text-decoration: none;
+    color: inherit;
+    transition: background-color 0.1s;
+    -webkit-tap-highlight-color: rgba(167, 139, 250, 0.2);
+  }
+  .deadline:active { background: rgba(167, 139, 250, 0.08); }
+  .deadline:last-child { border-bottom: none; }
+  .days-chip {
+    flex-shrink: 0;
+    min-width: 46px;
+    padding: 6px 10px;
+    border-radius: 8px;
+    text-align: center;
+    color: #FFFFFF;
+    font-weight: 700;
+    font-size: 15px;
+  }
+  .days-chip.urgent { background: var(--urgent); }
+  .days-chip.warning { background: var(--warning); }
+  .days-chip.normal { background: var(--normal); }
+  .deadline-main {
+    flex: 1;
+    min-width: 0;
+  }
+  .property {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .milestone {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .deadline-date {
+    flex-shrink: 0;
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 500;
+  }
+  /* FOOTER */
+  footer {
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(167, 139, 250, 0.15);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--text-muted);
+    font-size: 11px;
+  }
+  .refresh-btn {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 11px;
+    cursor: pointer;
+    padding: 6px 4px;
+    -webkit-tap-highlight-color: rgba(167, 139, 250, 0.2);
+  }
+  .refresh-btn:active { color: var(--accent); }
+  .settings-btn {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 14px;
+    cursor: pointer;
+    padding: 6px 8px;
+    -webkit-tap-highlight-color: rgba(167, 139, 250, 0.2);
+  }
+  /* EMPTY / ERROR / LOADING STATES */
+  .state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    text-align: center;
+    color: var(--text-secondary);
+    flex: 1;
+  }
+  .state-icon {
+    font-size: 36px;
+    margin-bottom: 12px;
+  }
+  .state-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: var(--text);
+  }
+  .state-body {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.5;
+    max-width: 320px;
+  }
+  .state .normal { color: var(--normal); }
+  /* SETUP SCREEN */
+  .setup-card {
+    background: var(--panel);
+    border-radius: 14px;
+    padding: 24px 20px;
+    margin: 8px 0;
+  }
+  .setup-card h1 {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .setup-card p {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 16px;
+    line-height: 1.5;
+  }
+  .setup-card input {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid rgba(167, 139, 250, 0.3);
+    color: var(--text);
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: -apple-system, monospace;
+    margin-bottom: 12px;
+    -webkit-appearance: none;
+  }
+  .setup-card input:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+  .setup-card button {
+    width: 100%;
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    padding: 14px;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .setup-card button:active { background: var(--lavender); }
+  .setup-card .hint {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 12px;
+    text-align: center;
+    line-height: 1.5;
+  }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<!-- Setup screen: shown when no webhook URL is saved -->
+<div id="setup" class="hidden">
+  <div class="setup-card">
+    <h1>Set up your widget</h1>
+    <p>Paste your sandbox Apps Script deployment URL. It's the same URL you have in your intake form's Connection Settings.</p>
+    <input type="url" id="setup-url" placeholder="https://script.google.com/macros/s/.../exec" autocapitalize="off" autocomplete="off" autocorrect="off" spellcheck="false">
+    <button id="setup-save">Save and continue</button>
+    <div class="hint">Stored only on this device. Tap the gear in the corner later to change it.</div>
+  </div>
+</div>
+
+<!-- Main app: shown once the webhook URL is configured -->
+<div id="app" class="hidden" style="display: flex; flex-direction: column; flex: 1;">
+  <header class="app-header">
+    <div class="brand">MRFL<span class="active" id="active-count">·</span></div>
+    <span class="urgent-pill" id="urgent-pill"></span>
+  </header>
+  <main id="main">
+    <div class="state" id="loading-state">
+      <div class="state-icon">⏳</div>
+      <div class="state-body">Loading…</div>
+    </div>
+  </main>
+  <footer>
+    <button class="refresh-btn" id="refresh-btn">Updated —</button>
+    <button class="settings-btn" id="settings-btn" aria-label="Settings">⚙</button>
+  </footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  // ============================================================
+  // CONFIG
+  // ============================================================
+  var STORAGE_KEY = "tc_webhook_url"; // shared with the intake form
+  var DAYS_WINDOW = 4;                // matches the dashboard's urgent+warning window
+  var REFRESH_MS = 60 * 1000;         // auto-refresh every 60s
+  var TAP_URL = "https://docs.google.com/spreadsheets/d/1HmBdzF8KRWvRFa01-QqmRIi9cKHF7Bh1-pf9jeDQ_7Y";
+
+  // ============================================================
+  // DOM HANDLES
+  // ============================================================
+  var $setup       = document.getElementById("setup");
+  var $app         = document.getElementById("app");
+  var $setupUrl    = document.getElementById("setup-url");
+  var $setupSave   = document.getElementById("setup-save");
+  var $main        = document.getElementById("main");
+  var $activeCount = document.getElementById("active-count");
+  var $urgentPill  = document.getElementById("urgent-pill");
+  var $refreshBtn  = document.getElementById("refresh-btn");
+  var $settingsBtn = document.getElementById("settings-btn");
+
+  var refreshTimer = null;
+
+  // ============================================================
+  // STARTUP
+  // ============================================================
+  init();
+
+  function init() {
+    var url = getWebhookUrl();
+    if (!url) {
+      showSetup();
+    } else {
+      showApp();
+      loadData();
+      scheduleRefresh();
+    }
+  }
+
+  function getWebhookUrl() {
+    try { return localStorage.getItem(STORAGE_KEY); }
+    catch (e) { return null; }
+  }
+
+  function saveWebhookUrl(url) {
+    try { localStorage.setItem(STORAGE_KEY, url); return true; }
+    catch (e) { return false; }
+  }
+
+  function showSetup() {
+    $setup.classList.remove("hidden");
+    $app.classList.add("hidden");
+    var existing = getWebhookUrl();
+    if (existing) $setupUrl.value = existing;
+    setTimeout(function () { $setupUrl.focus(); }, 100);
+  }
+
+  function showApp() {
+    $setup.classList.add("hidden");
+    $app.classList.remove("hidden");
+  }
+
+  // ============================================================
+  // SETUP HANDLERS
+  // ============================================================
+  $setupSave.addEventListener("click", function () {
+    var url = $setupUrl.value.trim();
+    if (!url) return;
+    if (!/^https:\/\/script\.google\.com\/macros\/s\//.test(url)) {
+      if (!confirm("That doesn't look like an Apps Script deployment URL. Save anyway?")) return;
+    }
+    if (!saveWebhookUrl(url)) {
+      alert("Couldn't save the URL on this device. Make sure Safari isn't in Private Browsing mode.");
+      return;
+    }
+    showApp();
+    loadData();
+    scheduleRefresh();
+  });
+
+  $setupUrl.addEventListener("keydown", function (e) {
+    if (e.key === "Enter") $setupSave.click();
+  });
+
+  $settingsBtn.addEventListener("click", function () {
+    if (refreshTimer) clearInterval(refreshTimer);
+    showSetup();
+  });
+
+  $refreshBtn.addEventListener("click", function () {
+    loadData();
+  });
+
+  // ============================================================
+  // DATA FETCH + RENDER
+  // ============================================================
+  function loadData() {
+    var url = getWebhookUrl();
+    if (!url) return showSetup();
+
+    showLoading();
+    var fullUrl = url + (url.indexOf("?") >= 0 ? "&" : "?") + "days=" + DAYS_WINDOW;
+
+    fetch(fullUrl, { method: "GET", cache: "no-store" })
+      .then(function (res) {
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        return res.text();
+      })
+      .then(function (text) {
+        var json;
+        try { json = JSON.parse(text); }
+        catch (e) { throw new Error("Webhook didn't return JSON. Check that it's deployed with Anyone access."); }
+        if (json.error) throw new Error(json.error);
+        renderData(json);
+      })
+      .catch(function (err) {
+        renderError(err.message || String(err));
+      });
+  }
+
+  function scheduleRefresh() {
+    if (refreshTimer) clearInterval(refreshTimer);
+    refreshTimer = setInterval(loadData, REFRESH_MS);
+  }
+
+  function showLoading() {
+    $main.innerHTML =
+      '<div class="state">' +
+      '  <div class="state-icon">⏳</div>' +
+      '  <div class="state-body">Loading…</div>' +
+      '</div>';
+  }
+
+  function renderData(json) {
+    var summary  = json.summary || {};
+    var dl       = json.deadlines || [];
+    $activeCount.textContent = " · " + (summary.active_deals || 0) + " active";
+
+    var urgent = summary.urgent_count || 0;
+    if (urgent > 0) {
+      $urgentPill.textContent = "🔴 " + urgent + " urgent";
+      $urgentPill.classList.add("show");
+    } else {
+      $urgentPill.classList.remove("show");
+    }
+
+    if (dl.length === 0) {
+      $main.innerHTML =
+        '<div class="state">' +
+        '  <div class="state-icon">✓</div>' +
+        '  <div class="state-title normal">All clear</div>' +
+        '  <div class="state-body">No deadlines in the next ' + DAYS_WINDOW + ' days.</div>' +
+        '</div>';
+    } else {
+      var rows = dl.slice(0, 6).map(function (d) {
+        var urgency = d.urgency || "normal";
+        return '' +
+          '<a class="deadline" href="' + escapeAttr(TAP_URL) + '" target="_blank">' +
+          '  <div class="days-chip ' + urgency + '">' + escapeHtml(String(d.days_until != null ? d.days_until : "?")) + 'd</div>' +
+          '  <div class="deadline-main">' +
+          '    <div class="property">' + escapeHtml(shortAddress(d.property)) + '</div>' +
+          '    <div class="milestone">' + escapeHtml(d.milestone || "—") + '</div>' +
+          '  </div>' +
+          '  <div class="deadline-date">' + escapeHtml(formatDate(d.date)) + '</div>' +
+          '</a>';
+      }).join("");
+      $main.innerHTML = rows;
+    }
+
+    $refreshBtn.textContent = "Updated " + formatTime(json.generated_at) + "  ·  " + DAYS_WINDOW + "-day window";
+  }
+
+  function renderError(msg) {
+    $main.innerHTML =
+      '<div class="state">' +
+      '  <div class="state-icon">⚠️</div>' +
+      '  <div class="state-title">Couldn\'t load deadlines</div>' +
+      '  <div class="state-body">' + escapeHtml(msg) + '</div>' +
+      '</div>';
+    $refreshBtn.textContent = "Tap to retry";
+  }
+
+  // ============================================================
+  // HELPERS
+  // ============================================================
+  function shortAddress(addr) {
+    if (!addr) return "—";
+    var i = addr.indexOf(",");
+    return i > 0 ? addr.substring(0, i) : addr;
+  }
+
+  function formatDate(iso) {
+    if (!iso) return "";
+    var d = new Date(iso + "T12:00:00");
+    if (isNaN(d.getTime())) return "";
+    return (d.getMonth() + 1) + "/" + d.getDate();
+  }
+
+  function formatTime(iso) {
+    if (!iso) return "—";
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return "—";
+    var h = d.getHours();
+    var m = String(d.getMinutes()).padStart(2, "0");
+    var ampm = h >= 12 ? "p" : "a";
+    h = h % 12 || 12;
+    return h + ":" + m + ampm;
+  }
+
+  function escapeHtml(s) {
+    return String(s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+  function escapeAttr(s) { return escapeHtml(s); }
+
+  // Re-fetch when the page becomes visible again (user comes back to the app)
+  document.addEventListener("visibilitychange", function () {
+    if (document.visibilityState === "visible" && getWebhookUrl()) {
+      loadData();
+    }
+  });
+})();
+</script>
+
+</body>
+</html>
