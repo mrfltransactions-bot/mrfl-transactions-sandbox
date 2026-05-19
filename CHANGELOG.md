@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.3.0] — 2026-05-14
+
+### Added — webhook v6.3 auto-PDF deliverable
+
+- On every form submit, the webhook now ALSO exports the combined
+  Transaction Summary Google Sheet as a polished PDF and saves it
+  alongside the Sheet in the master sheet's Drive folder. No more manual
+  "send the prompt to Claude" step to get a branded PDF deliverable.
+- Single click on "Generate Output" now produces: per-property tab,
+  dashboard refresh, combined Google Sheet, AND PDF version.
+- PDF export uses Google Sheets' native export URL — letter size,
+  portrait, narrow margins, no gridlines, fit-to-width. Output matches
+  the brand identity already styled into the Sheet (indigo headers,
+  lavender concession boxes, status-colored milestone rows).
+- Deliverable Sheet now also trims its unused rows/columns before
+  export so the PDF doesn't include 1000 rows of blank whitespace.
+- API response includes new `deliverablePdfUrl` field for clients that
+  want to link directly to the PDF.
+
+### Notes
+
+- Existing v6.2 widget endpoint and `doPost` flow are unchanged.
+- First-run note: Apps Script may prompt for an additional Drive
+  authorization scope when the new PDF export call runs (the script
+  fetches its own export URL via `UrlFetchApp`). Approve the prompt.
+- The PDF auto-export failing does NOT block form submission — it's
+  wrapped in its own try/catch so the rest of the deliverable flow
+  still completes if PDF export hits a transient error.
+
+---
+
 ## [1.2.0] — 2026-05-09
 
 ### Added — webhook v6.2 GET endpoint

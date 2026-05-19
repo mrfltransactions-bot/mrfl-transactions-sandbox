@@ -18,6 +18,11 @@
  * v6.2 (May 2026): Added GET endpoint for iPhone widget consumption.
  *   Returns next N days of upcoming deadlines as JSON. See
  *   docs/WIDGET_ENDPOINT.md for contract and integration notes.
+ *
+ * v6.3 (May 2026): Auto-export the deliverable as a branded PDF on
+ *   every form submit. Sits alongside the existing Google Sheet in
+ *   the master sheet's Drive folder. No more manual "send prompt to
+ *   Claude" step to get a polished PDF.
  */
 
 // ============ CONFIG ============
@@ -1072,9 +1077,18 @@ function doPost(e) {
     //   Transaction Summary section below, both stacked in a single tab.
     // Sheet stays private (only owner has access) per locked policy 3B.
     let deliverableUrl = null;
+    let deliverablePdfUrl = null;
     try {
       const parentFolder = _getMasterParentFolder();
-      deliverableUrl = _buildDeliverableSheet(data, parentFolder);
+      const deliverableSpreadsheet = _buildDeliverableSheet(data, parentFolder);
+      deliverableUrl = deliverableSpreadsheet.getUrl();
+      // v6.3 — also export a branded PDF alongside the Google Sheet
+      try {
+        const slug = _shortAddressSlug(data.propertyAddress);
+        deliverablePdfUrl = _exportDeliverableAsPdf(deliverableSpreadsheet, parentFolder, slug);
+      } catch (pdfErr) {
+        Logger.log('PDF export error (non-fatal): ' + pdfErr.toString());
+      }
     } catch (delivErr) {
       Logger.log('Deliverable error: ' + delivErr.toString());
     }
@@ -1086,7 +1100,8 @@ function doPost(e) {
       calendarEventsCreated: calendarEventsCreated.length,
       calendarEvents: calendarEventsCreated,
       dashboardRebuilt: dashboardRebuilt,
-      deliverableUrl: deliverableUrl
+      deliverableUrl: deliverableUrl,
+      deliverablePdfUrl: deliverablePdfUrl
     });
 
   } catch (err) {
@@ -1334,10 +1349,60 @@ function _buildDeliverableSheet(data, parentFolder) {
    .setHorizontalAlignment('center');
   sheet.setRowHeight(row, 20);
 
+  // ===== Trim unused rows and columns so the PDF export is tight =====
+  // Sheets default to 1000 rows × 26 columns, which would leave acres of
+  // whitespace in the exported PDF. Delete everything past the content.
+  const lastContentRow = row;
+  const maxRows = sheet.getMaxRows();
+  if (maxRows > lastContentRow) {
+    sheet.deleteRows(lastContentRow + 1, maxRows - lastContentRow);
+  }
+  const maxCols = sheet.getMaxColumns();
+  if (maxCols > 5) {
+    sheet.deleteColumns(6, maxCols - 5);
+  }
+
   // Move to master parent folder
   DriveApp.getFileById(ss.getId()).moveTo(parentFolder);
 
-  return ss.getUrl();
+  return ss;
+}
+
+// v6.3 — Export the deliverable Google Sheet as a branded PDF and save it
+// alongside in the master sheet's parent folder. Uses Sheets' native PDF
+// export URL with letter size, portrait orientation, narrow margins, no
+// gridlines, no print title. The result is a polished single-document
+// PDF that mirrors the brand identity already styled into the Sheet.
+function _exportDeliverableAsPdf(spreadsheet, parentFolder, slug) {
+  const exportUrl = 'https://docs.google.com/spreadsheets/d/' + spreadsheet.getId() +
+    '/export?exportFormat=pdf' +
+    '&format=pdf' +
+    '&size=letter' +
+    '&portrait=true' +
+    '&fitw=true' +              // fit to width
+    '&top_margin=0.5' +
+    '&bottom_margin=0.5' +
+    '&left_margin=0.5' +
+    '&right_margin=0.5' +
+    '&sheetnames=false' +       // no tab name in PDF
+    '&printtitle=false' +
+    '&pagenumbers=false' +
+    '&gridlines=false' +
+    '&fzr=false' +              // no frozen-row repeat
+    '&horizontal_alignment=CENTER';
+
+  const response = UrlFetchApp.fetch(exportUrl, {
+    headers: { Authorization: 'Bearer ' + ScriptApp.getOAuthToken() },
+    muteHttpExceptions: true
+  });
+
+  if (response.getResponseCode() !== 200) {
+    throw new Error('PDF export failed (HTTP ' + response.getResponseCode() + ')');
+  }
+
+  const pdfBlob = response.getBlob().setName('Transaction_Summary_' + slug + '.pdf');
+  const pdfFile = parentFolder.createFile(pdfBlob);
+  return pdfFile.getUrl();
 }
 
 // ============ HELPER ============
