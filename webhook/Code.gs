@@ -1405,6 +1405,49 @@ function _exportDeliverableAsPdf(spreadsheet, parentFolder, slug) {
   return pdfFile.getUrl();
 }
 
+// v6.3 — One-off helper to backfill the branded PDF for an EXISTING
+// Transaction_Summary Google Sheet that was created before v6.3 shipped.
+//
+// HOW TO USE:
+//   1. Open the existing Transaction_Summary_<address> Google Sheet
+//      in your browser. Its URL looks like:
+//        https://docs.google.com/spreadsheets/d/{FILE_ID}/edit
+//   2. Copy the FILE_ID portion (the long random string between
+//      /d/ and /edit).
+//   3. Paste it into the SHEET_FILE_ID line below, replacing the
+//      placeholder. Save (⌘S).
+//   4. From the Run dropdown at the top of the editor, select
+//      `regenerateExistingPdf` → click ▶ Run.
+//   5. View → Logs to see where the PDF was saved.
+//
+// The PDF is placed in the SAME folder as the source Google Sheet, so
+// this works for sheets in either the sandbox or production master
+// folder.
+function regenerateExistingPdf() {
+  const SHEET_FILE_ID = 'PASTE_THE_SHEET_FILE_ID_HERE';
+
+  if (!SHEET_FILE_ID || SHEET_FILE_ID.indexOf('PASTE_') === 0) {
+    throw new Error(
+      'Edit the SHEET_FILE_ID line at the top of regenerateExistingPdf() ' +
+      'with the file ID of the Transaction_Summary Google Sheet you want ' +
+      'to backfill. See the comment above the function for how to find it.'
+    );
+  }
+
+  const file = DriveApp.getFileById(SHEET_FILE_ID);
+  const spreadsheet = SpreadsheetApp.openById(SHEET_FILE_ID);
+  const parents = file.getParents();
+  const parentFolder = parents.hasNext() ? parents.next() : DriveApp.getRootFolder();
+
+  const slug = file.getName().replace(/^Transaction_Summary_/, '');
+  Logger.log('Regenerating PDF for: ' + file.getName());
+  Logger.log('Source Sheet folder: ' + parentFolder.getName());
+
+  const pdfUrl = _exportDeliverableAsPdf(spreadsheet, parentFolder, slug);
+  Logger.log('✅ PDF created: ' + pdfUrl);
+  return pdfUrl;
+}
+
 // ============ HELPER ============
 function jsonResponse(obj) {
   return ContentService
