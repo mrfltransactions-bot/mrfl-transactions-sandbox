@@ -539,6 +539,22 @@
     color: var(--ink);
     font-family: 'Manrope', sans-serif;
   }
+  /* date field with a clear calendar button (manual typing still works) */
+  .date-field { position: relative; width: 100%; }
+  .date-field input[type="date"] { width: 100%; padding-right: 40px; }
+  /* hide the tiny native picker icon so there's one clear button */
+  .date-field input[type="date"]::-webkit-calendar-picker-indicator { display: none; }
+  .date-field .cal-btn {
+    position: absolute; top: 1px; right: 1px; bottom: 1px;
+    width: 36px; display: flex; align-items: center; justify-content: center;
+    background: transparent; border: none; border-radius: 2px;
+    cursor: pointer; font-size: 15px; line-height: 1; padding: 0;
+    color: var(--navy);
+  }
+  .date-field .cal-btn:hover { color: var(--accent); }
+  .date-field .cal-btn:focus-visible {
+    outline: none; box-shadow: 0 0 0 3px rgba(31, 58, 95, 0.12);
+  }
   input[type="number"]::-webkit-outer-spin-button,
   input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
   input[type="number"] { -webkit-appearance: textfield; -moz-appearance: textfield; }
@@ -3033,6 +3049,17 @@
     });
   }
 
+  // ---- ArrayBuffer → base64 (chunked, avoids call-stack overflow on big PDFs) ----
+  function _arrayBufferToBase64(buffer) {
+    const bytes = new Uint8Array(buffer);
+    const chunk = 0x8000; // 32KB per chunk
+    let binary = '';
+    for (let i = 0; i < bytes.length; i += chunk) {
+      binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk));
+    }
+    return btoa(binary);
+  }
+
   // ---- PDF → text (in browser) ----
   async function _pdfExtractText(arrayBuffer) {
     if (typeof pdfjsLib === 'undefined') {
@@ -3177,11 +3204,42 @@ CANONICAL JSON SCHEMA (output exactly these keys, in this order):
   "concessions": []
 }`;
 
-  async function _pdfApiExtract(contractText, apiKey) {
+  async function _pdfApiExtract(pdfBase64, contractText, apiKey) {
     const today = new Date().toISOString().slice(0, 10);
-    const userMessage =
-      'Today is ' + today + '. Extract intake JSON from this contract.\n\n' +
-      '=== CONTRACT TEXT ===\n\n' + contractText;
+
+    // Send the actual PDF (so Claude can SEE checkboxes, initials, handwriting,
+    // and signatures) plus the browser-extracted text as an exact spelling aid
+    // for typed values like names and email addresses.
+    const userContent = [];
+    if (pdfBase64) {
+      userContent.push({
+        type: 'document',
+        source: { type: 'base64', media_type: 'application/pdf', data: pdfBase64 }
+      });
+    }
+    userContent.push({
+      type: 'text',
+      text:
+        'Today is ' + today + '. Extract intake JSON from this contract.\n' +
+        (pdfBase64
+          ? 'The PDF above is the AUTHORITATIVE source — read checkboxes (financing type ¶8, ' +
+            'closing-agent designation ¶9(c)), initials, handwriting, and signature dates directly ' +
+            'from it. The plain text below is a secondary aid for the exact spelling of names and ' +
+            'emails only; when it conflicts with the PDF, trust the PDF.\n'
+          : '') +
+        '\n=== CONTRACT TEXT (secondary) ===\n\n' + contractText
+    });
+
+    const requestBody = {
+      model: 'claude-opus-4-8',
+      max_tokens: 8000,
+      system: [{
+        type: 'text',
+        text: EXTRACTION_SYSTEM_PROMPT,
+        cache_control: { type: 'ephemeral' }
+      }],
+      messages: [{ role: 'user', content: userContent }]
+    };
 
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -3191,16 +3249,7 @@ CANONICAL JSON SCHEMA (output exactly these keys, in this order):
         'anthropic-version': '2023-06-01',
         'anthropic-dangerous-direct-browser-access': 'true'
       },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 2048,
-        system: [{
-          type: 'text',
-          text: EXTRACTION_SYSTEM_PROMPT,
-          cache_control: { type: 'ephemeral' }
-        }],
-        messages: [{ role: 'user', content: userMessage }]
-      })
+      body: JSON.stringify(requestBody)
     });
 
     if (!res.ok) {
@@ -3501,7 +3550,8 @@ CANONICAL JSON SCHEMA (output exactly these keys, in this order):
         _progressStep('step_api', 'active');
         if (labelEl) labelEl.textContent = 'Extracting via API…';
         try {
-          const apiData = await _pdfApiExtract(contractText, apiKey);
+          const pdfBase64 = _arrayBufferToBase64(buf);
+          const apiData = await _pdfApiExtract(pdfBase64, contractText, apiKey);
           const apiCount = _pdfApplyToForm(apiData);
           _progressStep('step_api', 'done');
           _progressHide(700);
@@ -4321,6 +4371,39 @@ CANONICAL JSON SCHEMA (output exactly these keys, in this order):
       $('email_modal_overlay').classList.remove('active');
     }
   });
+
+  // ---- Calendar button on every date field (manual typing stays intact) ----
+  (function enhanceDateFields() {
+    function enhance(input) {
+      if (input.dataset.calEnhanced) return;
+      input.dataset.calEnhanced = '1';
+      const wrap = document.createElement('div');
+      wrap.className = 'date-field';
+      input.parentNode.insertBefore(wrap, input);
+      wrap.appendChild(input);
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'cal-btn';
+      btn.setAttribute('aria-label', 'Open calendar');
+      btn.title = 'Pick a date';
+      btn.textContent = '📅';
+      btn.addEventListener('click', () => {
+        try {
+          if (typeof input.showPicker === 'function') { input.showPicker(); return; }
+        } catch (e) { /* showPicker can throw if not allowed; fall through */ }
+        input.focus();
+      });
+      wrap.appendChild(btn);
+    }
+    function run() {
+      document.querySelectorAll('input[type="date"]').forEach(enhance);
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', run);
+    } else {
+      run();
+    }
+  })();
 
 </script>
 
