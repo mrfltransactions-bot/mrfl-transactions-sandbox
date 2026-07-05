@@ -2677,7 +2677,8 @@
         })
       });
       if (res.ok) {
-        showApiTestResult('✓ Connected. API key is valid.', 'success');
+        setStoredApiKey(key);
+        showApiTestResult('✓ Connected & saved. API key is valid.', 'success');
       } else {
         const err = await res.text().catch(() => '');
         showApiTestResult('Test failed (' + res.status + '): ' + err.slice(0, 200), 'error');
@@ -3518,7 +3519,13 @@ CANONICAL JSON SCHEMA (output exactly these keys, in this order):
     btn.disabled = true;
     if (labelEl) labelEl.textContent = 'Reading...';
 
-    const apiKey = getStoredApiKey();
+    // Prefer the saved key; otherwise fall back to whatever is currently typed
+    // in the API-key field. Covers "tested but didn't click Save" and browsers
+    // where localStorage writes are blocked (private mode, etc.).
+    let apiKey = getStoredApiKey();
+    if (!apiKey) {
+      try { apiKey = _sanitizeApiKey($('api_key').value).cleaned; } catch (e) {}
+    }
     _progressShow(!!apiKey);
     _progressStep('step_read', 'active');
 
