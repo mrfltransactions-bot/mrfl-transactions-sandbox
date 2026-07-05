@@ -69,6 +69,7 @@ function onOpen() {
     .addItem('🔄 Refresh Dashboard', 'rebuildDashboard')
     .addItem(filterLabel, 'toggleActiveOnly')
     .addSeparator()
+    .addItem('🔄 Sync dates → Calendar', 'syncActiveTabToCalendar')
     .addItem('📅 Set up calendar sync', 'setupCalendarSync')
     .addItem('ℹ About', 'showAbout')
     .addToUi();
@@ -87,6 +88,7 @@ function toggleActiveOnly() {
     .addItem('🔄 Refresh Dashboard', 'rebuildDashboard')
     .addItem(newState ? '👁 Show All Transactions' : '🔍 Show Active Only', 'toggleActiveOnly')
     .addSeparator()
+    .addItem('🔄 Sync dates → Calendar', 'syncActiveTabToCalendar')
     .addItem('📅 Set up calendar sync', 'setupCalendarSync')
     .addItem('ℹ About', 'showAbout')
     .addToUi();
@@ -230,6 +232,57 @@ function _calDayWindow(date, padDays) {
   return { start: start, end: end };
 }
 
+// Tolerant title comparison — strip emoji/punctuation, lowercase, collapse
+// spaces — so an em-dash, extra space, or emoji difference never blocks a match.
+function _calNormalizeTitle(s) {
+  return String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+}
+
+// Move (or create) the calendar event for ONE milestone to newDate. Finds the
+// existing event by stored id, else by tolerant title match across a window that
+// spans the old and new dates; removes any duplicate matches; only creates a new
+// event when none exists.
+function _calSyncMilestone(calendar, props, gid, milestoneName, propertyAddress, newDate, oldDate) {
+  const newStart = new Date(newDate); newStart.setHours(EVENT_HOUR, 0, 0, 0);
+  const newEnd = new Date(newStart); newEnd.setHours(EVENT_HOUR + 1, 0, 0, 0);
+  const key = _calKey(gid, milestoneName);
+
+  // Fast path: the id we stored when the event was created / last matched.
+  const storedId = props.getProperty(key);
+  if (storedId) {
+    try {
+      const ev = calendar.getEventById(storedId);
+      if (ev) { ev.setTime(newStart, newEnd); return; }
+    } catch (e) { /* stale id — fall through to search */ }
+  }
+
+  // Search a window that covers BOTH the old and new dates (± 45 days) so we find
+  // the original event and any stray duplicate near the new date.
+  const oldMs = oldDate ? oldDate.getTime() : newDate.getTime();
+  const lo = new Date(Math.min(newDate.getTime(), oldMs)); lo.setDate(lo.getDate() - 45); lo.setHours(0, 0, 0, 0);
+  const hi = new Date(Math.max(newDate.getTime(), oldMs)); hi.setDate(hi.getDate() + 45); hi.setHours(23, 59, 59, 0);
+  const wantNorm = _calNormalizeTitle(_calEventTitle(milestoneName, propertyAddress));
+  const matches = calendar.getEvents(lo, hi).filter(ev => {
+    try { return _calNormalizeTitle(ev.getTitle()) === wantNorm; } catch (e) { return false; }
+  });
+
+  if (matches.length > 0) {
+    matches[0].setTime(newStart, newEnd);          // keep the first, move it
+    props.setProperty(key, matches[0].getId());
+    for (let i = 1; i < matches.length; i++) {     // delete any duplicates
+      try { matches[i].deleteEvent(); } catch (e) { /* ignore */ }
+    }
+    return;
+  }
+
+  // None found — create one so the calendar stays complete.
+  const url = SpreadsheetApp.getActiveSpreadsheet().getUrl() + '#gid=' + gid;
+  const ev = calendar.createEvent(_calEventTitle(milestoneName, propertyAddress), newStart, newEnd,
+    { location: propertyAddress, description: 'Property: ' + propertyAddress + '\n\n🔗 Tab in sheet: ' + url });
+  REMINDER_MINUTES.forEach(min => { try { ev.addPopupReminder(min); } catch (e) { /* ignore */ } });
+  props.setProperty(key, ev.getId());
+}
+
 // Installable onEdit handler — when a milestone date (column B / "Deadline") is
 // changed on a property tab, move the matching Google Calendar event to match.
 function onEditCalendarSync(e) {
@@ -237,11 +290,7 @@ function onEditCalendarSync(e) {
     if (!e || !e.range) return;
     const sheet = e.range.getSheet();
     const name = sheet.getName();
-
-    // Property tabs only (skip dashboard and special tabs)
     if (name === DASHBOARD_TAB_NAME || name.startsWith('📊') || !name.includes('_')) return;
-
-    // Only the Deadline column (B / column 2), single-cell edits
     if (e.range.getColumn() !== 2) return;
     if (e.range.getNumRows() > 1 || e.range.getNumColumns() > 1) return;
 
@@ -249,54 +298,89 @@ function onEditCalendarSync(e) {
     const milestoneName = String(sheet.getRange(rowIdx, 1).getValue() || '').trim();
     if (CAL_KNOWN_MILESTONES.indexOf(milestoneName) === -1) return;
 
-    // New date from the edited cell (may be a Date or a string)
     const raw = e.range.getValue();
     const newDate = (raw instanceof Date) ? raw : parseDate(String(raw || '').trim());
-    if (!newDate || isNaN(newDate.getTime())) return;  // blank/invalid → leave calendar alone
+    if (!newDate || isNaN(newDate.getTime())) return;
+
+    const propertyAddress = String(sheet.getRange(1, 1).getValue() || '').trim();
+    const gid = String(sheet.getSheetId());
+    const oldDate = parseDate(String(e.oldValue || '').trim());
+    _calSyncMilestone(CalendarApp.getDefaultCalendar(), PropertiesService.getDocumentProperties(),
+      gid, milestoneName, propertyAddress, newDate, oldDate);
+  } catch (err) {
+    Logger.log('onEditCalendarSync error: ' + err.toString());
+  }
+}
+
+// Manual, reliable path (🛠 TC Tools menu): sync EVERY milestone date on the
+// currently-open property tab to the calendar and remove any duplicate events.
+function syncActiveTabToCalendar() {
+  const ui = SpreadsheetApp.getUi();
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sheet = ss.getActiveSheet();
+    const name = sheet.getName();
+    if (name === DASHBOARD_TAB_NAME || name.startsWith('📊') || !name.includes('_')) {
+      ui.alert('Open a property tab first (the one with the milestone dates), then run this.');
+      return;
+    }
 
     const propertyAddress = String(sheet.getRange(1, 1).getValue() || '').trim();
     const gid = String(sheet.getSheetId());
     const props = PropertiesService.getDocumentProperties();
-    const key = _calKey(gid, milestoneName);
-
-    const newStart = new Date(newDate); newStart.setHours(EVENT_HOUR, 0, 0, 0);
-    const newEnd = new Date(newStart); newEnd.setHours(EVENT_HOUR + 1, 0, 0, 0);
-
     const calendar = CalendarApp.getDefaultCalendar();
-    let event = null;
 
-    // 1. Preferred: the event id stored when the event was created.
-    const storedId = props.getProperty(key);
-    if (storedId) {
-      try { event = calendar.getEventById(storedId); } catch (err) { event = null; }
+    // Collect milestone rows + their dates.
+    const values = sheet.getDataRange().getValues();
+    const rows = [];
+    let minMs = null, maxMs = null;
+    for (let i = 0; i < values.length; i++) {
+      const mName = String(values[i][0] || '').trim();
+      if (CAL_KNOWN_MILESTONES.indexOf(mName) === -1) continue;
+      const raw = values[i][1];
+      const d = (raw instanceof Date) ? raw : parseDate(String(raw || '').trim());
+      if (!d || isNaN(d.getTime())) continue;
+      rows.push({ name: mName, date: d });
+      minMs = (minMs === null) ? d.getTime() : Math.min(minMs, d.getTime());
+      maxMs = (maxMs === null) ? d.getTime() : Math.max(maxMs, d.getTime());
     }
+    if (rows.length === 0) { ui.alert('No milestone dates found on this tab.'); return; }
 
-    // 2. Fallback: find by exact title near the OLD date (covers transactions
-    //    whose events were created before calendar sync existed).
-    if (!event) {
-      const wantTitle = _calEventTitle(milestoneName, propertyAddress);
-      const oldDate = parseDate(String(e.oldValue || '').trim());
-      const win = _calDayWindow(oldDate || newDate, 3);
-      const candidates = calendar.getEvents(win.start, win.end, { search: milestoneName });
-      event = candidates.filter(ev => ev.getTitle() === wantTitle)[0] || null;
-    }
+    // One broad calendar read covering the whole transaction (± 180 days) so we
+    // catch events still sitting on their old, pre-extension dates.
+    const winStart = new Date(minMs); winStart.setDate(winStart.getDate() - 180); winStart.setHours(0, 0, 0, 0);
+    const winEnd = new Date(maxMs); winEnd.setDate(winEnd.getDate() + 180); winEnd.setHours(23, 59, 59, 0);
+    const allEvents = calendar.getEvents(winStart, winEnd);
 
-    if (event) {
-      event.setTime(newStart, newEnd);
-      props.setProperty(key, event.getId());  // cache id for next time
-    } else {
-      // No matching event (e.g., the date was previously blank) — create one so
-      // the calendar stays complete.
-      const url = SpreadsheetApp.getActiveSpreadsheet().getUrl() + '#gid=' + gid;
-      const ev = calendar.createEvent(
-        _calEventTitle(milestoneName, propertyAddress), newStart, newEnd,
-        { location: propertyAddress, description: 'Property: ' + propertyAddress + '\n\n🔗 Tab in sheet: ' + url }
-      );
-      REMINDER_MINUTES.forEach(min => { try { ev.addPopupReminder(min); } catch (er) { /* ignore */ } });
-      props.setProperty(key, ev.getId());
-    }
+    let moved = 0, created = 0;
+    const toDelete = [];
+    rows.forEach(r => {
+      const wantNorm = _calNormalizeTitle(_calEventTitle(r.name, propertyAddress));
+      const matches = allEvents.filter(ev => {
+        try { return _calNormalizeTitle(ev.getTitle()) === wantNorm; } catch (e) { return false; }
+      });
+      const s = new Date(r.date); s.setHours(EVENT_HOUR, 0, 0, 0);
+      const en = new Date(s); en.setHours(EVENT_HOUR + 1, 0, 0, 0);
+      if (matches.length > 0) {
+        matches[0].setTime(s, en);
+        props.setProperty(_calKey(gid, r.name), matches[0].getId());
+        moved++;
+        for (let j = 1; j < matches.length; j++) toDelete.push(matches[j]);
+      } else {
+        const ev = calendar.createEvent(_calEventTitle(r.name, propertyAddress), s, en,
+          { location: propertyAddress, description: 'Property: ' + propertyAddress });
+        REMINDER_MINUTES.forEach(min => { try { ev.addPopupReminder(min); } catch (e) {} });
+        props.setProperty(_calKey(gid, r.name), ev.getId());
+        created++;
+      }
+    });
+    let removed = 0;
+    toDelete.forEach(ev => { try { ev.deleteEvent(); removed++; } catch (e) {} });
+
+    ui.alert('✅ Calendar synced — ' + propertyAddress + '\n\n' +
+      'Updated: ' + moved + '\nCreated: ' + created + '\nDuplicates removed: ' + removed);
   } catch (err) {
-    Logger.log('onEditCalendarSync error: ' + err.toString());
+    ui.alert('Sync failed: ' + err.toString());
   }
 }
 
@@ -312,10 +396,11 @@ function setupCalendarSync() {
     ScriptApp.newTrigger('onEditCalendarSync').forSpreadsheet(ss).onEdit().create();
     CalendarApp.getDefaultCalendar().getName();  // force the Calendar auth prompt now
     ui.alert(
-      '✅ Calendar sync is on.\n\n' +
-      'From now on, when you change a milestone date in a property tab (the ' +
-      '"Deadline" column), the matching Google Calendar event moves to the new ' +
-      'date automatically. This works for new transactions and existing ones.'
+      '✅ Calendar sync is on (v6.5).\n\n' +
+      'When you change a milestone date in a property tab, the matching Google ' +
+      'Calendar event moves to the new date automatically.\n\n' +
+      'You can also run 🛠 TC Tools → "🔄 Sync dates → Calendar" anytime to force a ' +
+      'sync of the open tab and clean up any duplicate events.'
     );
   } catch (err) {
     ui.alert('Setup failed: ' + err.toString() +
