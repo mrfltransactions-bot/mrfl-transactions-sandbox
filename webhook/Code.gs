@@ -72,6 +72,7 @@ function onOpen() {
     .addItem('🔄 Sync dates → Calendar', 'syncActiveTabToCalendar')
     .addItem('📅 Set up calendar sync', 'setupCalendarSync')
     .addSeparator()
+    .addItem('🏘 Add / update HOA info', 'showHoaDialog')
     .addItem('🔗 Agent portal links', 'showPortalLinks')
     .addItem('ℹ About', 'showAbout')
     .addToUi();
@@ -93,6 +94,7 @@ function toggleActiveOnly() {
     .addItem('🔄 Sync dates → Calendar', 'syncActiveTabToCalendar')
     .addItem('📅 Set up calendar sync', 'setupCalendarSync')
     .addSeparator()
+    .addItem('🏘 Add / update HOA info', 'showHoaDialog')
     .addItem('🔗 Agent portal links', 'showPortalLinks')
     .addItem('ℹ About', 'showAbout')
     .addToUi();
@@ -1955,6 +1957,223 @@ function showPortalLinks() {
     HtmlService.createHtmlOutput(html).setWidth(680).setHeight(Math.min(160 + agents.length * 56, 560)),
     '🔗 Agent portal links'
   );
+}
+
+// ============================================================
+// v6.8 — HOA INFO DIALOG (add/update mid-transaction)
+//
+// HOA details often arrive after the contract is opened. This menu
+// dialog writes a correctly-formatted "HOA / Association" section into
+// the active property tab (and optionally HOA milestone dates), so the
+// info flows to the dashboard, deliverables, and the agent portal.
+// ============================================================
+
+const HOA_SECTION_HEADER = 'HOA / Association';
+const HOA_FIELDS = [
+  ['association', 'Association'],
+  ['mgmt', 'Management Company'],
+  ['contact', 'Contact'],
+  ['email', 'Email'],
+  ['phone', 'Phone'],
+  ['estoppel', 'Estoppel Fee']
+];
+
+function _hoaEsc(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+// Locate the existing HOA section (1-indexed rows, header included), or null.
+function _hoaSectionRange(values) {
+  const stoppers = ['Seller Title', 'Loan Officer', 'Loan Processor',
+    'Escrow Agent/ Title', 'Escrow Agent/ Buyer Title'];
+  for (let i = 0; i < values.length; i++) {
+    if (String(values[i][0] || '').trim() !== HOA_SECTION_HEADER) continue;
+    let end = i + 1;
+    for (let j = i + 1; j < values.length; j++) {
+      const l = String(values[j][0] || '').trim();
+      if (!l || stoppers.indexOf(l) >= 0 || l.indexOf(':') < 0) break;
+      end = j + 1;
+    }
+    return { start: i + 1, end: end };
+  }
+  return null;
+}
+
+// Read current HOA values (details section + milestone dates) for prefill.
+function _hoaReadExisting(values) {
+  const out = { association: '', mgmt: '', contact: '', email: '', phone: '', estoppel: '', appDate: '', approvalDate: '' };
+  const sec = _hoaSectionRange(values);
+  if (sec) {
+    for (let r = sec.start; r < sec.end; r++) {  // rows after the header
+      const line = String(values[r][0] || '').trim();
+      const idx = line.indexOf(':');
+      if (idx <= 0) continue;
+      const label = line.substring(0, idx).trim();
+      const value = line.substring(idx + 1).trim();
+      for (let f = 0; f < HOA_FIELDS.length; f++) {
+        if (HOA_FIELDS[f][1] === label) { out[HOA_FIELDS[f][0]] = value; break; }
+      }
+    }
+  }
+  const tz = Session.getScriptTimeZone();
+  for (let i = 0; i < values.length; i++) {
+    const name = String(values[i][0] || '').trim();
+    if (name !== 'HOA Application' && name !== 'HOA Approval') continue;
+    const raw = values[i][1];
+    const d = (raw instanceof Date) ? raw : parseDate(String(raw || '').trim());
+    if (!d) continue;
+    const isoStr = Utilities.formatDate(d, tz, 'yyyy-MM-dd');
+    if (name === 'HOA Application') out.appDate = isoStr; else out.approvalDate = isoStr;
+  }
+  return out;
+}
+
+function showHoaDialog() {
+  const ui = SpreadsheetApp.getUi();
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  const name = sheet.getName();
+  if (name === DASHBOARD_TAB_NAME || name.startsWith('📊') || !name.includes('_')) {
+    ui.alert('Open the property tab you want to add HOA info to, then run this again.');
+    return;
+  }
+  const values = sheet.getDataRange().getValues();
+  const cur = _hoaReadExisting(values);
+  const property = String(values[0][0] || name).trim();
+
+  const field = (id, label, placeholder) =>
+    '<label style="display:block;margin:10px 0 3px;font-weight:600">' + label + '</label>' +
+    '<input id="' + id + '" type="text" value="' + _hoaEsc(cur[id]) + '" placeholder="' + placeholder + '" ' +
+    'style="width:100%;padding:7px;border:1px solid #ccc;border-radius:4px;box-sizing:border-box">';
+  const dateField = (id, label) =>
+    '<label style="display:block;margin:10px 0 3px;font-weight:600">' + label + '</label>' +
+    '<input id="' + id + '" type="date" value="' + _hoaEsc(cur[id]) + '" ' +
+    'style="width:100%;padding:6px;border:1px solid #ccc;border-radius:4px;box-sizing:border-box">';
+
+  const html =
+    '<div style="font-family:Arial,sans-serif;font-size:13px;line-height:1.4">' +
+    '<p style="margin:0 0 4px;color:#4B5563">Fill in what you have — empty fields are simply left out. ' +
+    'This updates the tab, the agent portal, and (if dates are set) the milestone table.</p>' +
+    field('association', 'Association name', 'Sunset Ridge HOA') +
+    field('mgmt', 'Management company', 'ABC Property Mgmt') +
+    field('contact', 'Contact name', 'Jane Manager') +
+    field('email', 'Contact email', 'hoa@example.com') +
+    field('phone', 'Contact phone', '(555) 123-4567') +
+    field('estoppel', 'Estoppel fee', '$250.00') +
+    '<div style="display:flex;gap:10px"><div style="flex:1">' +
+    dateField('appDate', 'HOA Application deadline') + '</div><div style="flex:1">' +
+    dateField('approvalDate', 'HOA Approval deadline') + '</div></div>' +
+    '<div id="out" style="margin-top:10px;color:#10B981;font-weight:600"></div>' +
+    '<div style="margin-top:14px;text-align:right">' +
+    '<button id="save" style="background:#4338CA;color:#fff;border:none;padding:9px 18px;' +
+    'border-radius:6px;font-weight:700;cursor:pointer">Save HOA info</button></div>' +
+    '<script>' +
+    'document.getElementById("save").onclick=function(){' +
+    'var b=this;b.disabled=true;b.textContent="Saving…";' +
+    'var f={};["association","mgmt","contact","email","phone","estoppel","appDate","approvalDate"]' +
+    '.forEach(function(id){f[id]=document.getElementById(id).value.trim();});' +
+    'f.sheetId=' + sheet.getSheetId() + ';' +
+    'google.script.run.withSuccessHandler(function(msg){' +
+    'document.getElementById("out").textContent=msg;setTimeout(function(){google.script.host.close();},1600);' +
+    '}).withFailureHandler(function(e){' +
+    'document.getElementById("out").style.color="#991B1B";' +
+    'document.getElementById("out").textContent="Error: "+e.message;b.disabled=false;b.textContent="Save HOA info";' +
+    '}).saveHoaInfo(f);};' +
+    '<\/script></div>';
+
+  ui.showModalDialog(
+    HtmlService.createHtmlOutput(html).setWidth(430).setHeight(600),
+    '🏘 HOA information — ' + property
+  );
+}
+
+function saveHoaInfo(f) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheets().find(s => s.getSheetId() === Number(f.sheetId));
+  if (!sheet) throw new Error('Could not find the property tab. Close the dialog and try again.');
+
+  // ---- 1. Details section: replace existing or append ----
+  const lines = [];
+  for (let i = 0; i < HOA_FIELDS.length; i++) {
+    const v = String(f[HOA_FIELDS[i][0]] || '').trim();
+    if (v) lines.push(HOA_FIELDS[i][1] + ': ' + v);
+  }
+
+  let values = sheet.getDataRange().getValues();
+  const sec = _hoaSectionRange(values);
+  let detailsMsg = '';
+  if (lines.length > 0) {
+    let insertAt;
+    if (sec) {
+      sheet.deleteRows(sec.start, sec.end - sec.start + 1);
+      sheet.insertRowsBefore(sec.start, lines.length + 1);
+      insertAt = sec.start;
+      detailsMsg = 'HOA details updated';
+    } else {
+      const lastRow = sheet.getLastRow();
+      if (lastRow + lines.length + 2 > sheet.getMaxRows()) {
+        sheet.insertRowsAfter(sheet.getMaxRows(), lines.length + 2);
+      }
+      insertAt = lastRow + 2;  // one blank spacer row
+      detailsMsg = 'HOA details added';
+    }
+    sheet.getRange(insertAt, 1).setValue(HOA_SECTION_HEADER).setFontWeight('bold');
+    for (let i = 0; i < lines.length; i++) {
+      sheet.getRange(insertAt + 1 + i, 1).setValue(lines[i]).setFontWeight('normal');
+    }
+  } else if (sec) {
+    detailsMsg = 'HOA details unchanged';
+  }
+
+  // ---- 2. Milestone rows: update in place, or insert before Closing Date ----
+  const tz = Session.getScriptTimeZone();
+  const toDisplay = (isoStr) => {
+    const m = String(isoStr).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!m) return '';
+    return Utilities.formatDate(new Date(+m[1], +m[2] - 1, +m[3]), tz, 'MM/dd/yyyy');
+  };
+  const wanted = [];
+  if (f.appDate) wanted.push(['HOA Application', toDisplay(f.appDate)]);
+  if (f.approvalDate) wanted.push(['HOA Approval', toDisplay(f.approvalDate)]);
+
+  let datesMsg = '';
+  if (wanted.length > 0) {
+    values = sheet.getDataRange().getValues();  // re-read after section edits
+    let closingRow = -1;
+    const existingRow = {};
+    for (let i = 0; i < values.length; i++) {
+      const n = String(values[i][0] || '').trim();
+      if (n === 'Closing Date' && closingRow < 0) closingRow = i + 1;
+      if (n === 'HOA Application' || n === 'HOA Approval') existingRow[n] = i + 1;
+    }
+    let added = 0, updated = 0;
+    wanted.forEach(function (w) {
+      if (existingRow[w[0]]) {
+        sheet.getRange(existingRow[w[0]], 2).setValue(w[1]);
+        updated++;
+      } else if (closingRow > 0) {
+        sheet.insertRowBefore(closingRow);
+        const range = sheet.getRange(closingRow, 1, 1, 5);
+        range.setValues([[w[0], w[1], '', '', '']])
+          .setVerticalAlignment('middle')
+          .setBorder(true, true, true, true, true, true)
+          .setBackground(null).setFontWeight('normal').setFontColor('#000000');
+        sheet.getRange(closingRow, 1).setHorizontalAlignment('left');
+        sheet.getRange(closingRow, 2).setHorizontalAlignment('center');
+        sheet.getRange(closingRow, 3).insertCheckboxes();
+        sheet.setRowHeight(closingRow, 26);
+        closingRow++;  // keep inserting above Closing Date, preserving order
+        added++;
+      }
+    });
+    datesMsg = (updated ? updated + ' deadline' + (updated > 1 ? 's' : '') + ' updated' : '') +
+      (updated && added ? ', ' : '') +
+      (added ? added + ' deadline' + (added > 1 ? 's' : '') + ' added — run 🔄 Sync dates → Calendar for reminders' : '');
+  }
+
+  try { rebuildDashboard(); } catch (e) { /* non-fatal */ }
+
+  return '✓ ' + [detailsMsg, datesMsg].filter(String).join(' · ');
 }
 
 // ============================================================

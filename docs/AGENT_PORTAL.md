@@ -142,6 +142,23 @@ time they open or refresh their portal. Rules of the road:
 The parser is generic — any `Label: value` row in a section shows up in the
 portal, so new kinds of info work without code changes.
 
+### HOA info arriving mid-transaction
+
+HOA details often aren't known at contract time. Instead of hand-typing the
+section, use **🛠 TC Tools → 🏘 Add / update HOA info** (webhook v6.8) with the
+property tab open:
+
+- A form asks for association name, management company, contact
+  name/email/phone, and estoppel fee — prefilled if the tab already has HOA
+  info. Empty fields are left out.
+- Optional **HOA Application / HOA Approval deadline** dates: existing
+  milestone rows are updated in place; missing ones are inserted above
+  Closing Date (with a checkbox), so they appear on the dashboard and the
+  agent's portal timeline.
+- Script-inserted dates don't fire the calendar onEdit trigger — run
+  **🔄 Sync dates → Calendar** afterwards to create the reminders.
+- The dashboard rebuilds automatically after saving.
+
 ## Known limits (v1)
 
 - Read-only — no uploads, messages, or notifications (spec Phases 2–3).

@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.5.2] — 2026-07-05
+
+### Added — HOA info mid-transaction (webhook v6.8)
+
+- New menu item **🛠 TC Tools → 🏘 Add / update HOA info**: with a property tab
+  open, a form collects association name, management company, contact
+  name/email/phone, and estoppel fee (prefilled from the tab when present) and
+  writes a correctly-formatted "HOA / Association" details section — replacing
+  the existing one or appending a new one.
+- Optional HOA Application / HOA Approval deadline dates update existing
+  milestone rows in place or insert new rows above Closing Date (with status
+  checkbox), so they flow to the dashboard, agent portal timeline, and — after
+  running 🔄 Sync dates → Calendar — calendar reminders.
+- Dashboard rebuilds automatically after saving.
+
+---
+
 ## [1.5.1] — 2026-07-05
 
 ### Added — portal "Contacts & details" per deal (webhook v6.7)
