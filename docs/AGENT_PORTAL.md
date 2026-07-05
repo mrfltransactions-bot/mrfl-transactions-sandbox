@@ -42,12 +42,22 @@ their phone and it behaves like an app.
 ## How Gloria shares links
 
 1. Open the master Sheet → **🛠 TC Tools → 🔗 Agent portal links**.
-2. The dialog lists every agent (from transaction tab prefixes) with their
+2. **First time only:** a prompt asks for the webhook URL — paste the same
+   one saved in the intake form's ⚙ Connection Settings. It's stored in
+   Script Properties (`portal_webapp_url`) and reused from then on.
+   (Auto-detecting the URL was unreliable because the script has multiple
+   web-app deployments — links must use the actively-maintained one.)
+3. The dialog lists every agent (from transaction tab prefixes) with their
    personal link. Keys are generated automatically the first time.
-3. Click a link to copy it, then text/email it to that agent — **only their
+4. Click a link to copy it, then text/email it to that agent — **only their
    own link**.
-4. New agents appear in the list automatically once they have a transaction
+5. New agents appear in the list automatically once they have a transaction
    tab; just open the dialog again.
+
+⚠️ **The deployment behind that webhook URL must be updated to a new version**
+whenever `Code.gs` changes (Deploy → Manage deployments → the deployment whose
+URL matches → ✏️ → New version). If the deployed version predates v6.6, the
+portal shows an "Almost ready" screen telling Gloria exactly that.
 
 ## Deploying changes
 
