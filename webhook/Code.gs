@@ -318,76 +318,93 @@ function onEditCalendarSync(e) {
   }
 }
 
+// Core sync for ONE property tab: align every milestone's calendar event with
+// the sheet dates, delete duplicates. Returns counts (no UI) so it can serve
+// both the menu button and dialog buttons.
+function _calSyncSheetCore(sheet) {
+  const propertyAddress = String(sheet.getRange(1, 1).getValue() || '').trim();
+  const gid = String(sheet.getSheetId());
+  const props = PropertiesService.getDocumentProperties();
+  const calendar = CalendarApp.getDefaultCalendar();
+
+  // Collect milestone rows + their dates.
+  const values = sheet.getDataRange().getValues();
+  const rows = [];
+  let minMs = null, maxMs = null;
+  for (let i = 0; i < values.length; i++) {
+    const mName = String(values[i][0] || '').trim();
+    if (CAL_KNOWN_MILESTONES.indexOf(mName) === -1) continue;
+    const raw = values[i][1];
+    const d = (raw instanceof Date) ? raw : parseDate(String(raw || '').trim());
+    if (!d || isNaN(d.getTime())) continue;
+    rows.push({ name: mName, date: d });
+    minMs = (minMs === null) ? d.getTime() : Math.min(minMs, d.getTime());
+    maxMs = (maxMs === null) ? d.getTime() : Math.max(maxMs, d.getTime());
+  }
+  if (rows.length === 0) throw new Error('No milestone dates found on this tab.');
+
+  // One broad calendar read covering the whole transaction (± 180 days) so we
+  // catch events still sitting on their old, pre-extension dates.
+  const winStart = new Date(minMs); winStart.setDate(winStart.getDate() - 180); winStart.setHours(0, 0, 0, 0);
+  const winEnd = new Date(maxMs); winEnd.setDate(winEnd.getDate() + 180); winEnd.setHours(23, 59, 59, 0);
+  const allEvents = calendar.getEvents(winStart, winEnd);
+
+  let moved = 0, created = 0;
+  const toDelete = [];
+  rows.forEach(r => {
+    const wantNorm = _calNormalizeTitle(_calEventTitle(r.name, propertyAddress));
+    const matches = allEvents.filter(ev => {
+      try { return _calNormalizeTitle(ev.getTitle()) === wantNorm; } catch (e) { return false; }
+    });
+    const s = new Date(r.date); s.setHours(EVENT_HOUR, 0, 0, 0);
+    const en = new Date(s); en.setHours(EVENT_HOUR + 1, 0, 0, 0);
+    if (matches.length > 0) {
+      matches[0].setTime(s, en);
+      props.setProperty(_calKey(gid, r.name), matches[0].getId());
+      moved++;
+      for (let j = 1; j < matches.length; j++) toDelete.push(matches[j]);
+    } else {
+      const ev = calendar.createEvent(_calEventTitle(r.name, propertyAddress), s, en,
+        { location: propertyAddress, description: 'Property: ' + propertyAddress });
+      REMINDER_MINUTES.forEach(min => { try { ev.addPopupReminder(min); } catch (e) {} });
+      props.setProperty(_calKey(gid, r.name), ev.getId());
+      created++;
+    }
+  });
+  let removed = 0;
+  toDelete.forEach(ev => { try { ev.deleteEvent(); removed++; } catch (e) {} });
+
+  return { property: propertyAddress, moved: moved, created: created, removed: removed };
+}
+
 // Manual, reliable path (🛠 TC Tools menu): sync EVERY milestone date on the
 // currently-open property tab to the calendar and remove any duplicate events.
 function syncActiveTabToCalendar() {
   const ui = SpreadsheetApp.getUi();
   try {
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
-    const sheet = ss.getActiveSheet();
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
     const name = sheet.getName();
     if (name === DASHBOARD_TAB_NAME || name.startsWith('📊') || !name.includes('_')) {
       ui.alert('Open a property tab first (the one with the milestone dates), then run this.');
       return;
     }
-
-    const propertyAddress = String(sheet.getRange(1, 1).getValue() || '').trim();
-    const gid = String(sheet.getSheetId());
-    const props = PropertiesService.getDocumentProperties();
-    const calendar = CalendarApp.getDefaultCalendar();
-
-    // Collect milestone rows + their dates.
-    const values = sheet.getDataRange().getValues();
-    const rows = [];
-    let minMs = null, maxMs = null;
-    for (let i = 0; i < values.length; i++) {
-      const mName = String(values[i][0] || '').trim();
-      if (CAL_KNOWN_MILESTONES.indexOf(mName) === -1) continue;
-      const raw = values[i][1];
-      const d = (raw instanceof Date) ? raw : parseDate(String(raw || '').trim());
-      if (!d || isNaN(d.getTime())) continue;
-      rows.push({ name: mName, date: d });
-      minMs = (minMs === null) ? d.getTime() : Math.min(minMs, d.getTime());
-      maxMs = (maxMs === null) ? d.getTime() : Math.max(maxMs, d.getTime());
-    }
-    if (rows.length === 0) { ui.alert('No milestone dates found on this tab.'); return; }
-
-    // One broad calendar read covering the whole transaction (± 180 days) so we
-    // catch events still sitting on their old, pre-extension dates.
-    const winStart = new Date(minMs); winStart.setDate(winStart.getDate() - 180); winStart.setHours(0, 0, 0, 0);
-    const winEnd = new Date(maxMs); winEnd.setDate(winEnd.getDate() + 180); winEnd.setHours(23, 59, 59, 0);
-    const allEvents = calendar.getEvents(winStart, winEnd);
-
-    let moved = 0, created = 0;
-    const toDelete = [];
-    rows.forEach(r => {
-      const wantNorm = _calNormalizeTitle(_calEventTitle(r.name, propertyAddress));
-      const matches = allEvents.filter(ev => {
-        try { return _calNormalizeTitle(ev.getTitle()) === wantNorm; } catch (e) { return false; }
-      });
-      const s = new Date(r.date); s.setHours(EVENT_HOUR, 0, 0, 0);
-      const en = new Date(s); en.setHours(EVENT_HOUR + 1, 0, 0, 0);
-      if (matches.length > 0) {
-        matches[0].setTime(s, en);
-        props.setProperty(_calKey(gid, r.name), matches[0].getId());
-        moved++;
-        for (let j = 1; j < matches.length; j++) toDelete.push(matches[j]);
-      } else {
-        const ev = calendar.createEvent(_calEventTitle(r.name, propertyAddress), s, en,
-          { location: propertyAddress, description: 'Property: ' + propertyAddress });
-        REMINDER_MINUTES.forEach(min => { try { ev.addPopupReminder(min); } catch (e) {} });
-        props.setProperty(_calKey(gid, r.name), ev.getId());
-        created++;
-      }
-    });
-    let removed = 0;
-    toDelete.forEach(ev => { try { ev.deleteEvent(); removed++; } catch (e) {} });
-
-    ui.alert('✅ Calendar synced — ' + propertyAddress + '\n\n' +
-      'Updated: ' + moved + '\nCreated: ' + created + '\nDuplicates removed: ' + removed);
+    const r = _calSyncSheetCore(sheet);
+    ui.alert('✅ Calendar synced — ' + r.property + '\n\n' +
+      'Updated: ' + r.moved + '\nCreated: ' + r.created + '\nDuplicates removed: ' + r.removed);
   } catch (err) {
     ui.alert('Sync failed: ' + err.toString());
   }
+}
+
+// Same sync, callable from dialogs (google.script.run) — returns a summary
+// string instead of showing alerts.
+function syncCalendarForDialog(sheetId) {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheets()
+    .find(s => s.getSheetId() === Number(sheetId));
+  if (!sheet) throw new Error('Property tab not found — close and try from 🛠 TC Tools → 🔄 Sync dates → Calendar.');
+  const r = _calSyncSheetCore(sheet);
+  return '✅ Calendar synced — updated ' + r.moved + ', created ' + r.created +
+    ', duplicates removed ' + r.removed + '.';
 }
 
 // One-time setup: install the installable onEdit trigger and authorize Calendar.
@@ -2073,8 +2090,31 @@ function showHoaDialog() {
     'var f={};["association","mgmt","contact","email","phone","estoppel","appDate","approvalDate"]' +
     '.forEach(function(id){f[id]=document.getElementById(id).value.trim();});' +
     'f.sheetId=' + sheet.getSheetId() + ';' +
-    'google.script.run.withSuccessHandler(function(msg){' +
-    'document.getElementById("out").textContent=msg;setTimeout(function(){google.script.host.close();},1600);' +
+    'google.script.run.withSuccessHandler(function(res){' +
+    'if(res&&res.datesSaved){' +
+    'document.body.innerHTML=\'<div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.5;padding:10px 6px">\'+' +
+    '\'<h3 style="margin:0 0 8px">📅 One more click for calendar reminders</h3>\'+' +
+    '\'<p style="margin:0 0 6px;color:#4B5563">\'+(res.msg||"Saved.")+\'</p>\'+' +
+    '\'<p style="margin:0 0 16px;color:#4B5563">Deadline dates added by this form need a quick sync to show on your Google Calendar.</p>\'+' +
+    '\'<button id="syncnow" style="background:#4338CA;color:#fff;border:none;padding:10px 16px;border-radius:6px;font-weight:700;cursor:pointer">📅 Sync calendar now</button>\'+' +
+    '\'<button id="later" style="background:#fff;color:#4338CA;border:1px solid #4338CA;padding:10px 16px;border-radius:6px;font-weight:700;cursor:pointer;margin-left:8px">Later</button>\'+' +
+    '\'<div id="out2" style="margin-top:12px;font-weight:600;color:#10B981"></div></div>\';' +
+    'document.getElementById("syncnow").onclick=function(){' +
+    'var sb=this;sb.disabled=true;sb.textContent="Syncing…";' +
+    'google.script.run.withSuccessHandler(function(m){' +
+    'document.getElementById("out2").textContent=m;setTimeout(function(){google.script.host.close();},2400);' +
+    '}).withFailureHandler(function(e){' +
+    'document.getElementById("out2").style.color="#991B1B";' +
+    'document.getElementById("out2").textContent="Sync error: "+e.message+" — you can run 🔄 Sync dates → Calendar from the menu.";' +
+    'sb.disabled=false;sb.textContent="📅 Sync calendar now";' +
+    '}).syncCalendarForDialog(' + sheet.getSheetId() + ');};' +
+    'document.getElementById("later").onclick=function(){' +
+    'document.getElementById("out2").style.color="#92400E";' +
+    'document.getElementById("out2").textContent="OK — remember: 🛠 TC Tools → 🔄 Sync dates → Calendar when you\\u2019re ready.";' +
+    'setTimeout(function(){google.script.host.close();},2800);};' +
+    '}else{' +
+    'document.getElementById("out").textContent=(res&&res.msg)||"✓ Saved";' +
+    'setTimeout(function(){google.script.host.close();},1600);}' +
     '}).withFailureHandler(function(e){' +
     'document.getElementById("out").style.color="#991B1B";' +
     'document.getElementById("out").textContent="Error: "+e.message;b.disabled=false;b.textContent="Save HOA info";' +
@@ -2169,31 +2209,16 @@ function saveHoaInfo(f) {
     datesMsg = (updated ? updated + ' deadline' + (updated > 1 ? 's' : '') + ' updated' : '') +
       (updated && added ? ', ' : '') +
       (added ? added + ' deadline' + (added > 1 ? 's' : '') + ' added' : '');
-
-    // Dates written by a script don't fire the calendar onEdit trigger —
-    // offer to run the sync right now so the reminder isn't forgotten.
-    try {
-      const ui = SpreadsheetApp.getUi();
-      const answer = ui.alert(
-        '📅 Calendar sync',
-        'HOA deadline dates were saved to the milestone table.\n\n' +
-        'Add / update them on your Google Calendar now?',
-        ui.ButtonSet.YES_NO
-      );
-      if (answer === ui.Button.YES) {
-        ss.setActiveSheet(sheet);
-        syncActiveTabToCalendar();  // shows its own ✅ Updated/Created summary
-        datesMsg += ' · calendar synced';
-      } else {
-        ui.alert('No problem — just remember to run 🛠 TC Tools → 🔄 Sync dates → Calendar ' +
-          'later, so the new HOA deadlines get calendar reminders.');
-      }
-    } catch (e) { /* UI unavailable — keep the save regardless */ }
   }
 
   try { rebuildDashboard(); } catch (e) { /* non-fatal */ }
 
-  return '✓ ' + [detailsMsg, datesMsg].filter(String).join(' · ');
+  // datesSaved tells the dialog to show the "Sync calendar now" reminder —
+  // script-written dates don't fire the calendar onEdit trigger.
+  return {
+    msg: '✓ ' + [detailsMsg, datesMsg].filter(String).join(' · '),
+    datesSaved: wanted.length > 0
+  };
 }
 
 // ============================================================
