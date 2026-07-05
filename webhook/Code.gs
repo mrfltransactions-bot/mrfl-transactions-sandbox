@@ -1714,6 +1714,104 @@ function _portalListAgents() {
   return Object.keys(seen).map(k => seen[k]).sort();
 }
 
+// Parse a property tab's details block (written by doPost from the intake
+// form) into display sections for the portal: parties, agents, title
+// companies, lender, HOA, concessions. Generic label:value capture, so new
+// intake fields flow through without portal changes.
+function _portalDetailsFromValues(values) {
+  const skipPrefixes = ['Property Address:', 'EFFECTIVE DATE:', 'Side Represented:', 'Manual Status:'];
+  const standalone = [
+    ['Escrow Agent/ Buyer Title', 'Buyer title / escrow'],
+    ['Escrow Agent/ Title', 'Title / escrow'],
+    ['Seller Title', 'Seller title'],
+    ['Loan Officer', 'Loan officer'],
+    ['Loan Processor', 'Loan processor'],
+    ['HOA / Association', 'HOA / Association']
+  ];
+  const partyStarts = [
+    ['Seller(s):', 'Seller'],
+    ['Buyer(s):', 'Buyer'],
+    ["Seller's Agent:", 'Listing agent'],
+    ["Co-Seller's Agent:", 'Co-listing agent'],
+    ["Buyer's Agent:", "Buyer's agent"],
+    ["Co-Buyer's Agent:", "Co-buyer's agent"]
+  ];
+
+  const txn = { title: 'Transaction', items: [] };
+  const sections = [];
+  const concessions = [];
+  let current = null;
+  let inDetails = false;
+
+  for (let i = 1; i < values.length; i++) {  // skip row 1 (property header)
+    const line = String(values[i][0] || '').trim();
+    if (!line) continue;
+    if (line === 'Milestone') continue;
+    if (CAL_KNOWN_MILESTONES.indexOf(line) >= 0) continue;
+
+    if (!inDetails) {
+      if (line.indexOf('Property Address:') === 0) { inDetails = true; continue; }
+      concessions.push(line);   // rows between milestones and details
+      continue;
+    }
+    if (skipPrefixes.some(function (p) { return line.indexOf(p) === 0; })) continue;
+
+    // Standalone section headers (no colon-value on the line)
+    let handled = false;
+    for (let s = 0; s < standalone.length; s++) {
+      if (line === standalone[s][0]) {
+        current = { title: standalone[s][1], items: [] };
+        sections.push(current);
+        handled = true;
+        break;
+      }
+    }
+    if (handled) continue;
+
+    // Section-starting "Label: value" lines (parties and agents)
+    for (let p = 0; p < partyStarts.length; p++) {
+      if (line.indexOf(partyStarts[p][0]) === 0) {
+        current = { title: partyStarts[p][1], items: [] };
+        sections.push(current);
+        const v = line.substring(partyStarts[p][0].length).trim();
+        if (v) current.items.push({ label: 'Name', value: v });
+        handled = true;
+        break;
+      }
+    }
+    if (handled) continue;
+
+    // Generic "Label: value" line → goes to the current section (or Transaction)
+    const idx = line.indexOf(':');
+    if (idx > 0 && idx <= 40) {
+      const label = _portalPrettyLabel(line.substring(0, idx));
+      const value = line.substring(idx + 1).trim();
+      if (!value) continue;
+      (current || txn).items.push({ label: label, value: value });
+    }
+  }
+
+  const out = [];
+  if (txn.items.length) out.push(txn);
+  sections.forEach(function (s) { if (s.items.length) out.push(s); });
+  if (concessions.length) {
+    out.push({
+      title: 'Concessions',
+      items: concessions.map(function (c) { return { label: '', value: c }; })
+    });
+  }
+  return out;
+}
+
+function _portalPrettyLabel(label) {
+  let l = String(label || '').trim();
+  if (l === 'Seller(s)' || l === 'Buyer(s)') return 'Name';
+  l = l.replace(/^Seller\(s\)\s+/, '').replace(/^Buyer\(s\)\s+/, '');
+  if (l === 'Co-Brokerage') return 'Brokerage';
+  l = l.replace(/^Co-Brokerage\s+/, '').replace(/^Co-Agent\s+/, '').replace(/^Agent\s+/, '');
+  return l;
+}
+
 // GET ?view=portal&agent=X&key=Y → that agent's deals (or an error).
 function portalResponse_(params) {
   const agent = String(params.agent || '').trim();
@@ -1740,6 +1838,8 @@ function portalResponse_(params) {
     let d = null;
     try { d = extractTabData(sheet); } catch (err) { return; }
     if (!d) return;
+    let details = [];
+    try { details = _portalDetailsFromValues(sheet.getDataRange().getValues()); } catch (err) { details = []; }
     deals.push({
       property: d.propertyDisplay,
       side: d.side || '',
@@ -1755,7 +1855,8 @@ function portalResponse_(params) {
         name: m.name,
         date: _portalIso(m.date),
         completed: !!m.completed
-      }))
+      })),
+      details: details
     });
   });
 

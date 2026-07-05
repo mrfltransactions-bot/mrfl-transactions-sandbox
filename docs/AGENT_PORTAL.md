@@ -22,6 +22,12 @@ existing Apps Script webhook, so whatever Gloria updates in the sheet
   - "Day X of Y" progress bar from effective date to closing
   - amber "Next: [milestone] — [date] (in N days)" callout
   - full milestone list: ✓ done (from the sheet's checkboxes), red **!** past due, amber ● within 7 days, gray ○ upcoming
+  - collapsible **Contacts & details** section (v6.7): everything the intake
+    form extracted — purchase price/tax ID/financing, seller & buyer, listing
+    and buyer's agents (incl. co-agents), title/escrow companies (both sides
+    when split), loan officer & processor, HOA info, and concessions. Emails
+    are tap-to-email and phone numbers tap-to-call. Parsed generically from
+    the tab's details block, so new intake fields flow through automatically.
 - **Past transactions** collapsed at the bottom
 - Footer with Gloria's contact info
 

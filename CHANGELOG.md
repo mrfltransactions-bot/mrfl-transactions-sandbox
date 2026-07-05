@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.5.1] — 2026-07-05
+
+### Added — portal "Contacts & details" per deal (webhook v6.7)
+
+- Each deal card now has a collapsible Contacts & details section showing
+  everything extracted from the intake form: price/tax ID/financing, seller,
+  buyer, listing/buyer's agents (incl. co-agents), title & escrow companies
+  (both when split), loan officer/processor, HOA information, and concessions.
+- Emails render as tap-to-email and phones as tap-to-call links.
+- `_portalDetailsFromValues` parses the tab's details block generically
+  (label/value with section headers), so new intake fields appear in the
+  portal without further changes. Existing agent links keep working — only a
+  Code.gs paste + new-version deployment is needed.
+
+### Fixed
+
+- Agent portal links are now built from a stored, known-good webhook URL
+  (one-time prompt; `portal_webapp_url` in Script Properties) instead of
+  auto-detecting — the script has multiple web-app deployments and detection
+  could pick a stale/non-public one. The portal page now shows a clear
+  "Almost ready" message if the endpoint is running a pre-portal version.
+
+---
+
 ## [1.5.0] — 2026-07-05
 
 ### Added — Agent Portal (realtor-facing transaction view)

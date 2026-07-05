@@ -132,6 +132,25 @@
   .mile.late .mdate, .mile.late .mname { color: var(--urgent); font-weight: 600; }
   .mile.soon .mdate { color: #92400E; font-weight: 600; }
 
+  /* ---------- contacts & details ---------- */
+  details.contacts { margin-top: 10px; border-top: 1px solid var(--border-soft); }
+  details.contacts summary {
+    cursor: pointer; font-size: 13px; font-weight: 700; color: var(--indigo-deep);
+    padding: 10px 2px 6px; list-style: none;
+  }
+  details.contacts summary::-webkit-details-marker { display: none; }
+  details.contacts summary::before { content: "▸ "; }
+  details.contacts[open] summary::before { content: "▾ "; }
+  .csec { margin: 6px 0 12px; }
+  .ctitle {
+    font-size: 11px; font-weight: 800; letter-spacing: 0.7px; text-transform: uppercase;
+    color: var(--purple); margin-bottom: 4px;
+  }
+  .crow { display: flex; gap: 10px; padding: 3px 0; font-size: 13px; }
+  .clabel { flex: 0 0 108px; color: var(--text-muted); }
+  .cval { flex: 1; color: var(--text); word-break: break-word; }
+  .cval a { color: var(--indigo-deep); text-decoration: none; font-weight: 600; }
+
   details.past { margin-top: 8px; }
   details.past summary {
     cursor: pointer; font-size: 13px; font-weight: 700; color: var(--text-soft);
@@ -315,8 +334,36 @@
       });
       h += '</div>';
     }
+
+    if (deal.details && deal.details.length) {
+      h += '<details class="contacts"><summary>Contacts &amp; details</summary>';
+      deal.details.forEach(function (sec) {
+        h += '<div class="csec"><div class="ctitle">' + esc(sec.title) + '</div>';
+        (sec.items || []).forEach(function (it) {
+          h += '<div class="crow">' +
+            (it.label ? '<div class="clabel">' + esc(it.label) + '</div>' : '') +
+            '<div class="cval">' + contactValue(it.label, it.value) + '</div></div>';
+        });
+        h += '</div>';
+      });
+      h += '</details>';
+    }
     h += '</div>';
     return h;
+  }
+
+  // Emails → tap-to-email, phones → tap-to-call; everything else plain text.
+  function contactValue(label, value) {
+    var l = String(label || '').toLowerCase();
+    var v = String(value || '');
+    if (/email/.test(l) && v.indexOf('@') > 0) {
+      return '<a href="mailto:' + esc(v) + '">' + esc(v) + '</a>';
+    }
+    if (/phone|mobile/.test(l)) {
+      var digits = v.replace(/[^\d+]/g, '');
+      if (digits.length >= 10) return '<a href="tel:' + esc(digits) + '">' + esc(v) + '</a>';
+    }
+    return esc(v);
   }
 
   function render(data) {
