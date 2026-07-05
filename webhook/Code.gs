@@ -1791,14 +1791,29 @@ function showPortalLinks() {
     return;
   }
 
-  let execUrl = '';
-  try { execUrl = ScriptApp.getService().getUrl() || ''; } catch (e) { execUrl = ''; }
-  if (!execUrl) {
-    ui.alert('Could not read the web app URL. Make sure the script is deployed as a web app (Deploy → Manage deployments).');
-    return;
-  }
-
+  // Use the SAME webhook URL the intake form uses — stored once, then reused.
+  // (Auto-detecting via ScriptApp.getService().getUrl() proved unreliable when
+  // multiple deployments exist; the stored URL is deterministic.)
   const props = PropertiesService.getScriptProperties();
+  let execUrl = props.getProperty('portal_webapp_url') || '';
+  if (!execUrl) {
+    const resp = ui.prompt(
+      'Portal setup — one time',
+      'Paste your webhook URL — the SAME one saved in the intake form under ' +
+      '⚙ Connection Settings → Apps Script Webhook URL.\n\n' +
+      'It looks like: https://script.google.com/macros/s/…/exec',
+      ui.ButtonSet.OK_CANCEL
+    );
+    if (resp.getSelectedButton() !== ui.Button.OK) return;
+    execUrl = String(resp.getResponseText() || '').trim();
+    if (!/^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec$/.test(execUrl)) {
+      ui.alert('That doesn\'t look like a webhook URL. It must start with ' +
+        'https://script.google.com/macros/s/ and end with /exec. ' +
+        'Copy it from the intake form\'s ⚙ Connection Settings and try again.');
+      return;
+    }
+    props.setProperty('portal_webapp_url', execUrl);
+  }
   const u = _portalB64Url(execUrl);
 
   const rows = agents.map(ref => {
@@ -1821,7 +1836,11 @@ function showPortalLinks() {
     'email it to that agent. They can bookmark it or add it to their phone\'s home screen — ' +
     'it always shows their transactions, live from this sheet.</p>' +
     '<p style="color:#991B1B">Only send each agent <b>their own</b> link — a link shows that agent\'s deals to whoever has it.</p>' +
-    '<table style="width:100%;border-collapse:collapse">' + rows + '</table></div>';
+    '<table style="width:100%;border-collapse:collapse">' + rows + '</table>' +
+    '<p style="color:#9CA3AF;font-size:11px;margin-top:10px">Links use the webhook URL ending ' +
+    '“…' + execUrl.slice(-14) + '”. To point them at a different webhook URL, delete the ' +
+    '<b>portal_webapp_url</b> row under Apps Script → Project Settings → Script Properties, ' +
+    'then open this dialog again.</p></div>';
 
   ui.showModalDialog(
     HtmlService.createHtmlOutput(html).setWidth(680).setHeight(Math.min(160 + agents.length * 56, 560)),

@@ -390,6 +390,15 @@
       .then(function (data) {
         loading = false;
         if (!data.success) {
+          // The webhook answered, but with a pre-portal payload — the deployed
+          // version is older than v6.6. Surface that clearly instead of "invalid".
+          if (data.status === 'ok' || data.generated_at) {
+            showState('🛠', 'Almost ready',
+              'The portal isn’t switched on yet on Gloria’s side. Let her know you saw this. ' +
+              '<span style="color:#9CA3AF">(For Gloria: the webhook deployment is running an older version — ' +
+              'open Apps Script → Deploy → Manage deployments and update it to a New version.)</span>');
+            return;
+          }
           showState('🔒', 'Link not valid',
             esc(data.error || 'Ask Gloria for a fresh portal link.'));
           return;
