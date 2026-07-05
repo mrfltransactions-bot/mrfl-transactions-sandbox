@@ -121,6 +121,27 @@ Sheet + Apps Script + Vercel stack. If agents love it, the spec remains the
 roadmap for the bigger build. `portal/agent-dashboard.html` is the original
 static design mockup the visual style came from.
 
+## Updating transaction details mid-transaction
+
+The portal is a **live view of the property tab** — it re-reads the sheet on
+every open/refresh. To change any detail (title company switches, new lender,
+updated phone number), edit the text **directly in that property tab**
+(column A, below the milestone table). The agent sees the new value the next
+time they open or refresh their portal. Rules of the road:
+
+- Keep the `Label: value` shape — e.g. change
+  `Company: Old Title LLC` → `Company: New Title Group`.
+- Lines belong to the section header above them (`Loan Officer`,
+  `Seller Title`, `Escrow Agent/ Title`, `HOA / Association`).
+- To add a missing piece, insert a row in the right section, e.g.
+  `Email: closer@newtitle.com` under the title section.
+- To add a whole new section (say a lender was added to a cash-turned-financed
+  deal), type the header on its own row (`Loan Officer`) and the
+  `Company:` / `Contact:` / `Email:` / `Mobile:` rows beneath it.
+
+The parser is generic — any `Label: value` row in a section shows up in the
+portal, so new kinds of info work without code changes.
+
 ## Known limits (v1)
 
 - Read-only — no uploads, messages, or notifications (spec Phases 2–3).

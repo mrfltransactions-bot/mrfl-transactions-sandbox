@@ -1751,8 +1751,16 @@ function _portalDetailsFromValues(values) {
 
     if (!inDetails) {
       if (line.indexOf('Property Address:') === 0) { inDetails = true; continue; }
-      concessions.push(line);   // rows between milestones and details
-      continue;
+      // Older tabs may lack the "Property Address:" marker line — also enter
+      // details mode on any recognizable detail line, so nothing gets misfiled
+      // as a concession.
+      const looksDetail =
+        ['Property Tax ID:', 'Purchase Price:', 'Financing Type:', 'EFFECTIVE DATE:', 'Side Represented:', 'Manual Status:']
+          .some(function (p) { return line.indexOf(p) === 0; }) ||
+        partyStarts.some(function (ps) { return line.indexOf(ps[0]) === 0; }) ||
+        standalone.some(function (st) { return line === st[0]; });
+      if (!looksDetail) { concessions.push(line); continue; }
+      inDetails = true;  // fall through and process this line normally
     }
     if (skipPrefixes.some(function (p) { return line.indexOf(p) === 0; })) continue;
 
