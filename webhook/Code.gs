@@ -71,6 +71,8 @@ function onOpen() {
     .addSeparator()
     .addItem('🔄 Sync dates → Calendar', 'syncActiveTabToCalendar')
     .addItem('📅 Set up calendar sync', 'setupCalendarSync')
+    .addSeparator()
+    .addItem('🔗 Agent portal links', 'showPortalLinks')
     .addItem('ℹ About', 'showAbout')
     .addToUi();
 }
@@ -90,6 +92,8 @@ function toggleActiveOnly() {
     .addSeparator()
     .addItem('🔄 Sync dates → Calendar', 'syncActiveTabToCalendar')
     .addItem('📅 Set up calendar sync', 'setupCalendarSync')
+    .addSeparator()
+    .addItem('🔗 Agent portal links', 'showPortalLinks')
     .addItem('ℹ About', 'showAbout')
     .addToUi();
 }
@@ -557,7 +561,8 @@ function extractTabData(sheet) {
     daysUntil: daysUntil,
     progressElapsed: progressElapsed,
     progressTotal: progressTotal,
-    status: status
+    status: status,
+    milestones: milestones  // full list (name, date, completed) — used by the agent portal
   };
 }
 
@@ -1669,6 +1674,162 @@ function jsonResponse(obj) {
 }
 
 // ============================================================
+// v6.6 — AGENT PORTAL ENDPOINT + PRIVATE LINKS
+//
+// Lets each realtor view their own transactions in a read-only
+// web app (portal/index.html on Vercel). Access is via a private
+// per-agent key stored in Script Properties; the endpoint returns
+// ONLY that agent's deals. Keys are generated and shared from the
+// sheet menu: 🛠 TC Tools → 🔗 Agent portal links.
+// ============================================================
+
+const PORTAL_BASE_URL = 'https://mrfl-transactions.vercel.app/portal/';
+
+function _portalKeyProp(agentRef) {
+  return 'portal_key_' + String(agentRef || '').trim().toLowerCase();
+}
+
+function _portalRandomKey() {
+  const chars = 'abcdefghjkmnpqrstuvwxyz23456789';  // unambiguous charset
+  let s = '';
+  for (let i = 0; i < 20; i++) s += chars.charAt(Math.floor(Math.random() * chars.length));
+  return s;
+}
+
+function _portalIso(d) {
+  if (!d || !(d instanceof Date) || isNaN(d.getTime())) return '';
+  return Utilities.formatDate(d, Session.getScriptTimeZone(), 'yyyy-MM-dd');
+}
+
+// Distinct agent refs from transaction tab names ("Martha_510 SW..." → "Martha"),
+// preserving the casing of the first occurrence.
+function _portalListAgents() {
+  const seen = {};
+  SpreadsheetApp.getActiveSpreadsheet().getSheets().forEach(sheet => {
+    const name = sheet.getName();
+    if (name.startsWith('📊') || !name.includes('_')) return;
+    const ref = name.substring(0, name.indexOf('_')).trim();
+    if (ref && !seen[ref.toLowerCase()]) seen[ref.toLowerCase()] = ref;
+  });
+  return Object.keys(seen).map(k => seen[k]).sort();
+}
+
+// GET ?view=portal&agent=X&key=Y → that agent's deals (or an error).
+function portalResponse_(params) {
+  const agent = String(params.agent || '').trim();
+  const key = String(params.key || '').trim();
+  if (!agent || !key) {
+    return jsonResponse({ success: false, error: 'This link is incomplete. Ask Gloria for a fresh portal link.' });
+  }
+  const stored = PropertiesService.getScriptProperties().getProperty(_portalKeyProp(agent));
+  if (!stored || stored !== key) {
+    return jsonResponse({ success: false, error: 'This link is not valid anymore. Ask Gloria for a fresh portal link.' });
+  }
+
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const wanted = agent.toLowerCase();
+  let displayRef = agent;
+  const deals = [];
+
+  ss.getSheets().forEach(sheet => {
+    const name = sheet.getName();
+    if (name.startsWith('📊') || !name.includes('_')) return;
+    const ref = name.substring(0, name.indexOf('_')).trim();
+    if (ref.toLowerCase() !== wanted) return;
+    displayRef = ref;
+    let d = null;
+    try { d = extractTabData(sheet); } catch (err) { return; }
+    if (!d) return;
+    deals.push({
+      property: d.propertyDisplay,
+      side: d.side || '',
+      status: d.status,
+      effective_date: _portalIso(d.effectiveDate),
+      closing_date: _portalIso(d.closingDate),
+      next_deadline: d.deadlineName || '',
+      next_deadline_date: _portalIso(d.deadlineDate),
+      days_until: (typeof d.daysUntil === 'number') ? d.daysUntil : null,
+      progress_elapsed: d.progressElapsed,
+      progress_total: d.progressTotal,
+      milestones: (d.milestones || []).map(m => ({
+        name: m.name,
+        date: _portalIso(m.date),
+        completed: !!m.completed
+      }))
+    });
+  });
+
+  // Active deals first (soonest closing first), then closed/cancelled/on-hold.
+  const doneStatuses = ['closed', 'cancelled'];
+  deals.sort((a, b) => {
+    const aDone = doneStatuses.indexOf(a.status) >= 0 ? 1 : 0;
+    const bDone = doneStatuses.indexOf(b.status) >= 0 ? 1 : 0;
+    if (aDone !== bDone) return aDone - bDone;
+    return String(a.closing_date).localeCompare(String(b.closing_date));
+  });
+
+  return jsonResponse({
+    success: true,
+    agent: displayRef,
+    generated_at: new Date().toISOString(),
+    deals: deals
+  });
+}
+
+// Base64url without padding — used to pack the web-app URL into portal links
+// so the public portal page never hardcodes this endpoint.
+function _portalB64Url(s) {
+  return Utilities.base64EncodeWebSafe(s, Utilities.Charset.UTF_8).replace(/=+$/, '');
+}
+
+// Menu: generate (if needed) and show each agent's private portal link.
+function showPortalLinks() {
+  const ui = SpreadsheetApp.getUi();
+  const agents = _portalListAgents();
+  if (agents.length === 0) {
+    ui.alert('No transaction tabs found yet — portal links appear once you have deals in the sheet.');
+    return;
+  }
+
+  let execUrl = '';
+  try { execUrl = ScriptApp.getService().getUrl() || ''; } catch (e) { execUrl = ''; }
+  if (!execUrl) {
+    ui.alert('Could not read the web app URL. Make sure the script is deployed as a web app (Deploy → Manage deployments).');
+    return;
+  }
+
+  const props = PropertiesService.getScriptProperties();
+  const u = _portalB64Url(execUrl);
+
+  const rows = agents.map(ref => {
+    let key = props.getProperty(_portalKeyProp(ref));
+    if (!key) {
+      key = _portalRandomKey();
+      props.setProperty(_portalKeyProp(ref), key);
+    }
+    const link = PORTAL_BASE_URL + '?u=' + u + '&agent=' + encodeURIComponent(ref) + '&key=' + key;
+    return '<tr>' +
+      '<td style="padding:8px 12px 8px 0;font-weight:600;white-space:nowrap;vertical-align:top">' + ref + '</td>' +
+      '<td style="padding:8px 0"><input type="text" readonly value="' + link + '" ' +
+      'style="width:100%;font-size:11px;padding:6px;border:1px solid #ccc;border-radius:4px" ' +
+      'onclick="this.select();document.execCommand(\'copy\');this.nextElementSibling.style.display=\'inline\'">' +
+      '<span style="display:none;color:#10B981;font-size:11px;margin-left:6px">Copied!</span></td></tr>';
+  }).join('');
+
+  const html = '<div style="font-family:Arial,sans-serif;font-size:13px;line-height:1.5">' +
+    '<p><b>Each agent gets their own private link.</b> Click a link to copy it, then text or ' +
+    'email it to that agent. They can bookmark it or add it to their phone\'s home screen — ' +
+    'it always shows their transactions, live from this sheet.</p>' +
+    '<p style="color:#991B1B">Only send each agent <b>their own</b> link — a link shows that agent\'s deals to whoever has it.</p>' +
+    '<table style="width:100%;border-collapse:collapse">' + rows + '</table></div>';
+
+  ui.showModalDialog(
+    HtmlService.createHtmlOutput(html).setWidth(680).setHeight(Math.min(160 + agents.length * 56, 560)),
+    '🔗 Agent portal links'
+  );
+}
+
+// ============================================================
 // v6.2 — WIDGET GET ENDPOINT
 //
 // Reads the dashboard tab of the master sheet and returns the
@@ -1688,6 +1849,10 @@ const WIDGET_DEFAULT_DAYS = 4;        // default window if no ?days param
 function doGet(e) {
   try {
     const params = (e && e.parameter) || {};
+
+    // v6.6 — agent portal view (key-protected, per-agent data)
+    if (params.view === 'portal') return portalResponse_(params);
+
     const days = parseInt(params.days, 10) || WIDGET_DEFAULT_DAYS;
     const agentFilter = params.agent || null;
 

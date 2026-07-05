@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.5.0] — 2026-07-05
+
+### Added — Agent Portal (realtor-facing transaction view)
+
+- `portal/index.html`: mobile-first read-only web app where each realtor sees
+  their own transactions live — stats, per-deal cards with side/status pills,
+  "Day X of Y" progress, next-deadline callout, and a full milestone timeline
+  (done ✓ from the sheet's checkboxes, past-due, upcoming). Past deals
+  collapsed. Friendly error screens; "Add to Home Screen" friendly.
+  Public at `mrfl-transactions.vercel.app/portal/`.
+- Webhook v6.6: key-protected `?view=portal` GET mode returning only the
+  requesting agent's deals (matched by tab-name prefix, validated against a
+  per-agent key in Script Properties). `extractTabData` now also returns the
+  full milestones array.
+- New menu item **🛠 TC Tools → 🔗 Agent portal links**: auto-generates each
+  agent's private key and shows copyable personal links to share.
+- Access model: private per-agent links (no logins). The public page contains
+  no endpoint URL — it travels base64-encoded inside each personal link.
+- `docs/AGENT_PORTAL.md` — usage, security model, endpoint contract, deploy
+  steps. This is Phase 1 (read-only validation) of `CLIENT_PORTAL_SPEC.md`.
+
+### Notes
+
+- Apps Script `doGet` changes require a **new version** web-app deployment
+  (Deploy → Manage deployments → Edit → New version), not just a paste+save.
+- Discovered the production domain `mrfl-transactions.vercel.app` is public,
+  while the `-git-main-` branch URL remains behind Vercel login protection.
+
+---
+
 ## [1.4.0] — 2026-07-05
 
 See `docs/JULY_2026_UPDATES.md` for the full usage + deploy guide.

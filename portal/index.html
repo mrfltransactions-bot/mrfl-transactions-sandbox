@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1E1B4B">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="MRFL">
+<meta name="robots" content="noindex, nofollow">
+<title>MRFL · My Transactions</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📋</text></svg>">
+<style>
+  :root {
+    --indigo-deep:   #4338CA;
+    --indigo-navy:   #312E81;
+    --indigo-darker: #1E1B4B;
+    --purple:        #8B5CF6;
+    --lavender:      #DDD6FE;
+    --purple-tint:   #F5F3FF;
+
+    --bg:            #FAFAFA;
+    --surface:       #FFFFFF;
+    --border:        #E5E7EB;
+    --border-soft:   #F3F4F6;
+
+    --text:          #1E1B4B;
+    --text-soft:     #4B5563;
+    --text-muted:    #9CA3AF;
+
+    --past-due:      #991B1B;
+    --urgent:        #EF4444;
+    --warning:       #F59E0B;
+    --on-track:      #10B981;
+    --closed:        #6B7280;
+    --on-hold:       #F97316;
+
+    --shadow:        0 4px 12px -2px rgba(30, 27, 75, 0.08);
+    --radius:        12px;
+    --radius-sm:     8px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+  .shell { max-width: 720px; margin: 0 auto; padding: 16px; }
+
+  /* ---------- header ---------- */
+  header.top {
+    background: var(--indigo-darker);
+    color: #fff;
+    padding: max(14px, env(safe-area-inset-top)) 0 14px;
+  }
+  header.top .shell { padding-top: 0; padding-bottom: 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .brand { font-weight: 800; font-size: 14px; letter-spacing: 1.5px; white-space: nowrap; }
+  .brand .accent { color: var(--purple); }
+  .refresh-btn {
+    background: rgba(255,255,255,0.1); border: none; color: #fff;
+    width: 36px; height: 36px; border-radius: 50%; font-size: 16px; cursor: pointer;
+  }
+  .refresh-btn:active { background: rgba(255,255,255,0.25); }
+
+  .hero {
+    background: var(--indigo-darker); color: #fff;
+    padding: 6px 0 22px;
+  }
+  .hero h1 { font-size: 22px; font-weight: 700; }
+  .hero .sub { font-size: 13px; color: rgba(255,255,255,0.65); margin-top: 2px; }
+
+  /* ---------- stats ---------- */
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: -14px auto 18px; }
+  .stat {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 12px 10px; text-align: center; box-shadow: var(--shadow);
+  }
+  .stat .num { font-size: 22px; font-weight: 800; color: var(--indigo-navy); line-height: 1.2; }
+  .stat .lbl { font-size: 11px; color: var(--text-soft); margin-top: 2px; }
+
+  /* ---------- deal cards ---------- */
+  .section-title { font-size: 13px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; color: var(--text-soft); margin: 20px 2px 10px; }
+  .deal {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    box-shadow: var(--shadow); padding: 16px; margin-bottom: 14px;
+  }
+  .deal-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+  .deal-addr { font-size: 16px; font-weight: 700; line-height: 1.35; }
+  .pills { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+  .pill {
+    display: inline-block; font-size: 11px; font-weight: 600; padding: 3px 9px;
+    border-radius: 999px; white-space: nowrap;
+  }
+  .pill.side { background: var(--purple-tint); color: var(--indigo-deep); border: 1px solid var(--lavender); }
+  .pill.st-on_track, .pill.st-active { background: #ECFDF5; color: #065F46; }
+  .pill.st-warning  { background: #FFFBEB; color: #92400E; }
+  .pill.st-urgent, .pill.st-past_due { background: #FEF2F2; color: #991B1B; }
+  .pill.st-closed   { background: #F3F4F6; color: #4B5563; }
+  .pill.st-cancelled{ background: #FEF2F2; color: #7F1D1D; }
+  .pill.st-on_hold  { background: #FFF7ED; color: #9A3412; }
+
+  .daypill { font-size: 12px; font-weight: 700; color: var(--indigo-deep); white-space: nowrap; }
+
+  .progress { height: 6px; background: var(--border-soft); border-radius: 999px; margin: 12px 0 4px; overflow: hidden; }
+  .progress > div { height: 100%; background: linear-gradient(90deg, var(--purple), var(--indigo-deep)); border-radius: 999px; }
+  .progress-lbl { font-size: 11px; color: var(--text-muted); }
+
+  .callout {
+    display: flex; gap: 8px; align-items: flex-start;
+    background: #FFFBEB; border: 1px solid #FDE68A; border-radius: var(--radius-sm);
+    padding: 10px 12px; margin: 12px 0 4px; font-size: 13px; color: #92400E;
+  }
+  .callout.red { background: #FEF2F2; border-color: #FECACA; color: #991B1B; }
+  .callout b { font-weight: 700; }
+
+  .miles { margin-top: 12px; border-top: 1px solid var(--border-soft); padding-top: 6px; }
+  .mile { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--border-soft); }
+  .mile:last-child { border-bottom: none; }
+  .mile .dot { width: 20px; height: 20px; border-radius: 50%; flex: none; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; }
+  .mile.done .dot   { background: #ECFDF5; color: var(--on-track); }
+  .mile.late .dot   { background: #FEF2F2; color: var(--urgent); }
+  .mile.soon .dot   { background: #FFFBEB; color: var(--warning); }
+  .mile.future .dot { background: var(--border-soft); color: var(--text-muted); }
+  .mile .mname { flex: 1; font-size: 13.5px; }
+  .mile.done .mname { color: var(--text-muted); text-decoration: line-through; text-decoration-color: rgba(75,85,99,0.35); }
+  .mile .mdate { font-size: 12.5px; color: var(--text-soft); white-space: nowrap; }
+  .mile.late .mdate, .mile.late .mname { color: var(--urgent); font-weight: 600; }
+  .mile.soon .mdate { color: #92400E; font-weight: 600; }
+
+  details.past { margin-top: 8px; }
+  details.past summary {
+    cursor: pointer; font-size: 13px; font-weight: 700; color: var(--text-soft);
+    padding: 10px 2px; list-style: none;
+  }
+  details.past summary::-webkit-details-marker { display: none; }
+  details.past summary::before { content: "▸ "; }
+  details.past[open] summary::before { content: "▾ "; }
+  details.past .deal { opacity: 0.75; }
+
+  /* ---------- states ---------- */
+  .state { text-align: center; padding: 60px 24px; color: var(--text-soft); }
+  .state .big { font-size: 40px; margin-bottom: 12px; }
+  .state h2 { font-size: 17px; color: var(--text); margin-bottom: 6px; }
+  .state p { font-size: 14px; max-width: 420px; margin: 0 auto; }
+  .spinner {
+    width: 34px; height: 34px; margin: 0 auto 14px;
+    border: 3px solid var(--lavender); border-top-color: var(--indigo-deep);
+    border-radius: 50%; animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  footer { text-align: center; padding: 26px 16px 40px; font-size: 12.5px; color: var(--text-muted); }
+  footer a { color: var(--indigo-deep); text-decoration: none; font-weight: 600; }
+  .updated { font-size: 11.5px; color: var(--text-muted); text-align: center; margin: 4px 0 0; }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="shell">
+    <div class="brand">MRFL <span class="accent">TRANSACTIONS</span></div>
+    <button class="refresh-btn" id="refresh" title="Refresh" aria-label="Refresh">↻</button>
+  </div>
+</header>
+<div class="hero">
+  <div class="shell">
+    <h1 id="welcome">My Transactions</h1>
+    <div class="sub" id="subline">Live view of your deals with MRFL</div>
+  </div>
+</div>
+
+<main class="shell" id="main">
+  <div class="state" id="loading">
+    <div class="spinner"></div>
+    <p>Loading your transactions…</p>
+  </div>
+</main>
+
+<footer>
+  Questions about a deal? Contact Gloria —
+  <a href="mailto:MRFLTransactions@gmail.com">MRFLTransactions@gmail.com</a> ·
+  <a href="tel:+14012828414">(401) 282-8414</a><br>
+  MRFL Transactions · South Florida
+</footer>
+
+<script>
+(function () {
+  'use strict';
+
+  var CFG_KEY = 'mrfl_portal_cfg';
+
+  // ---------- config: URL params, falling back to localStorage ----------
+  function readConfig() {
+    var q = new URLSearchParams(location.search);
+    var cfg = { u: q.get('u') || '', agent: q.get('agent') || '', key: q.get('key') || '' };
+    if (cfg.u && cfg.agent && cfg.key) {
+      try { localStorage.setItem(CFG_KEY, JSON.stringify(cfg)); } catch (e) {}
+      return cfg;
+    }
+    try {
+      var saved = JSON.parse(localStorage.getItem(CFG_KEY) || 'null');
+      if (saved && saved.u && saved.agent && saved.key) return saved;
+    } catch (e) {}
+    return null;
+  }
+
+  function decodeEndpoint(u) {
+    try {
+      var b64 = u.replace(/-/g, '+').replace(/_/g, '/');
+      while (b64.length % 4) b64 += '=';
+      var url = atob(b64);
+      // Only ever talk to Google Apps Script endpoints.
+      if (/^https:\/\/script\.google(?:usercontent)?\.com\//.test(url)) return url;
+    } catch (e) {}
+    return null;
+  }
+
+  // ---------- date helpers (parse YYYY-MM-DD as LOCAL date) ----------
+  var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  function parseLocal(iso) {
+    var m = String(iso || '').match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (!m) return null;
+    return new Date(+m[1], +m[2] - 1, +m[3]);
+  }
+  function fmt(iso) {
+    var d = parseLocal(iso);
+    if (!d) return '';
+    return MONTHS[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
+  }
+  function fmtShort(iso) {
+    var d = parseLocal(iso);
+    if (!d) return '';
+    return MONTHS[d.getMonth()] + ' ' + d.getDate();
+  }
+  function daysFromToday(iso) {
+    var d = parseLocal(iso);
+    if (!d) return null;
+    var t = new Date(); t.setHours(0, 0, 0, 0);
+    return Math.round((d - t) / 86400000);
+  }
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  var STATUS_LABEL = {
+    on_track: 'On track', active: 'Active', warning: 'Deadline soon',
+    urgent: 'Urgent', past_due: 'Past due', closed: 'Closed',
+    cancelled: 'Cancelled', on_hold: 'On hold', unknown: 'Active'
+  };
+  var SIDE_LABEL = { Seller: 'Listing side', Buyer: 'Buyer side', Both: 'Dual agency' };
+  var DONE = { closed: 1, cancelled: 1 };
+
+  // ---------- renderers ----------
+  function inWords(n) {
+    if (n === null || n === undefined) return '';
+    if (n < 0) return Math.abs(n) + (n === -1 ? ' day' : ' days') + ' overdue';
+    if (n === 0) return 'today';
+    if (n === 1) return 'tomorrow';
+    return 'in ' + n + ' days';
+  }
+
+  function mileClass(m) {
+    if (m.completed) return 'done';
+    var d = daysFromToday(m.date);
+    if (d === null) return 'future';
+    if (d < 0) return 'late';
+    if (d <= 7) return 'soon';
+    return 'future';
+  }
+  function mileIcon(cls) {
+    return { done: '✓', late: '!', soon: '●', future: '○' }[cls] || '○';
+  }
+
+  function dealCard(deal) {
+    var isDone = !!DONE[deal.status];
+    var h = '<div class="deal">';
+    h += '<div class="deal-head"><div>';
+    h += '<div class="deal-addr">' + esc(deal.property) + '</div>';
+    h += '<div class="pills">';
+    if (deal.side) h += '<span class="pill side">' + esc(SIDE_LABEL[deal.side] || deal.side) + '</span>';
+    h += '<span class="pill st-' + esc(deal.status) + '">' + esc(STATUS_LABEL[deal.status] || deal.status) + '</span>';
+    h += '</div></div>';
+    if (!isDone && deal.progress_total && deal.progress_elapsed !== null && deal.progress_elapsed !== undefined) {
+      h += '<div class="daypill">Day ' + deal.progress_elapsed + ' of ' + deal.progress_total + '</div>';
+    }
+    h += '</div>';
+
+    if (!isDone && deal.progress_total) {
+      var pct = Math.max(2, Math.min(100, Math.round(100 * deal.progress_elapsed / deal.progress_total)));
+      h += '<div class="progress"><div style="width:' + pct + '%"></div></div>';
+      h += '<div class="progress-lbl">' + fmtShort(deal.effective_date) + ' → closing ' + fmt(deal.closing_date) + '</div>';
+    }
+
+    if (!isDone && deal.next_deadline && deal.next_deadline_date) {
+      var overdue = deal.days_until !== null && deal.days_until < 0;
+      h += '<div class="callout' + (overdue ? ' red' : '') + '">⏰&nbsp;<div>Next: <b>' +
+        esc(deal.next_deadline) + '</b> — ' + fmt(deal.next_deadline_date) +
+        (deal.days_until !== null ? ' (' + inWords(deal.days_until) + ')' : '') + '</div></div>';
+    }
+
+    if (deal.milestones && deal.milestones.length) {
+      h += '<div class="miles">';
+      deal.milestones.forEach(function (m) {
+        var cls = isDone ? (m.completed ? 'done' : 'future') : mileClass(m);
+        h += '<div class="mile ' + cls + '"><div class="dot">' + mileIcon(cls) + '</div>' +
+          '<div class="mname">' + esc(m.name) + '</div>' +
+          '<div class="mdate">' + fmt(m.date) + '</div></div>';
+      });
+      h += '</div>';
+    }
+    h += '</div>';
+    return h;
+  }
+
+  function render(data) {
+    var main = document.getElementById('main');
+    document.getElementById('welcome').textContent = 'Welcome back, ' + data.agent;
+
+    var active = data.deals.filter(function (d) { return !DONE[d.status]; });
+    var past = data.deals.filter(function (d) { return DONE[d.status]; });
+
+    var closingSoon = active.filter(function (d) {
+      var n = daysFromToday(d.closing_date);
+      return n !== null && n >= 0 && n <= 7;
+    }).length;
+
+    var nextDays = null;
+    active.forEach(function (d) {
+      if (d.days_until !== null && d.days_until >= 0 && (nextDays === null || d.days_until < nextDays)) nextDays = d.days_until;
+    });
+
+    var h = '';
+    h += '<div class="stats">';
+    h += '<div class="stat"><div class="num">' + active.length + '</div><div class="lbl">Active deal' + (active.length === 1 ? '' : 's') + '</div></div>';
+    h += '<div class="stat"><div class="num">' + closingSoon + '</div><div class="lbl">Closing within 7 days</div></div>';
+    h += '<div class="stat"><div class="num">' + (nextDays === null ? '—' : (nextDays === 0 ? 'Today' : nextDays + 'd')) + '</div><div class="lbl">Next deadline</div></div>';
+    h += '</div>';
+
+    if (active.length === 0 && past.length === 0) {
+      h += '<div class="state"><div class="big">🌴</div><h2>No transactions yet</h2>' +
+        '<p>When Gloria opens a transaction for you, it will show up here automatically.</p></div>';
+    } else {
+      if (active.length) {
+        h += '<div class="section-title">Active transactions</div>';
+        active.forEach(function (d) { h += dealCard(d); });
+      } else {
+        h += '<div class="state"><div class="big">✅</div><h2>No active deals right now</h2>' +
+          '<p>Your past transactions are below. New deals appear here automatically.</p></div>';
+      }
+      if (past.length) {
+        h += '<details class="past"><summary>Past transactions (' + past.length + ')</summary>';
+        past.forEach(function (d) { h += dealCard(d); });
+        h += '</details>';
+      }
+    }
+
+    var t = new Date();
+    h += '<div class="updated">Updated ' + t.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) + ' — live from Gloria’s tracking sheet</div>';
+    main.innerHTML = h;
+  }
+
+  function showState(icon, title, body) {
+    document.getElementById('main').innerHTML =
+      '<div class="state"><div class="big">' + icon + '</div><h2>' + esc(title) + '</h2><p>' + body + '</p></div>';
+  }
+
+  // ---------- load ----------
+  var cfg = readConfig();
+  var endpoint = cfg && decodeEndpoint(cfg.u);
+  var loading = false;
+
+  function load() {
+    if (loading) return;
+    if (!cfg || !endpoint) {
+      showState('🔒', 'This page needs your personal link',
+        'Open the portal using the private link Gloria sent you. If you lost it, just ask her for a fresh one.');
+      return;
+    }
+    loading = true;
+    var url = endpoint + '?view=portal&agent=' + encodeURIComponent(cfg.agent) + '&key=' + encodeURIComponent(cfg.key);
+    fetch(url, { method: 'GET', cache: 'no-store' })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        loading = false;
+        if (!data.success) {
+          showState('🔒', 'Link not valid',
+            esc(data.error || 'Ask Gloria for a fresh portal link.'));
+          return;
+        }
+        render(data);
+      })
+      .catch(function () {
+        loading = false;
+        showState('📶', 'Couldn’t load right now',
+          'Check your internet connection and pull to refresh, or tap the ↻ button. If it keeps happening, let Gloria know.');
+      });
+  }
+
+  document.getElementById('refresh').addEventListener('click', function () {
+    document.getElementById('main').innerHTML =
+      '<div class="state" id="loading"><div class="spinner"></div><p>Refreshing…</p></div>';
+    load();
+  });
+
+  // Refresh when the page becomes visible again (e.g., reopened from home screen)
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'visible') load();
+  });
+
+  load();
+})();
+</script>
+</body>
+</html>
