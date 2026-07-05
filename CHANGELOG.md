@@ -7,6 +7,65 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.4.0] — 2026-07-05
+
+See `docs/JULY_2026_UPDATES.md` for the full usage + deploy guide.
+
+### Added — intake form: PDF-vision extraction
+
+- Contract upload now sends the actual PDF pages to Claude (`claude-opus-4-8`)
+  so it can read checkboxes, initials, handwriting, and signature dates —
+  not just pdf.js-extracted text (kept as a secondary spelling aid).
+- Applies the AS-IS contract's pre-printed default periods when a timeframe
+  blank is empty: escrow 3, loan application 5, loan approval 30, inspection
+  15, title commitment 15. Avoids the ¶9(c) "no later than 5 days" trap and
+  leaves loan periods blank for cash deals.
+- On-screen "Extraction diagnostics" readout that appears only when an upload
+  fails, with a step-by-step log.
+
+### Added — intake form: HOA & date-field improvements
+
+- Detects an HOA / condo association rider or addendum, checks "HOA
+  Application & Approval Required," and captures Association Name, Management
+  Company, HOA Contact Name/Phone/Email, and Estoppel Fee (in addition to the
+  application/approval day fields). New fields flow to the per-property tab and
+  Google Sheet.
+- Calendar-picker button on every date field; manual typing still works and
+  the stored value stays `YYYY-MM-DD`.
+
+### Added — webhook v6.5: calendar sync
+
+- Changing a milestone date in a property tab (the "Deadline" column) moves the
+  matching Google Calendar event to the new date. One-to-one; no cascade.
+- Created events store their id (keyed by tab + milestone) so they can be found
+  and moved later; matching is tolerant of emoji/spacing/dash differences and
+  searches a window spanning the old and new dates.
+- New "🔄 Sync dates → Calendar" menu item (🛠 TC Tools): force-syncs every
+  milestone on the open tab to the sheet dates, removes duplicate events, and
+  reports what it did.
+- New "📅 Set up calendar sync" menu item installs the installable onEdit
+  trigger and authorizes Calendar (a simple `onEdit` trigger cannot call
+  CalendarApp).
+
+### Fixed
+
+- Intake form: uploads fell back to manual mode because pdf.js detaches the
+  ArrayBuffer it reads — the PDF is now copied so the original survives for the
+  API call ("Cannot perform Construct on a detached ArrayBuffer").
+- Intake form: API extraction only ran when a key was saved; the uploader now
+  also uses a key typed but not yet saved, and Test now auto-saves the key.
+- Calendar sync: the first version duplicated events (created a new one instead
+  of moving the existing one). Fixed with tolerant matching + duplicate cleanup.
+
+### Notes
+
+- Intake form (Vercel) auto-deploys on push to `main`; hard-refresh to load it.
+- Webhook (`Code.gs`) is updated by pasting the file into the Apps Script
+  editor, then re-running "📅 Set up calendar sync" (confirm the version in the
+  popup). Calendar sync needs the one-time setup + Calendar authorization.
+
+---
+
 ## [1.3.0] — 2026-05-14
 
 ### Added — webhook v6.3 auto-PDF deliverable
