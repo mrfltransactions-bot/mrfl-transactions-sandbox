@@ -3502,6 +3502,38 @@ CANONICAL JSON SCHEMA (output exactly these keys, in this order):
     }
   }
 
+  // ---- On-screen extraction diagnostics (troubleshooting readout) ----
+  let _dbgBox = null;
+  function _dbgReset() {
+    if (_dbgBox) _dbgBox.remove();
+    _dbgBox = document.createElement('div');
+    _dbgBox.id = 'pdf_debug';
+    _dbgBox.style.cssText =
+      'position:fixed;left:16px;bottom:16px;z-index:99999;max-width:480px;' +
+      'max-height:55vh;overflow:auto;background:#0f1424;color:#cdd6f4;' +
+      'border:1px solid #3a3f5a;border-radius:8px;padding:12px 14px;' +
+      'font:12px/1.55 ui-monospace,Menlo,Consolas,monospace;' +
+      'box-shadow:0 8px 30px rgba(0,0,0,.5)';
+    _dbgBox.innerHTML =
+      '<div style="display:flex;justify-content:space-between;align-items:center;' +
+      'margin-bottom:6px;gap:12px"><strong style="color:#a6adf4">' +
+      'Extraction diagnostics</strong><button type="button" id="pdf_debug_close" ' +
+      'style="background:transparent;border:none;color:#8891b0;cursor:pointer;' +
+      'font-size:16px;line-height:1">&times;</button></div>' +
+      '<div id="pdf_debug_lines"></div>';
+    document.body.appendChild(_dbgBox);
+    _dbgBox.querySelector('#pdf_debug_close')
+      .addEventListener('click', () => { _dbgBox.remove(); _dbgBox = null; });
+  }
+  function _dbg(msg, kind) {
+    if (!_dbgBox) _dbgReset();
+    const line = document.createElement('div');
+    line.style.color =
+      kind === 'err' ? '#f38ba8' : kind === 'ok' ? '#a6e3a1' : '#cdd6f4';
+    line.textContent = '• ' + msg;
+    _dbgBox.querySelector('#pdf_debug_lines').appendChild(line);
+  }
+
   // ---- File picker → run the pipeline ----
   $('pdf_file_input').addEventListener('change', async (e) => {
     const file = e.target.files[0];
@@ -3519,12 +3551,27 @@ CANONICAL JSON SCHEMA (output exactly these keys, in this order):
     btn.disabled = true;
     if (labelEl) labelEl.textContent = 'Reading...';
 
+    _dbgReset();
+    _dbg('Upload started — ' + file.name + ' (' + Math.round(file.size / 1024) + ' KB)');
+
     // Prefer the saved key; otherwise fall back to whatever is currently typed
     // in the API-key field. Covers "tested but didn't click Save" and browsers
     // where localStorage writes are blocked (private mode, etc.).
-    let apiKey = getStoredApiKey();
+    const _savedKey = getStoredApiKey();
+    let apiKey = _savedKey;
+    let _keySource = _savedKey ? 'saved in browser' : '';
     if (!apiKey) {
-      try { apiKey = _sanitizeApiKey($('api_key').value).cleaned; } catch (e) {}
+      try {
+        apiKey = _sanitizeApiKey($('api_key').value).cleaned;
+        if (apiKey) _keySource = 'typed in field (not saved)';
+      } catch (e) {}
+    }
+    if (apiKey) {
+      _dbg('API key: FOUND (' + _keySource + ') — length ' + apiKey.length +
+           ', starts "' + apiKey.slice(0, 8) + '…"', 'ok');
+    } else {
+      _dbg('API key: NOT FOUND — automatic extraction will be SKIPPED. ' +
+           'Add your key under Connection Settings, then Test.', 'err');
     }
     _progressShow(!!apiKey);
     _progressStep('step_read', 'active');
@@ -3539,6 +3586,8 @@ CANONICAL JSON SCHEMA (output exactly these keys, in this order):
       contractText = await _pdfExtractText(buf);
 
       if (!contractText || contractText.trim().length < 200) {
+        _dbg('PDF text read: only ' + (contractText ? contractText.trim().length : 0) +
+             ' chars — looks scanned/image-based; stopping before API.', 'err');
         _progressFail('step_extract',
           'Could not extract enough text — this PDF looks scanned/image-based.');
         _progressHide(2000);
@@ -3548,6 +3597,7 @@ CANONICAL JSON SCHEMA (output exactly these keys, in this order):
         );
       }
       _progressStep('step_extract', 'done');
+      _dbg('PDF text read: ' + contractText.trim().length + ' characters.');
 
       const data = _pdfPatternExtract(contractText);
       const filledCount = _pdfApplyToForm(data);
@@ -3558,8 +3608,11 @@ CANONICAL JSON SCHEMA (output exactly these keys, in this order):
         if (labelEl) labelEl.textContent = 'Extracting via API…';
         try {
           const pdfBase64 = _arrayBufferToBase64(buf);
+          _dbg('Calling Claude (model claude-opus-4-8, PDF attached, ' +
+               Math.round(pdfBase64.length / 1024) + ' KB base64)…');
           const apiData = await _pdfApiExtract(pdfBase64, contractText, apiKey);
           const apiCount = _pdfApplyToForm(apiData);
+          _dbg('Claude API OK — filled ' + apiCount + ' fields. Done.', 'ok');
           _progressStep('step_api', 'done');
           _progressHide(700);
           showToast(
@@ -3568,6 +3621,7 @@ CANONICAL JSON SCHEMA (output exactly these keys, in this order):
           );
           return;
         } catch (apiErr) {
+          _dbg('Claude API FAILED: ' + (apiErr.message || 'unknown error'), 'err');
           console.warn('[API Extract] Failed, falling back to manual workflow:', apiErr);
           _progressFail('step_api',
             'API extraction failed — falling back to manual chat workflow.');
@@ -3583,6 +3637,9 @@ CANONICAL JSON SCHEMA (output exactly these keys, in this order):
 
       // No API key path (or API failed and we fell through) — close the overlay
       // before showing the fallback panel so the user can interact with it.
+      _dbg(apiKey
+        ? '→ API path failed above; showing manual fallback panel.'
+        : '→ No API key, so the API was never called; showing manual fallback panel.', 'err');
       _progressHide(apiKey ? 0 : 500);
       _pdfShowFallback(contractText, filledCount);
       showToast(
@@ -3590,6 +3647,7 @@ CANONICAL JSON SCHEMA (output exactly these keys, in this order):
         ' from PDF text. See orange panel below to finish extraction in Claude chat.'
       );
     } catch (err) {
+      _dbg('Stopped with error: ' + (err.message || String(err)), 'err');
       console.error('[PDF Upload]', err);
       // Surface failure on the overlay then auto-dismiss
       _progressFail(null, 'PDF extraction failed: ' + (err.message || String(err)));
