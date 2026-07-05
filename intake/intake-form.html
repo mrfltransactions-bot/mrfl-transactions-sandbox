@@ -3583,7 +3583,9 @@ CANONICAL JSON SCHEMA (output exactly these keys, in this order):
       _progressStep('step_read', 'done');
       _progressStep('step_extract', 'active');
       if (labelEl) labelEl.textContent = 'Extracting...';
-      contractText = await _pdfExtractText(buf);
+      // pdf.js transfers/detaches the ArrayBuffer it receives, so hand it a COPY
+      // and keep the original intact to base64-encode the PDF for the API call.
+      contractText = await _pdfExtractText(buf.slice(0));
 
       if (!contractText || contractText.trim().length < 200) {
         _dbg('PDF text read: only ' + (contractText ? contractText.trim().length : 0) +
