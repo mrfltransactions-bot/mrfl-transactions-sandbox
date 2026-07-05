@@ -69,6 +69,7 @@ function onOpen() {
     .addItem('🔄 Refresh Dashboard', 'rebuildDashboard')
     .addItem(filterLabel, 'toggleActiveOnly')
     .addSeparator()
+    .addItem('📅 Set up calendar sync', 'setupCalendarSync')
     .addItem('ℹ About', 'showAbout')
     .addToUi();
 }
@@ -86,6 +87,7 @@ function toggleActiveOnly() {
     .addItem('🔄 Refresh Dashboard', 'rebuildDashboard')
     .addItem(newState ? '👁 Show All Transactions' : '🔍 Show Active Only', 'toggleActiveOnly')
     .addSeparator()
+    .addItem('📅 Set up calendar sync', 'setupCalendarSync')
     .addItem('ℹ About', 'showAbout')
     .addToUi();
 }
@@ -126,6 +128,8 @@ function createCalendarEvents(data) {
   const calendar = CalendarApp.getDefaultCalendar();
   const propertyAddress = data.propertyAddress || 'Property';
   const created = [];
+  const gid = _calGidFromUrl(data.sheetUrl);
+  const calProps = PropertiesService.getDocumentProperties();
 
   const contextLines = [];
   if (data.details && data.details.length > 0) {
@@ -186,6 +190,8 @@ function createCalendarEvents(data) {
         REMINDER_MINUTES.forEach(min => {
           try { event.addPopupReminder(min); } catch (e) { /* ignore */ }
         });
+        // Remember this event so a later date change in the sheet can move it.
+        if (gid) calProps.setProperty(_calKey(gid, m.name), event.getId());
         created.push({ name: m.name, date: m.date });
       } catch (err) {
         // Continue on individual event errors
@@ -193,6 +199,128 @@ function createCalendarEvents(data) {
     });
   }
   return created;
+}
+
+// ============ CALENDAR SYNC: SHEET DATE EDIT → MOVE THE EVENT ============
+// A simple onEdit trigger runs in restricted mode and CANNOT call CalendarApp,
+// so this runs as an INSTALLABLE onEdit trigger. Run setupCalendarSync() once
+// (🛠 TC Tools → Set up calendar sync) to install it and authorize calendar.
+
+const CAL_KNOWN_MILESTONES = [
+  'Effective Date', 'Escrow Due', 'Inspection Due', 'Loan Application Due',
+  'Loan Approval Due', 'HOA Application', 'HOA Approval', 'Title Commitment',
+  'Closing Date', 'Additional Escrow Due'
+];
+
+function _calGidFromUrl(url) {
+  const m = String(url || '').match(/gid=(\d+)/);
+  return m ? m[1] : '';
+}
+function _calKey(gid, milestoneName) {
+  return 'evt_' + gid + '_' + milestoneName;
+}
+function _calEventTitle(milestoneName, propertyAddress) {
+  return '📌 ' + milestoneName + ' — ' + propertyAddress;
+}
+function _calDayWindow(date, padDays) {
+  const start = new Date(date); start.setHours(0, 0, 0, 0);
+  start.setDate(start.getDate() - padDays);
+  const end = new Date(date); end.setHours(0, 0, 0, 0);
+  end.setDate(end.getDate() + padDays + 1);
+  return { start: start, end: end };
+}
+
+// Installable onEdit handler — when a milestone date (column B / "Deadline") is
+// changed on a property tab, move the matching Google Calendar event to match.
+function onEditCalendarSync(e) {
+  try {
+    if (!e || !e.range) return;
+    const sheet = e.range.getSheet();
+    const name = sheet.getName();
+
+    // Property tabs only (skip dashboard and special tabs)
+    if (name === DASHBOARD_TAB_NAME || name.startsWith('📊') || !name.includes('_')) return;
+
+    // Only the Deadline column (B / column 2), single-cell edits
+    if (e.range.getColumn() !== 2) return;
+    if (e.range.getNumRows() > 1 || e.range.getNumColumns() > 1) return;
+
+    const rowIdx = e.range.getRow();
+    const milestoneName = String(sheet.getRange(rowIdx, 1).getValue() || '').trim();
+    if (CAL_KNOWN_MILESTONES.indexOf(milestoneName) === -1) return;
+
+    // New date from the edited cell (may be a Date or a string)
+    const raw = e.range.getValue();
+    const newDate = (raw instanceof Date) ? raw : parseDate(String(raw || '').trim());
+    if (!newDate || isNaN(newDate.getTime())) return;  // blank/invalid → leave calendar alone
+
+    const propertyAddress = String(sheet.getRange(1, 1).getValue() || '').trim();
+    const gid = String(sheet.getSheetId());
+    const props = PropertiesService.getDocumentProperties();
+    const key = _calKey(gid, milestoneName);
+
+    const newStart = new Date(newDate); newStart.setHours(EVENT_HOUR, 0, 0, 0);
+    const newEnd = new Date(newStart); newEnd.setHours(EVENT_HOUR + 1, 0, 0, 0);
+
+    const calendar = CalendarApp.getDefaultCalendar();
+    let event = null;
+
+    // 1. Preferred: the event id stored when the event was created.
+    const storedId = props.getProperty(key);
+    if (storedId) {
+      try { event = calendar.getEventById(storedId); } catch (err) { event = null; }
+    }
+
+    // 2. Fallback: find by exact title near the OLD date (covers transactions
+    //    whose events were created before calendar sync existed).
+    if (!event) {
+      const wantTitle = _calEventTitle(milestoneName, propertyAddress);
+      const oldDate = parseDate(String(e.oldValue || '').trim());
+      const win = _calDayWindow(oldDate || newDate, 3);
+      const candidates = calendar.getEvents(win.start, win.end, { search: milestoneName });
+      event = candidates.filter(ev => ev.getTitle() === wantTitle)[0] || null;
+    }
+
+    if (event) {
+      event.setTime(newStart, newEnd);
+      props.setProperty(key, event.getId());  // cache id for next time
+    } else {
+      // No matching event (e.g., the date was previously blank) — create one so
+      // the calendar stays complete.
+      const url = SpreadsheetApp.getActiveSpreadsheet().getUrl() + '#gid=' + gid;
+      const ev = calendar.createEvent(
+        _calEventTitle(milestoneName, propertyAddress), newStart, newEnd,
+        { location: propertyAddress, description: 'Property: ' + propertyAddress + '\n\n🔗 Tab in sheet: ' + url }
+      );
+      REMINDER_MINUTES.forEach(min => { try { ev.addPopupReminder(min); } catch (er) { /* ignore */ } });
+      props.setProperty(key, ev.getId());
+    }
+  } catch (err) {
+    Logger.log('onEditCalendarSync error: ' + err.toString());
+  }
+}
+
+// One-time setup: install the installable onEdit trigger and authorize Calendar.
+function setupCalendarSync() {
+  const ui = SpreadsheetApp.getUi();
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    // Remove any existing calendar-sync triggers so we don't stack duplicates.
+    ScriptApp.getProjectTriggers().forEach(t => {
+      if (t.getHandlerFunction() === 'onEditCalendarSync') ScriptApp.deleteTrigger(t);
+    });
+    ScriptApp.newTrigger('onEditCalendarSync').forSpreadsheet(ss).onEdit().create();
+    CalendarApp.getDefaultCalendar().getName();  // force the Calendar auth prompt now
+    ui.alert(
+      '✅ Calendar sync is on.\n\n' +
+      'From now on, when you change a milestone date in a property tab (the ' +
+      '"Deadline" column), the matching Google Calendar event moves to the new ' +
+      'date automatically. This works for new transactions and existing ones.'
+    );
+  } catch (err) {
+    ui.alert('Setup failed: ' + err.toString() +
+      '\n\nApprove the Google permissions when prompted, then run it again.');
+  }
 }
 
 // ============ DASHBOARD: EXTRACT DATA FROM A TAB ============
