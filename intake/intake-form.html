@@ -1667,6 +1667,36 @@
             <span class="calc-display" id="hoa_approval_calc">—</span>
           </div>
         </div>
+        <div class="grid grid-2">
+          <div class="field">
+            <label>Association Name</label>
+            <input id="hoa_name" type="text" placeholder="Sunset Ridge HOA" />
+          </div>
+          <div class="field">
+            <label>Management Company</label>
+            <input id="hoa_mgmt_company" type="text" placeholder="ABC Property Mgmt" />
+          </div>
+        </div>
+        <div class="grid grid-2">
+          <div class="field">
+            <label>HOA Contact Name</label>
+            <input id="hoa_contact" type="text" placeholder="Jane Manager" />
+          </div>
+          <div class="field">
+            <label>HOA Contact Phone</label>
+            <input id="hoa_phone" type="tel" placeholder="(555) 123-4567" />
+          </div>
+        </div>
+        <div class="grid grid-2">
+          <div class="field">
+            <label>HOA Contact Email</label>
+            <input id="hoa_email" type="email" placeholder="hoa@example.com" />
+          </div>
+          <div class="field">
+            <label>Estoppel Fee <span class="opt">(optional)</span></label>
+            <input id="hoa_estoppel_fee" type="text" placeholder="$250.00" />
+          </div>
+        </div>
       </div>
     </div>
 
@@ -2518,6 +2548,17 @@
       if (val('lo_phone'))   details.push(`Mobile: ${val('lo_phone')}`);
     }
 
+    if ($('has_hoa').checked && (val('hoa_name') || val('hoa_mgmt_company') || val('hoa_contact') ||
+        val('hoa_phone') || val('hoa_email') || val('hoa_estoppel_fee'))) {
+      details.push('HOA / Association');
+      if (val('hoa_name'))          details.push(`Association: ${val('hoa_name')}`);
+      if (val('hoa_mgmt_company'))  details.push(`Management Company: ${val('hoa_mgmt_company')}`);
+      if (val('hoa_contact'))       details.push(`Contact: ${val('hoa_contact')}`);
+      if (val('hoa_email'))         details.push(`Email: ${val('hoa_email')}`);
+      if (val('hoa_phone'))         details.push(`Phone: ${val('hoa_phone')}`);
+      if (val('hoa_estoppel_fee'))  details.push(`Estoppel Fee: ${val('hoa_estoppel_fee')}`);
+    }
+
     // ---------- Plaintext format (for paste fallback) ----------
     // Use TAB separator for milestone table so Google Sheets auto-splits into columns A-E.
     // Contact info stays in column A (single cell per row).
@@ -2939,7 +2980,8 @@
         'lo_company', 'lo_contact', 'lo_email', 'lo_phone',
         'lp_company', 'lp_contact', 'lp_email', 'lp_phone',
         'add_escrow_amount', 'add_escrow_days',
-        'hoa_app_days', 'hoa_approval_days'
+        'hoa_app_days', 'hoa_approval_days',
+        'hoa_name', 'hoa_mgmt_company', 'hoa_contact', 'hoa_phone', 'hoa_email', 'hoa_estoppel_fee'
       ];
       
       let filledCount = 0;
@@ -2980,7 +3022,9 @@
       };
       
       if (data.add_escrow_amount || data.add_escrow_days) triggerToggle('has_additional_escrow');
-      if (data.hoa_app_days || data.hoa_approval_days) triggerToggle('has_hoa');
+      if (data.has_hoa === 'yes' || data.hoa_app_days || data.hoa_approval_days ||
+          data.hoa_name || data.hoa_mgmt_company || data.hoa_contact ||
+          data.hoa_phone || data.hoa_email || data.hoa_estoppel_fee) triggerToggle('has_hoa');
       if (data.co_lst_name) triggerToggle('has_co_listing');
       if (data.co_byr_name) triggerToggle('has_co_buyer');
       if (data.lp_company || data.lp_contact) triggerToggle('has_processor');
@@ -3117,7 +3161,7 @@ DEFAULTS (critical — this is a frequent error): the AS-IS form pre-prints a de
 
 IMPORTANT for I, J, K: three SEPARATE numbers from three different paragraphs — never copy one into another. If an attached rider, addendum, or Paragraph 20 "ADDITIONAL TERMS" explicitly changes one of these periods, use the changed value and note it in your summary.
 
-L) has_hoa / hoa_app_days / hoa_approval_days — Set has_hoa to "yes" if the property is in a homeowners' or condominium association AND the contract has an association disclosure/approval rider or addendum attached — e.g., Rider B "Homeowners' Association/Community Disclosure", a Condominium Rider, an association-approval addendum, or any attached HOA/COA addendum. Otherwise leave has_hoa "". When such a rider/addendum states timeframes, fill hoa_app_days (days after Effective Date to submit the association application) and hoa_approval_days (days prior to Closing Date for association approval). Leave either day field blank if its timeframe is not stated, even when has_hoa is "yes".
+L) has_hoa / hoa_app_days / hoa_approval_days — Set has_hoa to "yes" if the property is in a homeowners' or condominium association AND the contract has an association disclosure/approval rider or addendum attached — e.g., Rider B "Homeowners' Association/Community Disclosure", a Condominium Rider, an association-approval addendum, or any attached HOA/COA addendum. Otherwise leave has_hoa "". When such a rider/addendum states timeframes, fill hoa_app_days (days after Effective Date to submit the association application) and hoa_approval_days (days prior to Closing Date for association approval). Leave either day field blank if its timeframe is not stated, even when has_hoa is "yes". Also capture, when named anywhere in the contract/addenda: hoa_name (the association's name), hoa_mgmt_company (management company), hoa_contact (contact person), hoa_phone, hoa_email, and hoa_estoppel_fee (estoppel/transfer fee amount, formatted like a price). These contact details are often NOT in the contract — leave any of them blank if not present.
 
 M) seller_names, buyer_names — Full legal names from page 1, ampersand-separated.
 
@@ -3160,6 +3204,12 @@ CANONICAL JSON SCHEMA (output exactly these keys, in this order):
   "has_hoa": "",
   "hoa_app_days": "",
   "hoa_approval_days": "",
+  "hoa_name": "",
+  "hoa_mgmt_company": "",
+  "hoa_contact": "",
+  "hoa_phone": "",
+  "hoa_email": "",
+  "hoa_estoppel_fee": "",
   "seller_names": "",
   "seller_email": "",
   "seller_phone": "",
@@ -3409,7 +3459,9 @@ CANONICAL JSON SCHEMA (output exactly these keys, in this order):
       }
     };
     if (data.add_escrow_amount || data.add_escrow_days) triggerToggle('has_additional_escrow');
-    if (data.has_hoa === 'yes' || data.hoa_app_days || data.hoa_approval_days) triggerToggle('has_hoa');
+    if (data.has_hoa === 'yes' || data.hoa_app_days || data.hoa_approval_days ||
+        data.hoa_name || data.hoa_mgmt_company || data.hoa_contact ||
+        data.hoa_phone || data.hoa_email || data.hoa_estoppel_fee) triggerToggle('has_hoa');
     if (data.co_lst_name) triggerToggle('has_co_listing');
     if (data.co_byr_name) triggerToggle('has_co_buyer');
     if (data.lp_company || data.lp_contact) triggerToggle('has_processor');
@@ -3537,9 +3589,18 @@ CANONICAL JSON SCHEMA (output exactly these keys, in this order):
     }
   }
 
-  // ---- On-screen extraction diagnostics (troubleshooting readout) ----
+  // ---- Extraction diagnostics — buffered each run; the box is only rendered
+  //      (via _dbgShow) when something fails, so successful uploads stay clean.
   let _dbgBox = null;
+  let _dbgLines = [];
   function _dbgReset() {
+    if (_dbgBox) { _dbgBox.remove(); _dbgBox = null; }
+    _dbgLines = [];
+  }
+  function _dbg(msg, kind) {
+    _dbgLines.push({ msg: msg, kind: kind });
+  }
+  function _dbgShow() {
     if (_dbgBox) _dbgBox.remove();
     _dbgBox = document.createElement('div');
     _dbgBox.id = 'pdf_debug';
@@ -3556,17 +3617,17 @@ CANONICAL JSON SCHEMA (output exactly these keys, in this order):
       'style="background:transparent;border:none;color:#8891b0;cursor:pointer;' +
       'font-size:16px;line-height:1">&times;</button></div>' +
       '<div id="pdf_debug_lines"></div>';
+    const lines = _dbgBox.querySelector('#pdf_debug_lines');
+    _dbgLines.forEach(l => {
+      const div = document.createElement('div');
+      div.style.color =
+        l.kind === 'err' ? '#f38ba8' : l.kind === 'ok' ? '#a6e3a1' : '#cdd6f4';
+      div.textContent = '• ' + l.msg;
+      lines.appendChild(div);
+    });
     document.body.appendChild(_dbgBox);
     _dbgBox.querySelector('#pdf_debug_close')
       .addEventListener('click', () => { _dbgBox.remove(); _dbgBox = null; });
-  }
-  function _dbg(msg, kind) {
-    if (!_dbgBox) _dbgReset();
-    const line = document.createElement('div');
-    line.style.color =
-      kind === 'err' ? '#f38ba8' : kind === 'ok' ? '#a6e3a1' : '#cdd6f4';
-    line.textContent = '• ' + msg;
-    _dbgBox.querySelector('#pdf_debug_lines').appendChild(line);
   }
 
   // ---- File picker → run the pipeline ----
@@ -3679,6 +3740,7 @@ CANONICAL JSON SCHEMA (output exactly these keys, in this order):
       _dbg(apiKey
         ? '→ API path failed above; showing manual fallback panel.'
         : '→ No API key, so the API was never called; showing manual fallback panel.', 'err');
+      _dbgShow();
       _progressHide(apiKey ? 0 : 500);
       _pdfShowFallback(contractText, filledCount);
       showToast(
@@ -3687,6 +3749,7 @@ CANONICAL JSON SCHEMA (output exactly these keys, in this order):
       );
     } catch (err) {
       _dbg('Stopped with error: ' + (err.message || String(err)), 'err');
+      _dbgShow();
       console.error('[PDF Upload]', err);
       // Surface failure on the overlay then auto-dismiss
       _progressFail(null, 'PDF extraction failed: ' + (err.message || String(err)));
