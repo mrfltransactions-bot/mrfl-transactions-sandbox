@@ -155,8 +155,10 @@ property tab open:
   milestone rows are updated in place; missing ones are inserted above
   Closing Date (with a checkbox), so they appear on the dashboard and the
   agent's portal timeline.
-- Script-inserted dates don't fire the calendar onEdit trigger — run
-  **🔄 Sync dates → Calendar** afterwards to create the reminders.
+- Script-inserted dates don't fire the calendar onEdit trigger — so when you
+  save deadline dates, a popup offers to run the calendar sync **right then**
+  (Yes = synced immediately with the usual summary; No = a reminder to run
+  🛠 TC Tools → 🔄 Sync dates → Calendar later).
 - The dashboard rebuilds automatically after saving.
 
 ## Known limits (v1)

@@ -2168,7 +2168,27 @@ function saveHoaInfo(f) {
     });
     datesMsg = (updated ? updated + ' deadline' + (updated > 1 ? 's' : '') + ' updated' : '') +
       (updated && added ? ', ' : '') +
-      (added ? added + ' deadline' + (added > 1 ? 's' : '') + ' added — run 🔄 Sync dates → Calendar for reminders' : '');
+      (added ? added + ' deadline' + (added > 1 ? 's' : '') + ' added' : '');
+
+    // Dates written by a script don't fire the calendar onEdit trigger —
+    // offer to run the sync right now so the reminder isn't forgotten.
+    try {
+      const ui = SpreadsheetApp.getUi();
+      const answer = ui.alert(
+        '📅 Calendar sync',
+        'HOA deadline dates were saved to the milestone table.\n\n' +
+        'Add / update them on your Google Calendar now?',
+        ui.ButtonSet.YES_NO
+      );
+      if (answer === ui.Button.YES) {
+        ss.setActiveSheet(sheet);
+        syncActiveTabToCalendar();  // shows its own ✅ Updated/Created summary
+        datesMsg += ' · calendar synced';
+      } else {
+        ui.alert('No problem — just remember to run 🛠 TC Tools → 🔄 Sync dates → Calendar ' +
+          'later, so the new HOA deadlines get calendar reminders.');
+      }
+    } catch (e) { /* UI unavailable — keep the save regardless */ }
   }
 
   try { rebuildDashboard(); } catch (e) { /* non-fatal */ }
