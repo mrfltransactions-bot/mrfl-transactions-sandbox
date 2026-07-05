@@ -3101,19 +3101,21 @@ D) purchase_price — Paragraph 2. Format: "$XXX,XXX.XX" with $, commas, two dec
 
 E) escrow_amount — Paragraph 2(a) "Initial deposit". Same format as purchase_price.
 
-F) escrow_days — Paragraph 2(a) "made within ____ days after Effective Date". Just the number as a string ("3"). Empty if not specified.
+F) escrow_days — Paragraph 2(a) "made within ____ days after Effective Date". Number as a string. If the blank is empty, use the paragraph's pre-printed default (3 days on the standard AS-IS form) — see DEFAULTS below.
 
 G) add_escrow_amount / add_escrow_days — Paragraph 2(b) "Additional deposit". Same formats.
 
-H) inspection_days — Paragraph 12(a) "Buyer shall have ____ days". Number as string.
+H) inspection_days — Paragraph 12(a) "Buyer shall have ____ days". Number as string. If the blank is empty, use the pre-printed default (15 days on the standard AS-IS form) — see DEFAULTS below.
 
-I) loanapp_days — Paragraph 8(b)(i): number of days after Effective Date to "make application for Financing". Distinct from J.
+I) loanapp_days — Paragraph 8(b)(i): days after Effective Date to "make application for Financing". Distinct from J. Financing deals only (leave blank for Cash).
 
-J) loan_days — Paragraph 8(b): the "Loan Approval Period" number of days after Effective Date (the financing-contingency / loan-approval deadline). Distinct from I and K. Number as string.
+J) loan_days — Paragraph 8(b): the "Loan Approval Period" days after Effective Date (the financing-contingency / loan-approval deadline). Distinct from I and K. Financing deals only (leave blank for Cash).
 
-K) title_days — Paragraph 9(c): the title-commitment number of days, usually phrased "at least ____ days prior to Closing Date" (sometimes "within ____ days"). This is a TITLE field, not a loan field.
+K) title_days — Paragraph 9(c): the title-commitment period. Use the "at least ____ days prior to Closing Date" figure. Do NOT use the "no later than 5 days prior to Closing Date" backstop that also appears in 9(c) — that is a cap, not this field. Applies to every deal (cash and financed).
 
-IMPORTANT for I, J, K: these are three SEPARATE numbers from three different paragraphs — never copy one into another, and never guess. Read each from its own blank in the contract image. If an attached rider, addendum, or Paragraph 20 "ADDITIONAL TERMS" explicitly changes one of these periods, use the changed value and note it in your summary. Leave a field blank if its number is not clearly stated.
+DEFAULTS (critical — this is a frequent error): the AS-IS form pre-prints a default beside each of these blanks, e.g. "(if left blank, then N days)". When a blank is EMPTY on the contract, DO NOT leave the field empty — fill in that pre-printed default number, reading it directly from the paragraph in the image. If the printed default is unreadable, the standard AS-IS defaults are: escrow_days = 3; loanapp_days = 5; loan_days (Loan Approval Period) = 30; inspection_days = 15; title_days = 15. Exception: for a Cash transaction leave loanapp_days and loan_days blank (there is no financing).
+
+IMPORTANT for I, J, K: three SEPARATE numbers from three different paragraphs — never copy one into another. If an attached rider, addendum, or Paragraph 20 "ADDITIONAL TERMS" explicitly changes one of these periods, use the changed value and note it in your summary.
 
 L) has_hoa / hoa_app_days / hoa_approval_days — Set has_hoa to "yes" if the property is in a homeowners' or condominium association AND the contract has an association disclosure/approval rider or addendum attached — e.g., Rider B "Homeowners' Association/Community Disclosure", a Condominium Rider, an association-approval addendum, or any attached HOA/COA addendum. Otherwise leave has_hoa "". When such a rider/addendum states timeframes, fill hoa_app_days (days after Effective Date to submit the association application) and hoa_approval_days (days prior to Closing Date for association approval). Leave either day field blank if its timeframe is not stated, even when has_hoa is "yes".
 
