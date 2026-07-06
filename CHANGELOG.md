@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.9.1] — 2026-07-06
+
+### Added — per-transaction print / save-as-PDF
+
+- Agent portal: every deal card gains a "🖨 Print / save as PDF" button.
+- Operator dashboard: same button in the deal detail view.
+- Both open the device print dialog with a branded, print-optimized
+  Transaction Overview (black on white): MRFL header, property, agent /
+  side / status, key-dates table, milestone table with ✓ Completed /
+  ◻ Upcoming / ⚠ Past due, all contact/detail sections, and a
+  prepared-by footer with a generated-at timestamp. On phones the print
+  dialog's share menu offers "Save as PDF". Front-end only — no Apps
+  Script change.
+
+---
+
 ## [1.9.0] — 2026-07-06
 
 ### Changed — dashboard v2: glass UI + full interactive drill-downs
