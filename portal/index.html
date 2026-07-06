@@ -319,8 +319,14 @@
   a.congrats {
     display: flex; gap: 10px; align-items: center; text-decoration: none;
     background: var(--success-soft); color: var(--on-success-soft);
-    border-radius: var(--radius); padding: 14px 16px; margin: 0 0 16px;
+    border-radius: var(--radius) var(--radius) 0 0; padding: 14px 16px; margin: 0;
     font-size: 13.5px; font-weight: 700; box-shadow: var(--shadow); cursor: pointer;
+  }
+  a.rev-ask {
+    display: block; text-decoration: none; text-align: center;
+    background: var(--primary-soft); color: var(--primary-strong);
+    border-radius: 0 0 var(--radius) var(--radius); padding: 11px 16px; margin: 2px 0 16px;
+    font-size: 12.5px; font-weight: 800; box-shadow: var(--shadow);
   }
 
   /* ============================================================
@@ -408,6 +414,7 @@
 
   // Referral landing page (update host when the custom domain goes live).
   var REFER_BASE = 'https://mrfl-transactions.vercel.app/refer/';
+  var SITE_BASE = REFER_BASE.replace(/refer\/$/, '');   // public site root (reviews live at #reviews)
 
   // ---------- theme toggle ----------
   function currentTheme() {
@@ -716,7 +723,9 @@
     if (justClosed) {
       h += '<a class="congrats" data-share="1">🎉&nbsp;<span>Congrats on closing <b>' +
         esc(shortAddr(justClosed.property)) + '</b>! Know an agent who\'d love this support? ' +
-        'You both save — share your invite →</span></a>';
+        'You both save — share your invite →</span></a>' +
+        '<a class="rev-ask" href="' + SITE_BASE + '#reviews" target="_blank" rel="noopener">' +
+        '⭐ Loved working together? Leave a quick review →</a>';
     }
 
     h += '<div class="stats">';

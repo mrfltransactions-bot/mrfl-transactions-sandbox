@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [2.4.0] — 2026-07-06
+
+### Added — review management + growth features (webhook v7.5)
+
+- **⭐ Manage reviews** (🛠 TC Tools): dialog listing every review with
+  LIVE/HIDDEN status — one-click ✅ Show on site / 🙈 Hide / 🗑 Delete
+  (with confirm). Writes are guarded: the row must still hold the same
+  reviewer name, so an out-of-date dialog can't touch the wrong review.
+- **Google reviews hook**: set Script Property `google_review_url` (once
+  the Google Business Profile exists) and the site automatically shows a
+  frosted "⭐ Read & leave reviews on Google ↗" button in the reviews
+  section. No code change needed later.
+- **Review-ask at closing** (portal): the 🎉 congrats banner now pairs
+  with "⭐ Loved working together? Leave a quick review →" linking to the
+  site's reviews section — the highest-intent moment.
+- **Reminder-draft growth footer**: every reminder draft now ends with a
+  referral nudge (agent's personal /refer/ link) + review link. Drafts
+  only, as always — Gloria still sends each one herself.
+- **Social proof on /refer/**: the invite page shows up to 3 approved
+  reviews ("Loved by agents") fetched live; hidden when none exist.
+- **Dashboard**: home shows "⭐ N reviews waiting for approval" (amber)
+  whenever something is pending; operator payload now carries review
+  counts.
+
+---
+
 ## [2.3.0] — 2026-07-06
 
 ### Changed — "liquid glass" website UI (from Gloria's references)

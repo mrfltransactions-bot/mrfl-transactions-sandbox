@@ -26,6 +26,7 @@
 
     --acc:       #7DD3FC;      /* icy cyan */
     --acc2:      #F0ABFC;      /* pink */
+    --star:      #FBBF24;
 
     --glass-base:  rgba(255, 255, 255, 0.06);
     --glass-sheen: linear-gradient(160deg, rgba(255,255,255,0.13), rgba(255,255,255,0.03) 42%, rgba(255,255,255,0.01));
@@ -55,6 +56,7 @@
 
     --acc:       #0369A1;
     --acc2:      #A21CAF;
+    --star:      #B45309;
 
     --glass-base:  rgba(255, 255, 255, 0.72);
     --glass-sheen: linear-gradient(160deg, rgba(255,255,255,0.95), rgba(255,255,255,0.55) 45%, rgba(255,255,255,0.35));
@@ -148,8 +150,16 @@
   }
   h2.sec::before, .offer .pk::before, .offer .pk::after { color: var(--acc2); }
 
+  /* ---- social proof (approved reviews from the master sheet) ---- */
+  .pcards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;
+    max-width: 560px; margin: 0 auto; }
+  .pcard { border: 1px solid var(--bd); border-radius: 16px; padding: 16px; }
+  .pcard .pstars { color: var(--star); font-size: 14px; letter-spacing: 2px; margin-bottom: 6px; }
+  .pcard p { font-size: 13px; color: var(--soft); margin-bottom: 8px; }
+  .pcard .pwho { font-size: 12.5px; font-weight: 800; }
+
   /* ---- liquid glass panels: frosted blur + specular top edge ---- */
-  .offer, .invite-chip, .b .ic {
+  .offer, .invite-chip, .b .ic, .pcard {
     background-color: var(--glass-base);
     background-image: var(--glass-sheen);
     backdrop-filter: blur(14px) saturate(1.5);
@@ -258,6 +268,13 @@
   </div>
 </section>
 
+<section id="proof" style="display:none;padding-top:0">
+  <div class="shell">
+    <h2 class="sec">Loved by agents</h2>
+    <div class="pcards" id="pcards"></div>
+  </div>
+</section>
+
 <section style="padding-top:0">
   <div class="shell">
     <h2 class="sec">How it works</h2>
@@ -305,12 +322,35 @@
     applyTheme(currentTheme() === 'dark' ? 'light' : 'dark', true);
   });
 
-  /* ?from= personalization */
   function esc(s) {
     return String(s || '').replace(/[&<>"']/g, function (c) {
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
     });
   }
+
+  /* social proof — approved reviews from Gloria's master sheet */
+  var WEBHOOK = 'https://script.google.com/macros/s/AKfycbzheiPICRaOkutzU6kkrNS3n1pVebVVMtMwqAyQtDinMrzbqnaeTxFdHaqCeKtveKEzBw/exec';
+  function starRow(n) { var h = ''; for (var i = 1; i <= 5; i++) h += (i <= n ? '★' : '☆'); return h; }
+  function showProof(list) {
+    if (!list || !list.length) return;
+    var h = '';
+    list.slice(0, 3).forEach(function (r) {
+      h += '<div class="pcard"><div class="pstars" aria-label="' + r.stars + ' out of 5 stars">' + starRow(r.stars) + '</div>' +
+        '<p>“' + esc(r.text) + '”</p>' +
+        '<div class="pwho">' + esc(r.name) + (r.brokerage ? ' · ' + esc(r.brokerage) : '') + '</div></div>';
+    });
+    document.getElementById('pcards').innerHTML = h;
+    document.getElementById('proof').style.display = 'block';
+  }
+  try {
+    fetch(WEBHOOK + '?view=reviews')
+      .then(function (r) { return r.json(); })
+      .then(function (j) { showProof((j && j.reviews) || []); })
+      .catch(function () { /* no proof strip — fine */ });
+  } catch (e) { /* fine */ }
+  window._mrfl = { showProof: showProof };
+
+  /* ?from= personalization */
   var from = new URLSearchParams(location.search).get('from') || '';
   from = from.replace(/[^\w\s.'-]/g, '').trim().slice(0, 40);
   if (!from) return;

@@ -76,6 +76,7 @@ function onOpen() {
     .addItem('🔗 Agent portal links', 'showPortalLinks')
     .addItem('🖥 My dashboard link', 'showOperatorLink')
     .addItem('🎁 Log a referral', 'showReferralDialog')
+    .addItem('⭐ Manage reviews', 'showReviewsManager')
     .addSeparator()
     .addItem('🔔 Preview / create reminder drafts', 'previewAndDraftReminders')
     .addItem('🔔 Set up daily reminder drafts', 'setupDailyReminders')
@@ -103,6 +104,7 @@ function toggleActiveOnly() {
     .addItem('🔗 Agent portal links', 'showPortalLinks')
     .addItem('🖥 My dashboard link', 'showOperatorLink')
     .addItem('🎁 Log a referral', 'showReferralDialog')
+    .addItem('⭐ Manage reviews', 'showReviewsManager')
     .addSeparator()
     .addItem('🔔 Preview / create reminder drafts', 'previewAndDraftReminders')
     .addItem('🔔 Set up daily reminder drafts', 'setupDailyReminders')
@@ -1717,6 +1719,8 @@ function jsonResponse(obj) {
 // ============================================================
 
 const PORTAL_BASE_URL = 'https://mrfl-transactions.vercel.app/portal/';
+const SITE_BASE_URL = 'https://mrfl-transactions.vercel.app/';       // public site
+const REFER_BASE_URL = SITE_BASE_URL + 'refer/';                     // referral landing
 
 function _portalKeyProp(agentRef) {
   return 'portal_key_' + String(agentRef || '').trim().toLowerCase();
@@ -2333,11 +2337,15 @@ function operatorResponse_(params) {
   let referrals = [];
   try { referrals = _refList(); } catch (e) { referrals = []; }
 
+  let reviewStats = { pending: 0, shown: 0 };
+  try { reviewStats = _revStats(); } catch (e) {}
+
   return jsonResponse({
     success: true,
     generated_at: new Date().toISOString(),
     deals: deals,
-    referrals: referrals
+    referrals: referrals,
+    reviews: reviewStats
   });
 }
 
@@ -2563,6 +2571,13 @@ function _remBuildEmailHtml(ref, items, portalLink) {
         'style="background:#4338CA;color:#fff;text-decoration:none;padding:12px 22px;border-radius:8px;' +
         'font-weight:700;font-size:14px;display:inline-block">Open your portal →</a></div>'
       : '') +
+    // v7.5 growth footer — referral + review nudge in every reminder
+    // (drafts only, as always: Gloria reviews and sends each one herself)
+    '<div style="margin:18px 0 0;padding:12px 14px;background:#F5F3FF;border-radius:8px;font-size:12.5px;color:#4B5563">' +
+    '🎁 <b style="color:#1E1B4B">Know an agent who\'d love this support?</b> Your invite gives them ' +
+    '50% off their first transaction — and you 50% off your next when theirs closes: ' +
+    '<a href="' + REFER_BASE_URL + '?from=' + encodeURIComponent(ref) + '" style="color:#4338CA;font-weight:700">share your invite</a>. ' +
+    'Loved working together? <a href="' + SITE_BASE_URL + '#reviews" style="color:#4338CA;font-weight:700">Leave a quick review ⭐</a></div>' +
     '<p style="margin:14px 0 0;font-size:12.5px;color:#9CA3AF;text-align:center">' +
     'Gloria · MRFL Transactions — questions? Just reply to this email.</p>' +
     '</div></div>';
@@ -2576,6 +2591,10 @@ function _remBuildEmailPlain(ref, items, portalLink) {
       return '• ' + it.name + ' — ' + it.dateStr + ' (' + when(it.days) + ') · ' + it.property;
     }).join('\n') +
     (portalLink ? '\n\nYour portal: ' + portalLink : '') +
+    '\n\n🎁 Know an agent who\'d love this support? Your invite gives them 50% off their first ' +
+    'transaction (and you 50% off your next when theirs closes): ' +
+    REFER_BASE_URL + '?from=' + encodeURIComponent(ref) +
+    '\n⭐ Loved working together? Leave a quick review: ' + SITE_BASE_URL + '#reviews' +
     '\n\n— Gloria · MRFL Transactions';
 }
 
@@ -2813,7 +2832,7 @@ function _reviewsResponse() {
   if (sh && sh.getLastRow() > 1) {
     const rows = sh.getRange(2, 1, sh.getLastRow() - 1, REVIEWS_HEADERS.length).getValues();
     for (let i = rows.length - 1; i >= 0 && out.length < 30; i--) {
-      if (rows[i][5] !== true) continue;   // only rows Gloria checked
+      if (rows[i][5] !== true) continue;   // only rows Gloria approved
       out.push({
         name: String(rows[i][1] || ''),
         brokerage: String(rows[i][2] || ''),
@@ -2824,7 +2843,119 @@ function _reviewsResponse() {
       });
     }
   }
-  return jsonResponse({ status: 'ok', reviews: out });
+  // Future Google Business Profile tie-in: set Script Property
+  // google_review_url to the profile's review link and the site will
+  // show a "review us on Google" button automatically.
+  const gUrl = PropertiesService.getScriptProperties().getProperty('google_review_url') || '';
+  return jsonResponse({ status: 'ok', reviews: out, google_url: gUrl });
+}
+
+// ---------- v7.5 — review management (⭐ Manage reviews dialog) ----------
+
+function _revStats() {
+  const sh = _revSheet(false);
+  const stats = { pending: 0, shown: 0 };
+  if (sh && sh.getLastRow() > 1) {
+    sh.getRange(2, 6, sh.getLastRow() - 1, 1).getValues().forEach(function (r) {
+      if (r[0] === true) stats.shown++; else stats.pending++;
+    });
+  }
+  return stats;
+}
+
+// All reviews with their sheet row numbers, newest first — feeds the dialog.
+function listReviewsForManager() {
+  const sh = _revSheet(true);
+  const out = [];
+  if (sh.getLastRow() > 1) {
+    const rows = sh.getRange(2, 1, sh.getLastRow() - 1, REVIEWS_HEADERS.length).getValues();
+    for (let i = rows.length - 1; i >= 0; i--) {
+      out.push({
+        row: i + 2,
+        date: (rows[i][0] instanceof Date)
+          ? Utilities.formatDate(rows[i][0], Session.getScriptTimeZone(), 'MMM d, yyyy') : String(rows[i][0] || ''),
+        name: String(rows[i][1] || ''),
+        brokerage: String(rows[i][2] || ''),
+        stars: Math.max(1, Math.min(5, parseInt(rows[i][3], 10) || 5)),
+        text: String(rows[i][4] || ''),
+        shown: rows[i][5] === true
+      });
+    }
+  }
+  return out;
+}
+
+// Guarded write: the name at the row must match what the dialog showed,
+// so a stale dialog can never flip or delete the wrong review.
+function _revGuard(sh, row, expectName) {
+  if (!sh || row < 2 || row > sh.getLastRow()) return false;
+  return String(sh.getRange(row, 2).getValue() || '') === String(expectName || '');
+}
+
+function setReviewVisibility(row, expectName, show) {
+  const sh = _revSheet(false);
+  if (!_revGuard(sh, row, expectName)) {
+    return { ok: false, error: 'That review moved (sheet edited?) — reopening the list.', list: listReviewsForManager() };
+  }
+  sh.getRange(row, 6).setValue(show === true);
+  return { ok: true, list: listReviewsForManager() };
+}
+
+function deleteReview(row, expectName) {
+  const sh = _revSheet(false);
+  if (!_revGuard(sh, row, expectName)) {
+    return { ok: false, error: 'That review moved (sheet edited?) — reopening the list.', list: listReviewsForManager() };
+  }
+  sh.deleteRow(row);
+  return { ok: true, list: listReviewsForManager() };
+}
+
+function showReviewsManager() {
+  const html = '' +
+    '<style>body{font-family:-apple-system,Segoe UI,Arial,sans-serif;margin:0;padding:14px;color:#1E1B4B}' +
+    'h3{margin:0 0 2px;font-size:16px}' +
+    '.hint{font-size:12px;color:#6B7280;margin:0 0 12px}' +
+    '.rev{border:1px solid #E5E7EB;border-radius:10px;padding:10px 12px;margin-bottom:10px}' +
+    '.rev.live{border-color:#A7F3D0;background:#F0FDF9}' +
+    '.top{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}' +
+    '.who{font-weight:700;font-size:13.5px}.meta{font-size:11.5px;color:#6B7280}' +
+    '.stars{color:#D97706;font-size:13px;letter-spacing:1px}' +
+    '.txt{font-size:13px;color:#374151;margin:6px 0 8px}' +
+    '.chip{font-size:10.5px;font-weight:800;padding:2px 9px;border-radius:999px}' +
+    '.chip.live{background:#D1FAE5;color:#065F46}.chip.hidden{background:#FEF3C7;color:#92400E}' +
+    'button{border:none;border-radius:7px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;margin-right:6px}' +
+    '.show{background:#4338CA;color:#fff}.hide{background:#E5E7EB;color:#374151}.del{background:#FEE2E2;color:#B91C1C}' +
+    '.empty{color:#6B7280;font-size:13px;text-align:center;padding:26px 0}' +
+    '#err{display:none;color:#B91C1C;font-size:12px;margin-bottom:8px;font-weight:700}' +
+    '</style>' +
+    '<h3>⭐ Manage reviews</h3>' +
+    '<p class="hint">Only reviews marked <b>Live on site</b> are shown publicly. New submissions start hidden.</p>' +
+    '<div id="err"></div><div id="list"><p class="empty">Loading…</p></div>' +
+    '<script>' +
+    'function esc(s){return String(s==null?"":s).replace(/[&<>"\']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;","\\"":"&quot;","\'":"&#39;"}[c];});}' +
+    'function stars(n){var h="";for(var i=1;i<=5;i++)h+=(i<=n?"★":"☆");return h;}' +
+    'function paint(list){var box=document.getElementById("list");' +
+    'if(!list||!list.length){box.innerHTML=\'<p class="empty">No reviews yet — they land here when an agent submits one on your site.</p>\';return;}' +
+    'var h="";list.forEach(function(r){' +
+    'h+=\'<div class="rev\'+(r.shown?" live":"")+\'"><div class="top"><span><span class="who">\'+esc(r.name)+\'</span> ' +
+    '<span class="meta">\'+esc(r.brokerage||"Realtor")+\' · \'+esc(r.date)+\'</span></span>' +
+    '<span class="chip \'+(r.shown?"live":"hidden")+\'">\'+(r.shown?"LIVE ON SITE":"HIDDEN")+\'</span></div>' +
+    '<div class="stars">\'+stars(r.stars)+\'</div><div class="txt">\'+esc(r.text)+\'</div>' +
+    '<button class="\'+(r.shown?"hide":"show")+\'" onclick="flip(\'+r.row+\',this)" data-name="\'+esc(r.name)+\'" data-show="\'+(r.shown?"0":"1")+\'">\'+(r.shown?"🙈 Hide from site":"✅ Show on site")+\'</button>' +
+    '<button class="del" onclick="kill(\'+r.row+\',this)" data-name="\'+esc(r.name)+\'">🗑 Delete</button></div>\';});' +
+    'box.innerHTML=h;}' +
+    'function done(res){var e=document.getElementById("err");' +
+    'if(res&&res.error){e.textContent=res.error;e.style.display="block";}else{e.style.display="none";}' +
+    'paint(res&&res.list?res.list:[]);}' +
+    'function fail(err){var e=document.getElementById("err");e.textContent="Hmm, that did not save: "+err.message;e.style.display="block";}' +
+    'function flip(row,btn){btn.disabled=true;btn.textContent="Saving…";' +
+    'google.script.run.withSuccessHandler(done).withFailureHandler(fail).setReviewVisibility(row,btn.getAttribute("data-name"),btn.getAttribute("data-show")==="1");}' +
+    'function kill(row,btn){if(!confirm("Delete this review permanently?"))return;btn.disabled=true;' +
+    'google.script.run.withSuccessHandler(done).withFailureHandler(fail).deleteReview(row,btn.getAttribute("data-name"));}' +
+    'google.script.run.withSuccessHandler(paint).withFailureHandler(fail).listReviewsForManager();' +
+    '</script>';
+  SpreadsheetApp.getUi().showModalDialog(
+    HtmlService.createHtmlOutput(html).setWidth(560).setHeight(480), '⭐ Manage reviews');
 }
 
 function doGet(e) {

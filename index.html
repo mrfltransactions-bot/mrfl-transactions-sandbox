@@ -270,6 +270,12 @@
   .revs-empty { text-align: center; color: var(--soft); font-size: 14.5px; font-weight: 600;
     background: var(--panel); border: 1.5px dashed var(--bd-strong); border-radius: 16px;
     padding: 22px; margin-bottom: 30px; }
+  .g-strip { text-align: center; margin: -12px 0 30px; }
+  .g-btn { display: inline-block; color: var(--acc); font-weight: 800; font-size: 14px;
+    text-decoration: none; border: 1.5px solid var(--bd-strong); border-radius: 999px;
+    padding: 10px 20px; background-color: var(--glass-base); background-image: var(--glass-sheen);
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    box-shadow: inset 0 1px 0 var(--glass-spec); }
 
   .rev-form {
     max-width: 560px; margin: 0 auto; background: var(--panel);
@@ -584,12 +590,13 @@
     for (var i = 1; i <= 5; i++) h += (i <= n ? '★' : '☆');
     return h;
   }
-  function renderReviews(list) {
+  function renderReviews(list, googleUrl) {
     var box = document.getElementById('revs_box');
+    var h = '';
     if (!list || !list.length) {
-      box.innerHTML = '<div class="revs-empty reveal">🌟 Be the first to share what it\'s like working with MRFL — leave a review below!</div>';
+      h = '<div class="revs-empty reveal">🌟 Be the first to share what it\'s like working with MRFL — leave a review below!</div>';
     } else {
-      var h = '<div class="revs">';
+      h = '<div class="revs">';
       list.slice(0, 9).forEach(function (r) {
         h += '<div class="rev reveal"><div class="stars" aria-label="' + r.stars + ' out of 5 stars">' + starRow(r.stars) + '</div>' +
           '<p class="q">“' + esc(r.text) + '”</p>' +
@@ -597,15 +604,21 @@
           '<div class="whosub">' + esc(r.brokerage || 'Realtor') + (r.date ? ' · ' + esc(r.date) : '') + '</div></div>';
       });
       h += '</div>';
-      box.innerHTML = h;
     }
+    // Google Business Profile tie-in — appears automatically once Gloria
+    // stores her profile's review link (Script Property google_review_url).
+    if (googleUrl && /^https:\/\//.test(googleUrl)) {
+      h += '<div class="g-strip reveal"><a class="g-btn" href="' + esc(googleUrl) + '" target="_blank" rel="noopener">' +
+        '⭐ Read &amp; leave reviews on Google ↗</a></div>';
+    }
+    box.innerHTML = h;
     watchReveals(box);
   }
   function loadReviews() {
     fetch(WEBHOOK + '?view=reviews')
       .then(function (r) { return r.json(); })
-      .then(function (j) { renderReviews((j && j.reviews) || []); })
-      .catch(function () { renderReviews([]); });
+      .then(function (j) { renderReviews((j && j.reviews) || [], (j && j.google_url) || ''); })
+      .catch(function () { renderReviews([], ''); });
   }
   loadReviews();
 

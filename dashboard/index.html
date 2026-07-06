@@ -554,6 +554,16 @@
         : (refs.length ? 'All caught up on rewards' : 'Agents share invites from their portal — log referrals in 🛠 TC Tools')) +
       '</span></span><span class="chev">›</span></a>';
 
+    // ⭐ reviews row — only when something is waiting for approval
+    var revStats = DATA.reviews || {};
+    if (revStats.pending > 0) {
+      h += '<div class="row g" style="margin-top:10px">' +
+        '<span class="ebar" style="background:var(--bar-amber)"></span>' +
+        '<span class="r-main"><span class="r-title">⭐ ' + revStats.pending + ' review' + (revStats.pending > 1 ? 's' : '') + ' waiting for approval</span>' +
+        '<span class="r-sub">Approve in the sheet: 🛠 TC Tools → ⭐ Manage reviews' +
+        (revStats.shown ? ' · ' + revStats.shown + ' live on the site' : '') + '</span></span></div>';
+    }
+
     // week pills + timeline
     h += '<div class="sec" id="weeksec"><h2>This week</h2><span class="more">deadlines by day</span></div>';
     h += '<div class="days" id="days">';
