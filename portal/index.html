@@ -41,6 +41,7 @@
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
   html, body {
     background: var(--bg);
     color: var(--text);
@@ -82,6 +83,22 @@
   }
   .stat .num { font-size: 22px; font-weight: 800; color: var(--indigo-navy); line-height: 1.2; }
   .stat .lbl { font-size: 11px; color: var(--text-soft); margin-top: 2px; }
+
+  /* ---------- next-deadline banner ---------- */
+  a.next-banner {
+    display: flex; gap: 10px; align-items: flex-start;
+    background: #FFFBEB; border: 1px solid #FDE68A; border-radius: var(--radius);
+    padding: 12px 14px; margin: 0 0 18px; text-decoration: none;
+    color: #92400E; box-shadow: var(--shadow);
+  }
+  a.next-banner.red { background: #FEF2F2; border-color: #FECACA; color: #991B1B; }
+  .nb-icon { font-size: 18px; line-height: 1.3; }
+  .nb-k {
+    display: block; font-size: 10.5px; font-weight: 800; letter-spacing: 0.8px;
+    text-transform: uppercase; opacity: 0.75; margin-bottom: 2px;
+  }
+  .nb-what { font-size: 14.5px; line-height: 1.4; }
+  .nb-prop { display: block; font-size: 12.5px; margin-top: 2px; opacity: 0.85; }
 
   /* ---------- deal cards ---------- */
   .section-title { font-size: 13px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; color: var(--text-soft); margin: 20px 2px 10px; }
@@ -389,17 +406,30 @@
       return n !== null && n >= 0 && n <= 7;
     }).length;
 
-    var nextDays = null;
-    active.forEach(function (d) {
-      if (d.days_until !== null && d.days_until >= 0 && (nextDays === null || d.days_until < nextDays)) nextDays = d.days_until;
+    // Most urgent upcoming deadline across active deals — overdue (negative
+    // days) ranks first, since that needs attention most.
+    var next = null;
+    active.forEach(function (d, idx) {
+      if (d.days_until === null || !d.next_deadline) return;
+      if (next === null || d.days_until < next.days) next = { deal: d, days: d.days_until, idx: idx };
     });
 
     var h = '';
     h += '<div class="stats">';
     h += '<div class="stat"><div class="num">' + active.length + '</div><div class="lbl">Active deal' + (active.length === 1 ? '' : 's') + '</div></div>';
     h += '<div class="stat"><div class="num">' + closingSoon + '</div><div class="lbl">Closing within 7 days</div></div>';
-    h += '<div class="stat"><div class="num">' + (nextDays === null ? '—' : (nextDays === 0 ? 'Today' : nextDays + 'd')) + '</div><div class="lbl">Next deadline</div></div>';
+    h += '<div class="stat"><div class="num">' + (next === null ? '—' : (next.days < 0 ? '❗' : (next.days === 0 ? 'Today' : next.days + 'd'))) + '</div><div class="lbl">Next deadline</div></div>';
     h += '</div>';
+
+    if (next !== null) {
+      var overdue = next.days < 0;
+      h += '<a class="next-banner' + (overdue ? ' red' : '') + '" href="#deal_' + next.idx + '">' +
+        '<span class="nb-icon">' + (overdue ? '❗' : '⏰') + '</span>' +
+        '<span class="nb-main"><span class="nb-k">' + (overdue ? 'Past due — needs attention' : 'Next deadline') + '</span>' +
+        '<span class="nb-what"><b>' + esc(next.deal.next_deadline) + '</b> — ' +
+        fmt(next.deal.next_deadline_date) + ' (' + inWords(next.days) + ')</span>' +
+        '<span class="nb-prop">📍 ' + esc(next.deal.property) + '</span></span></a>';
+    }
 
     if (active.length === 0 && past.length === 0) {
       h += '<div class="state"><div class="big">🌴</div><h2>No transactions yet</h2>' +
@@ -407,7 +437,7 @@
     } else {
       if (active.length) {
         h += '<div class="section-title">Active transactions</div>';
-        active.forEach(function (d) { h += dealCard(d); });
+        active.forEach(function (d, idx) { h += '<div id="deal_' + idx + '">' + dealCard(d) + '</div>'; });
       } else {
         h += '<div class="state"><div class="big">✅</div><h2>No active deals right now</h2>' +
           '<p>Your past transactions are below. New deals appear here automatically.</p></div>';
