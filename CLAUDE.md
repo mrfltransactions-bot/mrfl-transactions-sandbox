@@ -1,8 +1,13 @@
 # CLAUDE.md — MRFL Transactions project context
 
-_Last full update: 2026-07-06 (system v1.9.1, webhook v7.2). Keep this file
+_Last full update: 2026-07-06 (system v2.0.0, webhook v7.3). Keep this file
 current whenever a feature ships — it is the canonical context/backup for
 future sessions._
+
+**Business facts:** pricing $500 single side / $700 dual agency, per closed
+transaction, pay-only-at-close, no monthly fee. Referral program: new agent
+50% off first closed deal ($250/$350); referrer 50% off their next deal when
+the referral's first deal closes.
 
 ## What this project is
 
@@ -33,6 +38,8 @@ overviews** from either app.
 | Operator dashboard | `dashboard/index.html` | Gloria's private all-transactions SPA (v1.9.0, dark-glass style): hash-router views — #home (search, tappable stat cards, week day-pills w/ per-day deadline timeline, attention preview), #agents → #deals/agent/<name>, #deals/all|urgent|closing, #deal/<i> full detail (milestone checklist + ALL details sections + tel/mailto + Open-sheet-tab). Floating bottom nav; center ＋ opens the master sheet. Fed by `doGet?view=operator&key=<operator_key>` (v7.2 payload includes `details`); link via 🛠 TC Tools → "🖥 My dashboard link". Detail view has "Open sheet tab ↗" + "🖨 Print / save as PDF" (same print pattern as the portal). Same dark/light token system + contrast-audit rule as the portal; `ENDPOINT` const = webhook URL. |
 | Widget | `widget/index.html` (web) + `scriptable/mrfl_widget.js` (legacy iOS) | Upcoming-deadlines dashboard. Now requires `&key=<widget_key>` on the URL. Web version stores URL in localStorage (⚙ gear to change); shares `tc_webhook_url` key with the intake form. |
 | Deliverables | `deliverables/` + Code.gs `_buildDeliverableSheet` / `_exportDeliverableAsPdf` | Branded combined Sheet + PDF per transaction, saved to Drive on submit. |
+| Public site | `index.html` (root) + `refer/index.html` | Marketing site at `/` (services, how-it-works, pricing, contact CTAs) and the referral landing at `/refer/?from=<agent>` (personalized invite chip/copy/CTAs, $250/$350 offer). Light-only, indigo brand. ⚠️ vercel.json's old `/` → intake redirect was REMOVED for this — Gloria's intake bookmark must be `/intake/intake-form.html`. When her custom domain is connected, update `REFER_BASE` in portal/index.html (and ideally PORTAL_BASE_URL/DASHBOARD_BASE_URL in Code.gs) to the new host. |
+| Referral tracking | `webhook/Code.gs` v7.3 + dashboard `#referrals` | "🎁 Referrals" sheet tab is the source of truth (Date/Referred by/New agent/Contact/Status dropdown/Reward/Notes; statuses: Invited → Joined → First deal closed — reward due → Reward redeemed). Log via 🛠 TC Tools → "🎁 Log a referral"; operator payload carries `referrals[]`; dashboard shows home row + #referrals view with reward-due flags. Portal has the share card + 14-day closed-congrats banner (both trigger `shareInvite()`). |
 | Portal mockup | `portal/agent-dashboard.html` | Static design mockup only (source of the design tokens). Not live. |
 
 ## Deploy model (critical)
@@ -140,7 +147,8 @@ overviews** from either app.
 
 Refresh Dashboard · Show Active Only/All · Sync dates → Calendar · Set up
 calendar sync · Add / update HOA info · Agent portal links · My dashboard
-link · Preview / create reminder drafts · Set up daily reminder drafts · About.
+link · Log a referral · Preview / create reminder drafts · Set up daily
+reminder drafts · About.
 
 ## Working with Gloria
 

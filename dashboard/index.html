@@ -543,6 +543,17 @@
     h += '<a class="stat g tap" href="#agents"><span class="ic green">👥</span><span><span class="num">' + Object.keys(agents).length + '</span><br><span class="lbl">Agents active</span></span><span class="chev">›</span></a>';
     h += '</div>';
 
+    // 🎁 referrals row
+    var refs = DATA.referrals || [];
+    var rewardDue = refs.filter(function (r) { return String(r.status).toLowerCase().indexOf('reward due') >= 0; }).length;
+    h += '<a class="row g tap" href="#referrals" style="margin-top:12px">' +
+      '<span class="ebar" style="background:' + (rewardDue ? 'var(--bar-amber)' : 'var(--bar-blue)') + '"></span>' +
+      '<span class="r-main"><span class="r-title">🎁 Referrals · ' + refs.length + ' logged</span>' +
+      '<span class="r-sub">' + (rewardDue
+        ? rewardDue + ' reward' + (rewardDue > 1 ? 's' : '') + ' due — time to say thank you!'
+        : (refs.length ? 'All caught up on rewards' : 'Agents share invites from their portal — log referrals in 🛠 TC Tools')) +
+      '</span></span><span class="chev">›</span></a>';
+
     // week pills + timeline
     h += '<div class="sec" id="weeksec"><h2>This week</h2><span class="more">deadlines by day</span></div>';
     h += '<div class="days" id="days">';
@@ -678,6 +689,39 @@
         (next ? ' · next: ' + esc(next.name) + ' ' + esc(inWords(next.days)) : '') + '</span></span>' +
         '<span class="chev">›</span></a>';
     });
+    setMain(h);
+  }
+
+  function viewReferrals() {
+    var refs = DATA.referrals || [];
+    var rewardDue = refs.filter(function (r) { return String(r.status).toLowerCase().indexOf('reward due') >= 0; });
+    var h = '<div class="dt-head">' + backBtn('#home') + '<h1>🎁 Referrals <span style="font-size:12px;color:var(--muted);font-weight:700">· ' +
+      refs.length + ' logged' + (rewardDue.length ? ' · ' + rewardDue.length + ' reward' + (rewardDue.length > 1 ? 's' : '') + ' due' : '') + '</span></h1></div>';
+
+    if (!refs.length) {
+      h += '<div class="tl-empty">No referrals logged yet.<br>Log one in the sheet: 🛠 TC Tools → 🎁 Log a referral.<br>' +
+        'Agents share their invite link from the portal\'s 🎁 card.</div>';
+      setMain(h);
+      return;
+    }
+    refs.slice().reverse().forEach(function (r) {
+      var s = String(r.status).toLowerCase();
+      var chip = s.indexOf('reward due') >= 0 ? '<span class="chip amber">🎁 Reward due</span>'
+        : s.indexOf('redeemed') >= 0 ? '<span class="chip">Reward redeemed</span>'
+        : s.indexOf('joined') >= 0 ? '<span class="chip green">Joined</span>'
+        : '<span class="chip blue">Invited</span>';
+      var bar = s.indexOf('reward due') >= 0 ? 'var(--bar-amber)'
+        : s.indexOf('joined') >= 0 ? 'var(--bar-green)'
+        : s.indexOf('redeemed') >= 0 ? 'var(--bar-gray)' : 'var(--bar-blue)';
+      h += '<div class="row g"><span class="ebar" style="background:' + bar + '"></span>' +
+        '<span class="r-main"><span class="r-title">' + esc(r.new_agent || '(no name)') + '</span>' +
+        '<span class="r-sub">referred by ' + esc(r.referred_by || '—') +
+        (r.date ? ' · ' + esc(r.date) : '') + (r.contact ? ' · ' + esc(r.contact) : '') + '</span>' +
+        '<span class="chips">' + chip + '</span>' +
+        (r.notes ? '<span class="r-sub" style="display:block;margin-top:5px">📝 ' + esc(r.notes) + '</span>' : '') +
+        '</span></div>';
+    });
+    h += '<div class="tl-empty" style="margin-top:8px">Update statuses in the sheet\'s 🎁 Referrals tab — this list follows it live.</div>';
     setMain(h);
   }
 
@@ -837,6 +881,7 @@
     var m;
     if (hash === '' || hash === '#' || hash === '#home') return viewHome();
     if (hash === '#agents') return viewAgents();
+    if (hash === '#referrals') return viewReferrals();
     if ((m = hash.match(/^#deal\/(\d+)$/))) return viewDetail(+m[1]);
     if ((m = hash.match(/^#deals\/agent\/(.+)$/))) return viewDeals('agent', decodeURIComponent(m[1]));
     if ((m = hash.match(/^#deals\/(all|urgent|closing)$/))) return viewDeals(m[1]);

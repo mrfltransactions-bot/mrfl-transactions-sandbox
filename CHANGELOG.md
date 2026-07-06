@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [2.0.0] — 2026-07-06
+
+### Added — public website, referral program, referral tracking
+
+- **Public marketing site** at the domain root (`index.html`): hero, services,
+  how-it-works, pricing ($500 single side / $700 dual agency, pay only at
+  close), about, contact CTAs (tap-to-text/call/email). Root redirect to the
+  intake form removed from `vercel.json` — bookmark `/intake/intake-form.html`
+  directly.
+- **Referral landing page** (`refer/index.html`): personalized via
+  `?from=<agent>` ("Martha invited you", "Martha's gift to you"), offer at
+  50% off first transaction ($250 / $350), prefilled tap-to-text-Gloria CTAs
+  mentioning the referrer.
+- **Portal referral sharing**: "🎁 Refer an agent — you both save" card with
+  📲 Share (native share sheet, clipboard fallback + confirmation) sending a
+  prewritten colleague message with the agent's personal /refer/ link; plus a
+  🎉 congrats banner when a deal closed within the last 14 days (highest-
+  intent referral moment) that triggers the same share.
+- **Referral tracking** (webhook v7.3): "🎁 Referrals" sheet tab
+  (auto-created, status dropdown), 🛠 TC Tools → "🎁 Log a referral" dialog,
+  referrals included in the operator payload, and a dashboard #referrals view
+  + home row with 🎁 reward-due flags.
+- Referral economics: new agent 50% off first closed deal; referrer 50% off
+  their next deal when the referral's first deal closes.
+
+---
+
 ## [1.9.1] — 2026-07-06
 
 ### Added — per-transaction print / save-as-PDF

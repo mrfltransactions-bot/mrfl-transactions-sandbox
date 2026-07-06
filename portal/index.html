@@ -300,6 +300,29 @@
     color: var(--text-soft); font-size: 12.5px; font-weight: 700; cursor: pointer; font-family: inherit;
   }
 
+  /* ---------- referral card + congrats banner ---------- */
+  .refer-card {
+    background: var(--primary-soft); border: 1.5px dashed var(--primary);
+    border-radius: var(--radius); padding: 18px; margin: 20px 0 6px; text-align: center;
+  }
+  .refer-card h3 { font-size: 15.5px; font-weight: 800; color: var(--primary-strong); margin-bottom: 6px; }
+  .refer-card p { font-size: 13px; color: var(--text-soft); font-weight: 600; max-width: 430px; margin: 0 auto 14px; }
+  .refer-card p b { color: var(--text); }
+  .refer-btn {
+    display: inline-block; background: var(--indigo-deep, #4338CA); background: var(--primary);
+    color: #fff; border: none; padding: 12px 22px; border-radius: 12px;
+    font-size: 14px; font-weight: 800; cursor: pointer; font-family: inherit;
+  }
+  :root[data-theme="dark"] .refer-btn { background: #4A3FE0; }
+  .refer-fb { display: none; margin-top: 10px; font-size: 12.5px; font-weight: 700; color: var(--on-success-soft); }
+
+  a.congrats {
+    display: flex; gap: 10px; align-items: center; text-decoration: none;
+    background: var(--success-soft); color: var(--on-success-soft);
+    border-radius: var(--radius); padding: 14px 16px; margin: 0 0 16px;
+    font-size: 13.5px; font-weight: 700; box-shadow: var(--shadow); cursor: pointer;
+  }
+
   /* ============================================================
      PRINT — branded per-transaction overview (black on white)
      ============================================================ */
@@ -383,6 +406,9 @@
   // endpoint returns data only with a valid per-agent or widget key.
   var PORTAL_ENDPOINT = 'https://script.google.com/macros/s/AKfycbzheiPICRaOkutzU6kkrNS3n1pVebVVMtMwqAyQtDinMrzbqnaeTxFdHaqCeKtveKEzBw/exec';
 
+  // Referral landing page (update host when the custom domain goes live).
+  var REFER_BASE = 'https://mrfl-transactions.vercel.app/refer/';
+
   // ---------- theme toggle ----------
   function currentTheme() {
     return document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
@@ -461,6 +487,7 @@
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
     });
   }
+  function shortAddr(p) { return String(p || '').split(',')[0]; }
 
   var STATUS_LABEL = {
     on_track: 'On track', active: 'Active', warning: 'Deadline soon',
@@ -609,15 +636,53 @@
     return h;
   }
 
-  var LAST = null;  // last successful payload (for printing)
+  var LAST = null;  // last successful payload (for printing + referrals)
   document.addEventListener('click', function (e) {
     var btn = e.target.closest ? e.target.closest('[data-print]') : null;
-    if (!btn || !LAST) return;
-    var d = (LAST.deals || [])[+btn.getAttribute('data-print')];
-    if (!d) return;
-    document.getElementById('printview').innerHTML = buildPrintHtml(d);
-    window.print();
+    if (btn && LAST) {
+      var d = (LAST.deals || [])[+btn.getAttribute('data-print')];
+      if (!d) return;
+      document.getElementById('printview').innerHTML = buildPrintHtml(d);
+      window.print();
+      return;
+    }
+    var share = e.target.closest ? e.target.closest('[data-share]') : null;
+    if (share && LAST) {
+      e.preventDefault();
+      shareInvite();
+    }
   });
+
+  // ---------- referral invite sharing ----------
+  function shareInvite() {
+    var name = (LAST && LAST.agent) || '';
+    var link = REFER_BASE + '?from=' + encodeURIComponent(name);
+    var msg = 'Hey! I use MRFL Transactions to run my deals — contract to close, every deadline handled. ' +
+      'Through my invite your first transaction is 50% off ($250 single side / $350 dual agency), ' +
+      'and you only pay when it closes. Check it out: ' + link;
+    if (navigator.share) {
+      navigator.share({ text: msg }).catch(function () { /* user cancelled — fine */ });
+      return;
+    }
+    var done = function () {
+      var fb = document.getElementById('refer_fb');
+      if (fb) { fb.style.display = 'block'; setTimeout(function () { fb.style.display = 'none'; }, 3500); }
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(msg).then(done).catch(function () { legacyCopy(msg); done(); });
+    } else {
+      legacyCopy(msg); done();
+    }
+  }
+  function legacyCopy(text) {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;left:-9999px;top:0';
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); } catch (e) {}
+    ta.remove();
+  }
 
   function render(data) {
     LAST = data;
@@ -642,6 +707,18 @@
     });
 
     var h = '';
+
+    // 🎉 just-closed congrats → the highest-intent referral moment
+    var justClosed = past.filter(function (d) {
+      var n = daysFromToday(d.closing_date);
+      return d.status === 'closed' && n !== null && n <= 0 && n >= -14;
+    })[0];
+    if (justClosed) {
+      h += '<a class="congrats" data-share="1">🎉&nbsp;<span>Congrats on closing <b>' +
+        esc(shortAddr(justClosed.property)) + '</b>! Know an agent who\'d love this support? ' +
+        'You both save — share your invite →</span></a>';
+    }
+
     h += '<div class="stats">';
     h += '<div class="stat"><div class="ic blue">🏠</div><div class="num">' + active.length + '</div><div class="lbl">Active deal' + (active.length === 1 ? '' : 's') + '</div></div>';
     h += '<div class="stat"><div class="ic amber">📆</div><div class="num">' + closingSoon + '</div><div class="lbl">Closing in 7 days</div></div>';
@@ -669,6 +746,13 @@
         h += '<div class="state"><div class="big">✅</div><h2>No active deals right now</h2>' +
           '<p>Your past transactions are below. New deals appear here automatically.</p></div>';
       }
+      // 🎁 referral card
+      h += '<div class="refer-card"><h3>🎁 Refer an agent — you both save</h3>' +
+        '<p>Give a colleague <b>50% off their first transaction</b> ($250 single side · $350 dual agency), ' +
+        'and get <b>50% off your next one</b> when their first deal closes.</p>' +
+        '<button type="button" class="refer-btn" data-share="1">📲 Share your invite</button>' +
+        '<div class="refer-fb" id="refer_fb">✓ Invite copied — paste it into a text or email!</div></div>';
+
       if (past.length) {
         h += '<details class="past"><summary>Past transactions (' + past.length + ')</summary>';
         past.forEach(function (d) { h += dealCard(d); });

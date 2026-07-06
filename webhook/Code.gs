@@ -75,6 +75,7 @@ function onOpen() {
     .addItem('🏘 Add / update HOA info', 'showHoaDialog')
     .addItem('🔗 Agent portal links', 'showPortalLinks')
     .addItem('🖥 My dashboard link', 'showOperatorLink')
+    .addItem('🎁 Log a referral', 'showReferralDialog')
     .addSeparator()
     .addItem('🔔 Preview / create reminder drafts', 'previewAndDraftReminders')
     .addItem('🔔 Set up daily reminder drafts', 'setupDailyReminders')
@@ -101,6 +102,7 @@ function toggleActiveOnly() {
     .addItem('🏘 Add / update HOA info', 'showHoaDialog')
     .addItem('🔗 Agent portal links', 'showPortalLinks')
     .addItem('🖥 My dashboard link', 'showOperatorLink')
+    .addItem('🎁 Log a referral', 'showReferralDialog')
     .addSeparator()
     .addItem('🔔 Preview / create reminder drafts', 'previewAndDraftReminders')
     .addItem('🔔 Set up daily reminder drafts', 'setupDailyReminders')
@@ -2324,10 +2326,14 @@ function operatorResponse_(params) {
     });
   });
 
+  let referrals = [];
+  try { referrals = _refList(); } catch (e) { referrals = []; }
+
   return jsonResponse({
     success: true,
     generated_at: new Date().toISOString(),
-    deals: deals
+    deals: deals,
+    referrals: referrals
   });
 }
 
@@ -2353,6 +2359,123 @@ function showOperatorLink() {
     'style="width:100%;font-size:11px;padding:6px;border:1px solid #ccc;border-radius:4px;box-sizing:border-box">' +
     '<span style="display:none;color:#10B981;font-size:11px">Copied!</span></div>'
   ).setWidth(600).setHeight(220), '🖥 My dashboard link');
+}
+
+// ============================================================
+// v7.3 — REFERRAL TRACKING
+//
+// Referrals live in a "🎁 Referrals" tab of the master sheet (source of
+// truth — Gloria can edit it directly). The menu dialog logs new ones;
+// the operator dashboard reads them via the operator view.
+// Pricing basis: $500 single-side / $700 dual; referred agents get 50%
+// off their first closed deal; referrer gets 50% off their next deal
+// when the referral's first deal closes.
+// ============================================================
+
+const REFERRAL_TAB = '🎁 Referrals';
+const REFERRAL_HEADERS = ['Date', 'Referred by', 'New agent', 'Contact', 'Status', 'Reward', 'Notes'];
+const REFERRAL_STATUSES = ['Invited', 'Joined', 'First deal closed — reward due', 'Reward redeemed'];
+
+function _refSheet(createIfMissing) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sh = ss.getSheetByName(REFERRAL_TAB);
+  if (!sh && createIfMissing) {
+    sh = ss.insertSheet(REFERRAL_TAB);
+    sh.getRange(1, 1, 1, REFERRAL_HEADERS.length).setValues([REFERRAL_HEADERS])
+      .setFontWeight('bold').setBackground('#4338CA').setFontColor('#FFFFFF');
+    sh.setColumnWidths(1, REFERRAL_HEADERS.length, 150);
+    sh.setColumnWidth(7, 260);
+    sh.setFrozenRows(1);
+    // Status dropdown on the whole column
+    const rule = SpreadsheetApp.newDataValidation().requireValueInList(REFERRAL_STATUSES, true).build();
+    sh.getRange(2, 5, sh.getMaxRows() - 1, 1).setDataValidation(rule);
+  }
+  return sh;
+}
+
+function _refList() {
+  const sh = _refSheet(false);
+  if (!sh) return [];
+  const values = sh.getDataRange().getValues();
+  const tz = Session.getScriptTimeZone();
+  const out = [];
+  for (let i = 1; i < values.length; i++) {
+    const r = values[i];
+    if (!String(r[1] || '').trim() && !String(r[2] || '').trim()) continue;
+    out.push({
+      date: (r[0] instanceof Date) ? Utilities.formatDate(r[0], tz, 'yyyy-MM-dd') : String(r[0] || ''),
+      referred_by: String(r[1] || ''),
+      new_agent: String(r[2] || ''),
+      contact: String(r[3] || ''),
+      status: String(r[4] || ''),
+      reward: String(r[5] || ''),
+      notes: String(r[6] || '')
+    });
+  }
+  return out;
+}
+
+function saveReferral(f) {
+  const sh = _refSheet(true);
+  const tz = Session.getScriptTimeZone();
+  sh.appendRow([
+    Utilities.formatDate(new Date(), tz, 'MM/dd/yyyy'),
+    String(f.referredBy || '').trim(),
+    String(f.newAgent || '').trim(),
+    String(f.contact || '').trim(),
+    String(f.status || 'Invited').trim(),
+    String(f.reward || '').trim(),
+    String(f.notes || '').trim()
+  ]);
+  return '✓ Referral logged — see the "' + REFERRAL_TAB + '" tab. Update its Status there as things progress.';
+}
+
+function showReferralDialog() {
+  const ui = SpreadsheetApp.getUi();
+  const agents = _portalListAgents();
+  const existing = _refList();
+  const rewardDue = existing.filter(function (r) { return r.status.indexOf('reward due') >= 0; }).length;
+
+  const opts = agents.map(function (a) { return '<option value="' + _hoaEsc(a) + '">'; }).join('');
+  const statusOpts = REFERRAL_STATUSES.map(function (s, i) {
+    return '<option' + (i === 0 ? ' selected' : '') + '>' + _hoaEsc(s) + '</option>';
+  }).join('');
+
+  const html =
+    '<div style="font-family:Arial,sans-serif;font-size:13px;line-height:1.45">' +
+    '<p style="margin:0 0 6px;color:#4B5563">' + existing.length + ' referral' + (existing.length === 1 ? '' : 's') +
+    ' logged so far' + (rewardDue ? ' · <b style="color:#B45309">' + rewardDue + ' reward' + (rewardDue > 1 ? 's' : '') + ' due 🎁</b>' : '') +
+    '. Full list lives in the <b>' + REFERRAL_TAB + '</b> tab.</p>' +
+    '<label style="display:block;margin:10px 0 3px;font-weight:600">Referred by (agent)</label>' +
+    '<input id="referredBy" list="agents" style="width:100%;padding:7px;border:1px solid #ccc;border-radius:4px;box-sizing:border-box">' +
+    '<datalist id="agents">' + opts + '</datalist>' +
+    '<label style="display:block;margin:10px 0 3px;font-weight:600">New agent name</label>' +
+    '<input id="newAgent" style="width:100%;padding:7px;border:1px solid #ccc;border-radius:4px;box-sizing:border-box">' +
+    '<label style="display:block;margin:10px 0 3px;font-weight:600">Contact (phone / email)</label>' +
+    '<input id="contact" style="width:100%;padding:7px;border:1px solid #ccc;border-radius:4px;box-sizing:border-box">' +
+    '<label style="display:block;margin:10px 0 3px;font-weight:600">Status</label>' +
+    '<select id="status" style="width:100%;padding:7px;border:1px solid #ccc;border-radius:4px">' + statusOpts + '</select>' +
+    '<label style="display:block;margin:10px 0 3px;font-weight:600">Reward</label>' +
+    '<input id="reward" value="New agent: 50% off first closed deal · Referrer: 50% off next deal after it closes" ' +
+    'style="width:100%;padding:7px;border:1px solid #ccc;border-radius:4px;box-sizing:border-box">' +
+    '<label style="display:block;margin:10px 0 3px;font-weight:600">Notes</label>' +
+    '<input id="notes" style="width:100%;padding:7px;border:1px solid #ccc;border-radius:4px;box-sizing:border-box">' +
+    '<div id="out" style="margin-top:10px;color:#10B981;font-weight:600"></div>' +
+    '<div style="margin-top:14px;text-align:right">' +
+    '<button id="save" style="background:#4338CA;color:#fff;border:none;padding:9px 18px;border-radius:6px;font-weight:700;cursor:pointer">Log referral</button></div>' +
+    '<script>' +
+    'document.getElementById("save").onclick=function(){' +
+    'var b=this;b.disabled=true;b.textContent="Saving…";' +
+    'var f={};["referredBy","newAgent","contact","status","reward","notes"].forEach(function(id){f[id]=document.getElementById(id).value;});' +
+    'google.script.run.withSuccessHandler(function(msg){' +
+    'document.getElementById("out").textContent=msg;setTimeout(function(){google.script.host.close();},1800);' +
+    '}).withFailureHandler(function(e){' +
+    'document.getElementById("out").style.color="#991B1B";document.getElementById("out").textContent="Error: "+e.message;' +
+    'b.disabled=false;b.textContent="Log referral";' +
+    '}).saveReferral(f);};' +
+    '<\/script></div>';
+
+  ui.showModalDialog(HtmlService.createHtmlOutput(html).setWidth(440).setHeight(520), '🎁 Log a referral');
 }
 
 // ============================================================
