@@ -75,8 +75,8 @@ function onOpen() {
     .addItem('🏘 Add / update HOA info', 'showHoaDialog')
     .addItem('🔗 Agent portal links', 'showPortalLinks')
     .addSeparator()
-    .addItem('🔔 Preview / send reminders now', 'previewAndSendReminders')
-    .addItem('🔔 Set up daily reminders', 'setupDailyReminders')
+    .addItem('🔔 Preview / create reminder drafts', 'previewAndDraftReminders')
+    .addItem('🔔 Set up daily reminder drafts', 'setupDailyReminders')
     .addItem('ℹ About', 'showAbout')
     .addToUi();
 }
@@ -100,8 +100,8 @@ function toggleActiveOnly() {
     .addItem('🏘 Add / update HOA info', 'showHoaDialog')
     .addItem('🔗 Agent portal links', 'showPortalLinks')
     .addSeparator()
-    .addItem('🔔 Preview / send reminders now', 'previewAndSendReminders')
-    .addItem('🔔 Set up daily reminders', 'setupDailyReminders')
+    .addItem('🔔 Preview / create reminder drafts', 'previewAndDraftReminders')
+    .addItem('🔔 Set up daily reminder drafts', 'setupDailyReminders')
     .addItem('ℹ About', 'showAbout')
     .addToUi();
 }
@@ -2267,13 +2267,14 @@ function saveHoaInfo(f) {
 }
 
 // ============================================================
-// v7.0 — DAILY DEADLINE REMINDER EMAILS TO AGENTS
+// v7.0 — DAILY DEADLINE REMINDER DRAFTS FOR AGENTS
 //
-// A daily time trigger scans every active property tab and emails each
-// realtor a digest of their milestones due in 3 days, 1 day, or today —
-// with a button to their personal portal. Gloria is BCC'd on every send.
-// Setup: 🛠 TC Tools → 🔔 Set up daily reminders (installs the trigger).
-// Test:  🛠 TC Tools → 🔔 Preview / send reminders now.
+// A daily time trigger scans every active property tab and creates a
+// Gmail DRAFT for each realtor with milestones due in 3 days, 1 day, or
+// today — Gloria reviews the drafts each morning and sends them herself.
+// NOTHING is ever sent automatically.
+// Setup: 🛠 TC Tools → 🔔 Set up daily reminder drafts.
+// Test:  🛠 TC Tools → 🔔 Preview / create reminder drafts.
 // ============================================================
 
 const REMINDER_DUE_DAYS = [3, 1, 0];   // days-until values that trigger a reminder
@@ -2347,8 +2348,19 @@ function _remBuildEmailHtml(ref, items, portalLink) {
         'font-weight:700;font-size:14px;display:inline-block">Open your portal →</a></div>'
       : '') +
     '<p style="margin:14px 0 0;font-size:12.5px;color:#9CA3AF;text-align:center">' +
-    'Sent automatically by MRFL Transactions · Questions? Just reply to this email.</p>' +
+    'Gloria · MRFL Transactions — questions? Just reply to this email.</p>' +
     '</div></div>';
+}
+
+// Plain-text fallback body for the draft (shown by clients without HTML).
+function _remBuildEmailPlain(ref, items, portalLink) {
+  const when = function (d) { return d === 0 ? 'DUE TODAY' : d === 1 ? 'due tomorrow' : 'in ' + d + ' days'; };
+  return 'Hi ' + ref + ' — heads up on ' + (items.length === 1 ? 'a deadline' : items.length + ' deadlines') + ' coming up:\n\n' +
+    items.map(function (it) {
+      return '• ' + it.name + ' — ' + it.dateStr + ' (' + when(it.days) + ') · ' + it.property;
+    }).join('\n') +
+    (portalLink ? '\n\nYour portal: ' + portalLink : '') +
+    '\n\n— Gloria · MRFL Transactions';
 }
 
 // Scan all tabs → reminders grouped per agent: { ref: {email, items:[...]}, ... }
@@ -2406,10 +2418,10 @@ function _remPortalLink(ref) {
   return PORTAL_BASE_URL + '?a=' + encodeURIComponent(ref) + '&k=' + key;
 }
 
-// Send the digests. Returns a human-readable summary of what happened.
-function _remSendAll(byAgent) {
-  const me = Session.getEffectiveUser().getEmail();
-  const sent = [];
+// Create one Gmail DRAFT per agent — never sends anything.
+// Returns a human-readable summary of what happened.
+function _remCreateDrafts(byAgent) {
+  const drafted = [];
   const skipped = [];
   Object.keys(byAgent).sort().forEach(function (ref) {
     const rec = byAgent[ref];
@@ -2420,52 +2432,49 @@ function _remSendAll(byAgent) {
       (rec.items.length > 1 ? ' (+' + (rec.items.length - 1) + ' more)' : '') +
       ' — ' + first.property;
     try {
-      MailApp.sendEmail({
-        to: rec.email,
-        bcc: me,
-        subject: subject,
-        htmlBody: _remBuildEmailHtml(ref, rec.items, _remPortalLink(ref)),
-        name: 'MRFL Transactions'
-      });
-      sent.push(ref + ' → ' + rec.email + ' (' + rec.items.length + ' deadline' + (rec.items.length > 1 ? 's' : '') + ')');
+      const link = _remPortalLink(ref);
+      GmailApp.createDraft(rec.email, subject,
+        _remBuildEmailPlain(ref, rec.items, link),
+        { htmlBody: _remBuildEmailHtml(ref, rec.items, link), name: 'MRFL Transactions' });
+      drafted.push(ref + ' → ' + rec.email + ' (' + rec.items.length + ' deadline' + (rec.items.length > 1 ? 's' : '') + ')');
     } catch (e) {
-      skipped.push(ref + ' (send failed: ' + e.message + ')');
+      skipped.push(ref + ' (draft failed: ' + e.message + ')');
     }
   });
   let summary = '';
-  if (sent.length) summary += 'Sent:\n• ' + sent.join('\n• ');
+  if (drafted.length) summary += 'Drafts created (in your Gmail Drafts folder — review & send):\n• ' + drafted.join('\n• ');
   if (skipped.length) summary += (summary ? '\n\n' : '') + 'Skipped:\n• ' + skipped.join('\n• ');
-  return summary || 'No deadlines due in ' + REMINDER_DUE_DAYS.join('/') + ' days today — nothing sent.';
+  return summary || 'No deadlines due in ' + REMINDER_DUE_DAYS.join('/') + ' days today — no drafts needed.';
 }
 
-// Trigger handler — runs daily.
+// Trigger handler — runs daily. Creates drafts only; sends nothing.
 function remindersDailyJob() {
   try {
     const byAgent = _remGatherAll();
     if (Object.keys(byAgent).length === 0) return;
-    const summary = _remSendAll(byAgent);
-    // Heads-up to Gloria only if an agent had to be skipped.
+    const summary = _remCreateDrafts(byAgent);
+    // If an agent had to be skipped, leave Gloria a note as a draft to herself
+    // (she reviews drafts each morning anyway).
     if (summary.indexOf('Skipped:') >= 0) {
-      MailApp.sendEmail({
-        to: Session.getEffectiveUser().getEmail(),
-        subject: 'MRFL reminders — attention needed',
-        body: 'This morning\'s agent reminders:\n\n' + summary +
-          '\n\nTo fix a missing email: make sure the agent\'s email is on their property tab ' +
-          '(Agent Email line), or set a Script Property portal_email_<agentref> with their address.'
-      });
+      GmailApp.createDraft(Session.getEffectiveUser().getEmail(),
+        'MRFL reminders — attention needed (do not send)',
+        'This morning\'s reminder drafts:\n\n' + summary +
+        '\n\nTo fix a missing email: make sure the agent\'s email is on their property tab ' +
+        '(Agent Email line), or set a Script Property portal_email_<agentref> with their address.' +
+        '\n\n(This note is just for you — you can discard it.)');
     }
   } catch (err) {
     Logger.log('remindersDailyJob error: ' + err.toString());
   }
 }
 
-// Menu: preview what would send today, then send on confirmation.
-function previewAndSendReminders() {
+// Menu: preview what drafts would be created today, then create on confirmation.
+function previewAndDraftReminders() {
   const ui = SpreadsheetApp.getUi();
   const byAgent = _remGatherAll();
   const refs = Object.keys(byAgent).sort();
   if (refs.length === 0) {
-    ui.alert('No deadlines due in ' + REMINDER_DUE_DAYS.join('/') + ' days today — nothing to send.');
+    ui.alert('No deadlines due in ' + REMINDER_DUE_DAYS.join('/') + ' days today — no drafts needed.');
     return;
   }
   const preview = refs.map(function (ref) {
@@ -2477,11 +2486,12 @@ function previewAndSendReminders() {
           ' · ' + it.property;
       }).join('\n');
   }).join('\n\n');
-  const answer = ui.alert('🔔 Reminders ready to send',
-    preview + '\n\nSend these now? (You\'ll be BCC\'d on every email.)',
+  const answer = ui.alert('🔔 Reminder drafts ready',
+    preview + '\n\nCreate these as Gmail DRAFTS now? Nothing is sent — you review and ' +
+    'send each one yourself from your Drafts folder.',
     ui.ButtonSet.YES_NO);
   if (answer !== ui.Button.YES) return;
-  ui.alert(_remSendAll(byAgent));
+  ui.alert(_remCreateDrafts(byAgent));
 }
 
 // Menu: one-time setup of the daily trigger.
@@ -2492,12 +2502,12 @@ function setupDailyReminders() {
       if (t.getHandlerFunction() === 'remindersDailyJob') ScriptApp.deleteTrigger(t);
     });
     ScriptApp.newTrigger('remindersDailyJob').timeBased().everyDays(1).atHour(REMINDER_HOUR).create();
-    MailApp.getRemainingDailyQuota();  // force the email-permission prompt now
-    ui.alert('✅ Daily reminders are on.\n\n' +
-      'Every morning (around ' + REMINDER_HOUR + '–' + (REMINDER_HOUR + 1) + ' AM), each realtor with a milestone due in ' +
-      '3 days, 1 day, or today gets one branded email listing their deadlines, with a button to their portal. ' +
-      'You\'re BCC\'d on every email.\n\n' +
-      'Use 🔔 Preview / send reminders now anytime to see or trigger today\'s batch.');
+    GmailApp.getAliases();  // force the Gmail permission prompt now, not at 7am
+    ui.alert('✅ Daily reminder drafts are on.\n\n' +
+      'Every morning (around ' + REMINDER_HOUR + '–' + (REMINDER_HOUR + 1) + ' AM), a Gmail DRAFT is prepared for each ' +
+      'realtor with a milestone due in 3 days, 1 day, or today. Nothing is sent automatically — ' +
+      'open your Drafts folder, review each one, and hit Send yourself.\n\n' +
+      'Use 🔔 Preview / create reminder drafts anytime to see or create today\'s batch.');
   } catch (err) {
     ui.alert('Setup failed: ' + err.toString() +
       '\n\nApprove the Google permissions when prompted, then run it again.');

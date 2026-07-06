@@ -167,21 +167,26 @@ property tab open:
   🛠 TC Tools → 🔄 Sync dates → Calendar later).
 - The dashboard rebuilds automatically after saving.
 
-## Deadline reminder emails (webhook v7.0)
+## Deadline reminder drafts (webhook v7.0)
 
-A daily Apps Script trigger (~7 AM) scans every active property tab and emails
-each realtor **one digest** of their milestones due in **3 days, 1 day, or
-today** — branded table with urgency colors and an "Open your portal" button
-(their personal short link). Gloria is BCC'd on every send.
+A daily Apps Script trigger (~7 AM) scans every active property tab and
+prepares **one Gmail draft** per realtor with milestones due in **3 days,
+1 day, or today** — branded table with urgency colors and an "Open your
+portal" button (their personal short link). **Nothing is sent
+automatically** — Gloria reviews the Drafts folder each morning and sends
+each one personally. The script contains no send calls at all
+(`GmailApp.createDraft` only).
 
-- **Setup (once):** 🛠 TC Tools → **🔔 Set up daily reminders** (approve the
-  email permission when prompted).
-- **Preview / manual send:** 🛠 TC Tools → **🔔 Preview / send reminders now**
-  shows exactly who would get what, then sends on confirmation.
+- **Setup (once):** 🛠 TC Tools → **🔔 Set up daily reminder drafts**. Google's
+  consent screen words the Gmail permission broadly; the code only creates
+  drafts.
+- **Preview / manual run:** 🛠 TC Tools → **🔔 Preview / create reminder
+  drafts** shows exactly who would get what, then creates the drafts on
+  confirmation.
 - **Agent email resolution:** Script Property `portal_email_<agentref>` if
   set, else derived from the tab — the represented side's "Agent Email" line
   (buyer side → Buyer's Agent, seller side / dual → Listing agent). Agents
-  with no findable email are skipped and Gloria gets a heads-up email.
+  with no findable email are skipped and a note-to-self draft flags them.
 - Excluded: Effective Date (not a deadline), completed (checked) milestones,
   and deals with Closed / Cancelled / On-hold status. Overdue items don't
   re-notify (the portal's red banner covers those).
