@@ -74,6 +74,9 @@ function onOpen() {
     .addSeparator()
     .addItem('🏘 Add / update HOA info', 'showHoaDialog')
     .addItem('🔗 Agent portal links', 'showPortalLinks')
+    .addSeparator()
+    .addItem('🔔 Preview / send reminders now', 'previewAndSendReminders')
+    .addItem('🔔 Set up daily reminders', 'setupDailyReminders')
     .addItem('ℹ About', 'showAbout')
     .addToUi();
 }
@@ -96,6 +99,9 @@ function toggleActiveOnly() {
     .addSeparator()
     .addItem('🏘 Add / update HOA info', 'showHoaDialog')
     .addItem('🔗 Agent portal links', 'showPortalLinks')
+    .addSeparator()
+    .addItem('🔔 Preview / send reminders now', 'previewAndSendReminders')
+    .addItem('🔔 Set up daily reminders', 'setupDailyReminders')
     .addItem('ℹ About', 'showAbout')
     .addToUi();
 }
@@ -2258,6 +2264,244 @@ function saveHoaInfo(f) {
     msg: '✓ ' + [detailsMsg, datesMsg].filter(String).join(' · '),
     datesSaved: wanted.length > 0
   };
+}
+
+// ============================================================
+// v7.0 — DAILY DEADLINE REMINDER EMAILS TO AGENTS
+//
+// A daily time trigger scans every active property tab and emails each
+// realtor a digest of their milestones due in 3 days, 1 day, or today —
+// with a button to their personal portal. Gloria is BCC'd on every send.
+// Setup: 🛠 TC Tools → 🔔 Set up daily reminders (installs the trigger).
+// Test:  🛠 TC Tools → 🔔 Preview / send reminders now.
+// ============================================================
+
+const REMINDER_DUE_DAYS = [3, 1, 0];   // days-until values that trigger a reminder
+const REMINDER_HOUR = 7;               // daily send hour (script timezone)
+
+// Pure: pick milestones due for a reminder. Excludes Effective Date (not a
+// deadline) and completed (checked) milestones.
+function _remSelectDue(milestones, todayMs) {
+  const out = [];
+  (milestones || []).forEach(function (m) {
+    if (!m || m.completed || m.name === 'Effective Date') return;
+    if (!(m.date instanceof Date) || isNaN(m.date.getTime())) return;
+    const d = new Date(m.date); d.setHours(0, 0, 0, 0);
+    const days = Math.round((d.getTime() - todayMs) / 86400000);
+    if (REMINDER_DUE_DAYS.indexOf(days) >= 0) out.push({ name: m.name, date: d, days: days });
+  });
+  return out;
+}
+
+// Pure: derive the realtor's email from a tab's details block.
+// Priority: explicit override → the represented side's "Agent Email".
+function _remAgentEmail(values, override) {
+  if (override) return override;
+  let side = '';
+  for (let i = 0; i < values.length; i++) {
+    const l = String(values[i][0] || '').trim();
+    if (l.indexOf('Side Represented:') === 0) { side = l.toLowerCase(); break; }
+  }
+  const wantSection = (side.indexOf('buyer') >= 0 && side.indexOf('seller') < 0)
+    ? "Buyer's agent" : 'Listing agent';   // seller side + dual agency → listing agent
+  let sections = [];
+  try { sections = _portalDetailsFromValues(values); } catch (e) { return ''; }
+  const sec = sections.filter(function (s) { return s.title === wantSection; })[0];
+  if (!sec) return '';
+  const item = sec.items.filter(function (it) { return it.label === 'Email'; })[0];
+  return item ? item.value : '';
+}
+
+// Pure: branded reminder email HTML for one agent.
+function _remBuildEmailHtml(ref, items, portalLink) {
+  const urg = function (days) {
+    if (days === 0) return ['#EF4444', 'DUE TODAY'];
+    if (days === 1) return ['#F59E0B', 'due tomorrow'];
+    return ['#F59E0B', 'in ' + days + ' days'];
+  };
+  const rows = items.map(function (it) {
+    const u = urg(it.days);
+    return '<tr>' +
+      '<td style="padding:10px 12px;border-bottom:1px solid #F3F4F6;font-weight:700;color:#1E1B4B">' + it.name + '</td>' +
+      '<td style="padding:10px 12px;border-bottom:1px solid #F3F4F6;white-space:nowrap;color:#4B5563">' + it.dateStr + '</td>' +
+      '<td style="padding:10px 12px;border-bottom:1px solid #F3F4F6;white-space:nowrap;font-weight:700;color:' + u[0] + '">' + u[1] + '</td>' +
+      '<td style="padding:10px 12px;border-bottom:1px solid #F3F4F6;color:#4B5563;font-size:13px">' + it.property + '</td>' +
+      '</tr>';
+  }).join('');
+  return '' +
+    '<div style="font-family:-apple-system,Segoe UI,Arial,sans-serif;max-width:640px;margin:0 auto">' +
+    '<div style="background:#1E1B4B;color:#fff;padding:18px 22px;border-radius:10px 10px 0 0">' +
+    '<div style="font-size:14px;font-weight:800;letter-spacing:1.5px">MRFL <span style="color:#8B5CF6">TRANSACTIONS</span></div></div>' +
+    '<div style="border:1px solid #E5E7EB;border-top:none;border-radius:0 0 10px 10px;padding:22px">' +
+    '<p style="margin:0 0 6px;font-size:16px;color:#1E1B4B"><b>Hi ' + ref + '</b> — heads up on ' +
+    (items.length === 1 ? 'a deadline' : items.length + ' deadlines') + ' coming up:</p>' +
+    '<table style="border-collapse:collapse;width:100%;margin:14px 0;font-size:14px">' +
+    '<tr><td style="padding:8px 12px;font-size:11px;font-weight:800;color:#6B7280;text-transform:uppercase">Milestone</td>' +
+    '<td style="padding:8px 12px;font-size:11px;font-weight:800;color:#6B7280;text-transform:uppercase">Date</td>' +
+    '<td style="padding:8px 12px;font-size:11px;font-weight:800;color:#6B7280;text-transform:uppercase">When</td>' +
+    '<td style="padding:8px 12px;font-size:11px;font-weight:800;color:#6B7280;text-transform:uppercase">Property</td></tr>' +
+    rows + '</table>' +
+    (portalLink
+      ? '<div style="text-align:center;margin:20px 0 8px"><a href="' + portalLink + '" ' +
+        'style="background:#4338CA;color:#fff;text-decoration:none;padding:12px 22px;border-radius:8px;' +
+        'font-weight:700;font-size:14px;display:inline-block">Open your portal →</a></div>'
+      : '') +
+    '<p style="margin:14px 0 0;font-size:12.5px;color:#9CA3AF;text-align:center">' +
+    'Sent automatically by MRFL Transactions · Questions? Just reply to this email.</p>' +
+    '</div></div>';
+}
+
+// Scan all tabs → reminders grouped per agent: { ref: {email, items:[...]}, ... }
+function _remGatherAll() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const props = PropertiesService.getScriptProperties();
+  const tz = Session.getScriptTimeZone();
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const byAgent = {};
+
+  ss.getSheets().forEach(function (sheet) {
+    const name = sheet.getName();
+    if (name === DASHBOARD_TAB_NAME || name.startsWith('📊') || !name.includes('_')) return;
+    let d = null;
+    try { d = extractTabData(sheet); } catch (e) { return; }
+    if (!d) return;
+    if (['closed', 'cancelled', 'on_hold'].indexOf(d.status) >= 0) return;
+
+    const due = _remSelectDue(d.milestones, today.getTime());
+    if (due.length === 0) return;
+
+    const ref = d.agentRef;
+    if (!byAgent[ref]) {
+      let email = '';
+      try {
+        email = _remAgentEmail(sheet.getDataRange().getValues(),
+          props.getProperty('portal_email_' + ref.toLowerCase()) || '');
+      } catch (e) { email = ''; }
+      byAgent[ref] = { email: email, items: [] };
+    } else if (!byAgent[ref].email) {
+      try {
+        byAgent[ref].email = _remAgentEmail(sheet.getDataRange().getValues(), '');
+      } catch (e) { /* keep empty */ }
+    }
+    due.forEach(function (m) {
+      byAgent[ref].items.push({
+        name: m.name, days: m.days,
+        dateStr: Utilities.formatDate(m.date, tz, 'EEE, MMM d'),
+        property: d.propertyDisplay
+      });
+    });
+  });
+
+  // Soonest first within each agent
+  Object.keys(byAgent).forEach(function (ref) {
+    byAgent[ref].items.sort(function (a, b) { return a.days - b.days; });
+  });
+  return byAgent;
+}
+
+function _remPortalLink(ref) {
+  const props = PropertiesService.getScriptProperties();
+  let key = props.getProperty(_portalKeyProp(ref));
+  if (!key) { key = _portalRandomKey(); props.setProperty(_portalKeyProp(ref), key); }
+  return PORTAL_BASE_URL + '?a=' + encodeURIComponent(ref) + '&k=' + key;
+}
+
+// Send the digests. Returns a human-readable summary of what happened.
+function _remSendAll(byAgent) {
+  const me = Session.getEffectiveUser().getEmail();
+  const sent = [];
+  const skipped = [];
+  Object.keys(byAgent).sort().forEach(function (ref) {
+    const rec = byAgent[ref];
+    if (!rec.email) { skipped.push(ref + ' (no email found on their tabs)'); return; }
+    const first = rec.items[0];
+    const subject = '⏰ ' + first.name + ' ' +
+      (first.days === 0 ? 'is due TODAY' : first.days === 1 ? 'is due tomorrow' : 'due in ' + first.days + ' days') +
+      (rec.items.length > 1 ? ' (+' + (rec.items.length - 1) + ' more)' : '') +
+      ' — ' + first.property;
+    try {
+      MailApp.sendEmail({
+        to: rec.email,
+        bcc: me,
+        subject: subject,
+        htmlBody: _remBuildEmailHtml(ref, rec.items, _remPortalLink(ref)),
+        name: 'MRFL Transactions'
+      });
+      sent.push(ref + ' → ' + rec.email + ' (' + rec.items.length + ' deadline' + (rec.items.length > 1 ? 's' : '') + ')');
+    } catch (e) {
+      skipped.push(ref + ' (send failed: ' + e.message + ')');
+    }
+  });
+  let summary = '';
+  if (sent.length) summary += 'Sent:\n• ' + sent.join('\n• ');
+  if (skipped.length) summary += (summary ? '\n\n' : '') + 'Skipped:\n• ' + skipped.join('\n• ');
+  return summary || 'No deadlines due in ' + REMINDER_DUE_DAYS.join('/') + ' days today — nothing sent.';
+}
+
+// Trigger handler — runs daily.
+function remindersDailyJob() {
+  try {
+    const byAgent = _remGatherAll();
+    if (Object.keys(byAgent).length === 0) return;
+    const summary = _remSendAll(byAgent);
+    // Heads-up to Gloria only if an agent had to be skipped.
+    if (summary.indexOf('Skipped:') >= 0) {
+      MailApp.sendEmail({
+        to: Session.getEffectiveUser().getEmail(),
+        subject: 'MRFL reminders — attention needed',
+        body: 'This morning\'s agent reminders:\n\n' + summary +
+          '\n\nTo fix a missing email: make sure the agent\'s email is on their property tab ' +
+          '(Agent Email line), or set a Script Property portal_email_<agentref> with their address.'
+      });
+    }
+  } catch (err) {
+    Logger.log('remindersDailyJob error: ' + err.toString());
+  }
+}
+
+// Menu: preview what would send today, then send on confirmation.
+function previewAndSendReminders() {
+  const ui = SpreadsheetApp.getUi();
+  const byAgent = _remGatherAll();
+  const refs = Object.keys(byAgent).sort();
+  if (refs.length === 0) {
+    ui.alert('No deadlines due in ' + REMINDER_DUE_DAYS.join('/') + ' days today — nothing to send.');
+    return;
+  }
+  const preview = refs.map(function (ref) {
+    const rec = byAgent[ref];
+    return ref + ' → ' + (rec.email || '⚠ NO EMAIL FOUND') + '\n' +
+      rec.items.map(function (it) {
+        return '   • ' + it.name + ' — ' + it.dateStr +
+          (it.days === 0 ? ' (TODAY)' : it.days === 1 ? ' (tomorrow)' : ' (in ' + it.days + ' days)') +
+          ' · ' + it.property;
+      }).join('\n');
+  }).join('\n\n');
+  const answer = ui.alert('🔔 Reminders ready to send',
+    preview + '\n\nSend these now? (You\'ll be BCC\'d on every email.)',
+    ui.ButtonSet.YES_NO);
+  if (answer !== ui.Button.YES) return;
+  ui.alert(_remSendAll(byAgent));
+}
+
+// Menu: one-time setup of the daily trigger.
+function setupDailyReminders() {
+  const ui = SpreadsheetApp.getUi();
+  try {
+    ScriptApp.getProjectTriggers().forEach(function (t) {
+      if (t.getHandlerFunction() === 'remindersDailyJob') ScriptApp.deleteTrigger(t);
+    });
+    ScriptApp.newTrigger('remindersDailyJob').timeBased().everyDays(1).atHour(REMINDER_HOUR).create();
+    MailApp.getRemainingDailyQuota();  // force the email-permission prompt now
+    ui.alert('✅ Daily reminders are on.\n\n' +
+      'Every morning (around ' + REMINDER_HOUR + '–' + (REMINDER_HOUR + 1) + ' AM), each realtor with a milestone due in ' +
+      '3 days, 1 day, or today gets one branded email listing their deadlines, with a button to their portal. ' +
+      'You\'re BCC\'d on every email.\n\n' +
+      'Use 🔔 Preview / send reminders now anytime to see or trigger today\'s batch.');
+  } catch (err) {
+    ui.alert('Setup failed: ' + err.toString() +
+      '\n\nApprove the Google permissions when prompted, then run it again.');
+  }
 }
 
 // ============================================================

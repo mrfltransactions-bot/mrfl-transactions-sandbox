@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.7.0] — 2026-07-05
+
+### Added — daily deadline reminder emails to agents (webhook v7.0)
+
+- Daily time trigger (~7 AM): each realtor with a milestone due in 3 days,
+  1 day, or today gets one branded digest email (urgency-colored table +
+  "Open your portal" button with their personal short link). Gloria BCC'd.
+- Menu: "🔔 Set up daily reminders" (installs the trigger) and "🔔 Preview /
+  send reminders now" (shows exactly who gets what, sends on YES).
+- Agent emails derived from each tab's represented side (override via
+  `portal_email_<agentref>` Script Property); skipped agents trigger a
+  heads-up email to Gloria.
+- Excludes Effective Date, completed milestones, and closed/cancelled/on-hold
+  deals. Portal next-deadline banner also added: milestone + property +
+  tap-to-jump, red past-due variant.
+
+---
+
 ## [1.6.0] — 2026-07-05
 
 ### Added — short portal links + invite messages (webhook v6.8.3–v6.9)

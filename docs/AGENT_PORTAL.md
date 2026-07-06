@@ -167,10 +167,29 @@ property tab open:
   🛠 TC Tools → 🔄 Sync dates → Calendar later).
 - The dashboard rebuilds automatically after saving.
 
+## Deadline reminder emails (webhook v7.0)
+
+A daily Apps Script trigger (~7 AM) scans every active property tab and emails
+each realtor **one digest** of their milestones due in **3 days, 1 day, or
+today** — branded table with urgency colors and an "Open your portal" button
+(their personal short link). Gloria is BCC'd on every send.
+
+- **Setup (once):** 🛠 TC Tools → **🔔 Set up daily reminders** (approve the
+  email permission when prompted).
+- **Preview / manual send:** 🛠 TC Tools → **🔔 Preview / send reminders now**
+  shows exactly who would get what, then sends on confirmation.
+- **Agent email resolution:** Script Property `portal_email_<agentref>` if
+  set, else derived from the tab — the represented side's "Agent Email" line
+  (buyer side → Buyer's Agent, seller side / dual → Listing agent). Agents
+  with no findable email are skipped and Gloria gets a heads-up email.
+- Excluded: Effective Date (not a deadline), completed (checked) milestones,
+  and deals with Closed / Cancelled / On-hold status. Overdue items don't
+  re-notify (the portal's red banner covers those).
+
 ## Known limits (v1)
 
-- Read-only — no uploads, messages, or notifications (spec Phases 2–3).
-- No push alerts; agents see updates when they open the page. (A weekly
-  email digest from Apps Script is a feasible follow-up.)
+- Read-only — no uploads or in-app messages (spec Phases 2–3). Notifications
+  are email-based (above); true phone push would need real backend
+  infrastructure.
 - One link per agent-ref spelling: `Carlos_…` and `Carlitos_…` tabs would be
   treated as two different agents — keep agent refs consistent.
