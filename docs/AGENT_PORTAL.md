@@ -106,11 +106,17 @@ Two halves, two deploy paths:
 Bad or missing key → `{ "success": false, "error": "…" }` (the page shows a
 friendly "ask Gloria for a fresh link" screen).
 
-Portal links have the shape
-`https://mrfl-transactions.vercel.app/portal/?u=<base64url-of-webapp-url>&agent=<ref>&key=<key>`
-— the page decodes `u`, accepts only `script.google.com` /
-`script.googleusercontent.com` endpoints, and stores the trio in
-localStorage so the bookmark keeps working.
+Portal links (v6.9+) have the short shape
+`https://mrfl-transactions.vercel.app/portal/?a=<ref>&k=<key>` — the page
+carries the webhook URL itself (`PORTAL_ENDPOINT` constant). Publishing that
+URL is safe because the endpoint returns no data without a valid key: the
+widget view requires `key=<widget_key>` (Script Properties; keyless GETs get
+a health check only, which keeps the intake form's webhook Test green), and
+the portal view requires per-agent keys. Legacy long links
+(`?u=<base64url-of-webapp-url>&agent=&key=`) continue to work unchanged.
+⚠️ If the webhook URL ever changes (a NEW deployment rather than a new
+version), update `PORTAL_ENDPOINT` in `portal/index.html`, the stored
+`portal_webapp_url` Script Property, and the widget URLs.
 
 ## Relationship to the Client Portal spec
 

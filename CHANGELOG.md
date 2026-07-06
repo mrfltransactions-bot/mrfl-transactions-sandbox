@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.6.0] — 2026-07-05
+
+### Added — short portal links + invite messages (webhook v6.8.3–v6.9)
+
+- "📋 Copy invite message" per agent in the links dialog: a friendly,
+  personalized ready-to-send text with the agent's link included.
+- Portal links shrink to `portal/?a=<agent>&k=<key>` — the page now carries
+  the webhook URL (`PORTAL_ENDPOINT`). Legacy long links keep working.
+- HOA dialog: after saving deadline dates, an in-dialog prompt offers
+  "📅 Sync calendar now" (runs the sync immediately) or "Later".
+
+### Security
+
+- Widget GET endpoint is no longer open: widget data requires
+  `key=<widget_key>` (shown in the links dialog for the one-time widget URL
+  update); keyless requests return a health check only, keeping the intake
+  form's webhook Test working. Required before publishing the webhook URL on
+  the public portal page.
+
+---
+
 ## [1.5.2] — 2026-07-05
 
 ### Added — HOA info mid-transaction (webhook v6.8)
