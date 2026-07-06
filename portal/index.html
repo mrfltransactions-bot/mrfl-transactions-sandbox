@@ -213,9 +213,20 @@
 
   var CFG_KEY = 'mrfl_portal_cfg';
 
+  // Webhook web-app URL used by SHORT links (?a=&k=). Safe to publish: the
+  // endpoint returns data only with a valid per-agent or widget key.
+  var PORTAL_ENDPOINT = '';  // ← set to Gloria's Apps Script /exec URL
+
   // ---------- config: URL params, falling back to localStorage ----------
   function readConfig() {
     var q = new URLSearchParams(location.search);
+    // Short form: ?a=Agent&k=key (endpoint baked into this page)
+    var short = { agent: q.get('a') || '', key: q.get('k') || '', short: true };
+    if (short.agent && short.key) {
+      try { localStorage.setItem(CFG_KEY, JSON.stringify(short)); } catch (e) {}
+      return short;
+    }
+    // Legacy form: ?u=<b64 endpoint>&agent=&key=
     var cfg = { u: q.get('u') || '', agent: q.get('agent') || '', key: q.get('key') || '' };
     if (cfg.u && cfg.agent && cfg.key) {
       try { localStorage.setItem(CFG_KEY, JSON.stringify(cfg)); } catch (e) {}
@@ -223,7 +234,7 @@
     }
     try {
       var saved = JSON.parse(localStorage.getItem(CFG_KEY) || 'null');
-      if (saved && saved.u && saved.agent && saved.key) return saved;
+      if (saved && (saved.u || saved.short) && saved.agent && saved.key) return saved;
     } catch (e) {}
     return null;
   }
@@ -420,11 +431,17 @@
 
   // ---------- load ----------
   var cfg = readConfig();
-  var endpoint = cfg && decodeEndpoint(cfg.u);
+  var endpoint = cfg ? (cfg.u ? decodeEndpoint(cfg.u) : (PORTAL_ENDPOINT || null)) : null;
   var loading = false;
 
   function load() {
     if (loading) return;
+    if (cfg && cfg.short && !PORTAL_ENDPOINT) {
+      showState('🛠', 'Almost ready',
+        'The portal is being upgraded right now — try again in a few minutes. ' +
+        'If this keeps showing, let Gloria know.');
+      return;
+    }
     if (!cfg || !endpoint) {
       showState('🔒', 'This page needs your personal link',
         'Open the portal using the private link Gloria sent you. If you lost it, just ask her for a fresh one.');

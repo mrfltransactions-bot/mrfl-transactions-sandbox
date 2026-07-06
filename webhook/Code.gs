@@ -1942,7 +1942,14 @@ function showPortalLinks() {
     }
     props.setProperty('portal_webapp_url', execUrl);
   }
-  const u = _portalB64Url(execUrl);
+
+  // v6.9 — widget data key (protects the widget view now that the portal page
+  // publishes the webhook URL). Generated once; shown in the dialog footer.
+  let widgetKey = props.getProperty('widget_key');
+  if (!widgetKey) {
+    widgetKey = _portalRandomKey();
+    props.setProperty('widget_key', widgetKey);
+  }
 
   const rows = agents.map(function (ref, i) {
     let key = props.getProperty(_portalKeyProp(ref));
@@ -1950,7 +1957,8 @@ function showPortalLinks() {
       key = _portalRandomKey();
       props.setProperty(_portalKeyProp(ref), key);
     }
-    const link = PORTAL_BASE_URL + '?u=' + u + '&agent=' + encodeURIComponent(ref) + '&key=' + key;
+    // v6.9 — short link; the portal page knows the webhook URL itself.
+    const link = PORTAL_BASE_URL + '?a=' + encodeURIComponent(ref) + '&k=' + key;
     const msg = 'Hi ' + ref + '! 🏡 I set up a private portal for your transactions with me. ' +
       'Your personal link shows your deals live — timelines, deadlines, and every contact on the file:\n\n' +
       link + '\n\n' +
@@ -1979,6 +1987,12 @@ function showPortalLinks() {
     '<b>📋 Copy invite message</b> for a friendly ready-to-send text with the link included.</p>' +
     '<p style="color:#991B1B">Only send each agent <b>their own</b> link — a link shows that agent\'s deals to whoever has it.</p>' +
     '<table style="width:100%;border-collapse:collapse">' + rows + '</table>' +
+    '<div style="margin-top:14px;padding:10px;border:1px solid #FDE68A;background:#FFFBEB;border-radius:6px">' +
+    '<b>📱 Your widget URL (one-time update):</b> widget data is now key-protected. ' +
+    'Paste this full URL into your iPhone widget / widget web page settings:<br>' +
+    '<input type="text" readonly value="' + _hoaEsc(execUrl + '?days=4&key=' + widgetKey) + '" data-copylink ' +
+    'style="width:100%;font-size:11px;padding:6px;margin-top:6px;border:1px solid #ccc;border-radius:4px;box-sizing:border-box">' +
+    '<span style="display:none;color:#10B981;font-size:11px;margin-left:6px">Copied!</span></div>' +
     '<p style="color:#9CA3AF;font-size:11px;margin-top:10px">Links use the webhook URL ending ' +
     '“…' + execUrl.slice(-14) + '”. To point them at a different webhook URL, delete the ' +
     '<b>portal_webapp_url</b> row under Apps Script → Project Settings → Script Properties, ' +
@@ -2269,6 +2283,18 @@ function doGet(e) {
 
     // v6.6 — agent portal view (key-protected, per-agent data)
     if (params.view === 'portal') return portalResponse_(params);
+
+    // v6.9 — widget data now requires the widget key (shown in the
+    // "🔗 Agent portal links" dialog). Keyless requests get a health check
+    // only — keeps the intake form's webhook Test working, exposes no data.
+    const widgetKey = PropertiesService.getScriptProperties().getProperty('widget_key');
+    if (!widgetKey || params.key !== widgetKey) {
+      return jsonResponse({
+        status: 'ok',
+        message: 'Transaction Coordinator Webhook is live.',
+        timestamp: new Date().toISOString()
+      });
+    }
 
     const days = parseInt(params.days, 10) || WIDGET_DEFAULT_DAYS;
     const agentFilter = params.agent || null;
