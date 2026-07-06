@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#070B1C">
+<meta name="theme-color" content="#0A0A1F">
 <meta name="robots" content="noindex">
 <title>You're invited · MRFL Transactions</title>
 <meta name="description" content="A colleague invited you to MRFL Transactions — 50% off your first coordinated transaction. Pay only when you close.">
@@ -14,50 +14,62 @@
      default + clean light)
      ============================================================ */
   :root, :root[data-theme="dark"] {
-    --bg:        #070B1C;
-    --bg2:       #0B1130;
-    --panel:     rgba(255, 255, 255, 0.045);
-    --bd:        rgba(101, 165, 255, 0.22);
-    --bd-strong: rgba(76, 201, 240, 0.55);
+    --bg:        #0A0A1F;      /* deep indigo night */
+    --bg2:       #12122E;
+    --panel:     rgba(255, 255, 255, 0.06);
+    --bd:        rgba(255, 255, 255, 0.16);
+    --bd-strong: rgba(147, 197, 253, 0.55);
 
-    --text:      #EAF0FF;
-    --soft:      #BCC7EC;
-    --muted:     #939DC9;
+    --text:      #F2F4FF;
+    --soft:      #C3CAF0;
+    --muted:     #99A2D4;
 
-    --acc:       #4CC9F0;
-    --acc2:      #A78BFA;
+    --acc:       #7DD3FC;      /* icy cyan */
+    --acc2:      #F0ABFC;      /* pink */
 
-    --btn-bg:    #4CC9F0;
-    --btn-text:  #06122B;
-    --btn2-bd:   rgba(76, 201, 240, 0.6);
-    --btn2-text: #7DDCFA;
+    --glass-base:  rgba(255, 255, 255, 0.06);
+    --glass-sheen: linear-gradient(160deg, rgba(255,255,255,0.13), rgba(255,255,255,0.03) 42%, rgba(255,255,255,0.01));
+    --glass-spec:  rgba(255, 255, 255, 0.28);
 
-    --av-text:   #06122B;
-    --glow:      0 0 22px rgba(76, 201, 240, 0.35);
+    --btn-bg:    #4F46E5;
+    --btn-grad:  linear-gradient(90deg, #2563EB, #7C3AED);
+    --btn-text:  #FFFFFF;
+    --btn2-bd:   rgba(255, 255, 255, 0.32);
+    --btn2-text: #EAF0FF;
+    --btn2-bg:   rgba(255, 255, 255, 0.08);
+
+    --av-text:   #101336;
+    --glow:      0 8px 28px rgba(99, 102, 241, 0.5);
     --shadow:    0 14px 34px -14px rgba(0, 0, 0, 0.6);
   }
   :root[data-theme="light"] {
-    --bg:        #F2F5FD;
-    --bg2:       #E9EEFB;
-    --panel:     #FFFFFF;
-    --bd:        #D9E1F6;
-    --bd-strong: #7FB6D9;
+    --bg:        #EEF1FB;
+    --bg2:       #E2E7F8;
+    --panel:     rgba(255, 255, 255, 0.72);
+    --bd:        #D6DDF3;
+    --bd-strong: #9FB6E8;
 
-    --text:      #131A38;
-    --soft:      #3E4870;
-    --muted:     #59638E;
+    --text:      #141838;
+    --soft:      #3D4570;
+    --muted:     #575F8A;
 
-    --acc:       #0E7490;
-    --acc2:      #6D28D9;
+    --acc:       #0369A1;
+    --acc2:      #A21CAF;
 
-    --btn-bg:    #4338CA;
+    --glass-base:  rgba(255, 255, 255, 0.72);
+    --glass-sheen: linear-gradient(160deg, rgba(255,255,255,0.95), rgba(255,255,255,0.55) 45%, rgba(255,255,255,0.35));
+    --glass-spec:  rgba(255, 255, 255, 0.9);
+
+    --btn-bg:    #4F46E5;
+    --btn-grad:  linear-gradient(90deg, #2563EB, #7C3AED);
     --btn-text:  #FFFFFF;
     --btn2-bd:   #4338CA;
-    --btn2-text: #3A31B8;
+    --btn2-text: #3730A3;
+    --btn2-bg:   rgba(255, 255, 255, 0.6);
 
     --av-text:   #FFFFFF;
-    --glow:      none;
-    --shadow:    0 12px 30px -14px rgba(30, 27, 75, 0.18);
+    --glow:      0 8px 24px rgba(99, 102, 241, 0.35);
+    --shadow:    0 12px 30px -14px rgba(30, 35, 90, 0.18);
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -71,10 +83,10 @@
     content: ""; position: fixed; z-index: -1; border-radius: 50%;
     filter: blur(110px); pointer-events: none; opacity: 0.6;
   }
-  body::before { width: 440px; height: 440px; top: -150px; right: -110px;
-    background: radial-gradient(circle, rgba(139, 92, 246, 0.35), transparent 70%); }
-  body::after { width: 480px; height: 480px; bottom: -190px; left: -150px;
-    background: radial-gradient(circle, rgba(34, 211, 238, 0.25), transparent 70%); }
+  body::before { width: 460px; height: 460px; top: -150px; right: -110px;
+    background: radial-gradient(circle, rgba(236, 72, 153, 0.38), transparent 70%); }
+  body::after { width: 520px; height: 520px; bottom: -200px; left: -160px;
+    background: radial-gradient(circle, rgba(59, 130, 246, 0.42), transparent 70%); }
   :root[data-theme="light"] body::before,
   :root[data-theme="light"] body::after { opacity: 0.35; }
 
@@ -122,10 +134,28 @@
   .hero p.sub b { color: var(--text); }
 
   .btn {
-    display: inline-block; background: var(--btn-bg); color: var(--btn-text); text-decoration: none;
-    padding: 15px 30px; border-radius: 12px; font-weight: 800; font-size: 16px; box-shadow: var(--glow);
+    display: inline-block; color: var(--btn-text); text-decoration: none;
+    background-color: var(--btn-bg);   /* solid base so contrast audits see it */
+    background-image: var(--btn-grad);
+    padding: 15px 32px; border-radius: 999px; font-weight: 800; font-size: 16px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.35), var(--glow);
   }
-  .btn.ghost { background: transparent; color: var(--btn2-text); border: 1.5px solid var(--btn2-bd); box-shadow: none; }
+  .btn.ghost {
+    background-color: var(--btn2-bg); background-image: none;
+    color: var(--btn2-text); border: 1.5px solid var(--btn2-bd);
+    box-shadow: inset 0 1px 0 var(--glass-spec);
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  }
+  h2.sec::before, .offer .pk::before, .offer .pk::after { color: var(--acc2); }
+
+  /* ---- liquid glass panels: frosted blur + specular top edge ---- */
+  .offer, .invite-chip, .b .ic {
+    background-color: var(--glass-base);
+    background-image: var(--glass-sheen);
+    backdrop-filter: blur(14px) saturate(1.5);
+    -webkit-backdrop-filter: blur(14px) saturate(1.5);
+    box-shadow: inset 0 1px 0 var(--glass-spec), var(--shadow);
+  }
   .fine { margin-top: 14px; font-size: 13px; color: var(--muted); font-weight: 600; }
 
   .offer {
@@ -267,7 +297,7 @@
     document.documentElement.setAttribute('data-theme', t);
     document.getElementById('theme_btn').textContent = (t === 'dark') ? '☀️' : '🌙';
     var meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) meta.setAttribute('content', t === 'dark' ? '#070B1C' : '#F2F5FD');
+    if (meta) meta.setAttribute('content', t === 'dark' ? '#0A0A1F' : '#EEF1FB');
     if (persist) { try { localStorage.setItem(THEME_KEY, t); } catch (e) {} }
   }
   applyTheme(currentTheme(), false);

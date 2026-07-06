@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#070B1C">
+<meta name="theme-color" content="#0A0A1F">
 <title>MRFL Transactions · Your Transaction Coordinator, On Demand</title>
 <meta name="description" content="Florida real estate transaction coordination for busy agents. Contract dates extracted in 24 hours, every party kept in sync, reminders before every deadline. Pay only when you close.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏡</text></svg>">
@@ -12,62 +12,75 @@
      THEME TOKENS — playful command-center: dark default + light
      ============================================================ */
   :root, :root[data-theme="dark"] {
-    --bg:        #070B1C;
-    --bg2:       #0B1130;
-    --panel:     rgba(255, 255, 255, 0.045);
-    --panel-2:   rgba(255, 255, 255, 0.08);
-    --bd:        rgba(101, 165, 255, 0.22);
-    --bd-strong: rgba(76, 201, 240, 0.55);
+    --bg:        #0A0A1F;      /* deep indigo night */
+    --bg2:       #12122E;
+    --panel:     rgba(255, 255, 255, 0.06);
+    --panel-2:   rgba(255, 255, 255, 0.10);
+    --bd:        rgba(255, 255, 255, 0.16);
+    --bd-strong: rgba(147, 197, 253, 0.55);
 
-    --text:      #EAF0FF;
-    --soft:      #BCC7EC;
-    --muted:     #939DC9;
+    --text:      #F2F4FF;
+    --soft:      #C3CAF0;
+    --muted:     #99A2D4;
 
-    --acc:       #4CC9F0;      /* cyan */
-    --acc2:      #A78BFA;      /* violet */
-    --acc3:      #F595C0;      /* playful pink */
+    --acc:       #7DD3FC;      /* icy cyan */
+    --acc2:      #F0ABFC;      /* pink */
+    --acc3:      #F595C0;
     --star:      #FBBF24;      /* review stars */
     --ok:        #4FE3AC;
 
-    --btn-bg:    #4CC9F0;
-    --btn-text:  #06122B;
-    --btn2-bd:   rgba(76, 201, 240, 0.6);
-    --btn2-text: #7DDCFA;
+    /* liquid glass */
+    --glass-base:  rgba(255, 255, 255, 0.06);
+    --glass-sheen: linear-gradient(160deg, rgba(255,255,255,0.13), rgba(255,255,255,0.03) 42%, rgba(255,255,255,0.01));
+    --glass-spec:  rgba(255, 255, 255, 0.28);
 
-    --input-bg:  rgba(255, 255, 255, 0.06);
-    --av-text:   #06122B;
-    --glow:      0 0 22px rgba(76, 201, 240, 0.35);
+    --btn-bg:    #4F46E5;      /* solid fallback under the gradient */
+    --btn-grad:  linear-gradient(90deg, #2563EB, #7C3AED);
+    --btn-text:  #FFFFFF;
+    --btn2-bd:   rgba(255, 255, 255, 0.32);
+    --btn2-text: #EAF0FF;
+    --btn2-bg:   rgba(255, 255, 255, 0.08);
+
+    --input-bg:  rgba(255, 255, 255, 0.07);
+    --av-text:   #101336;
+    --glow:      0 8px 28px rgba(99, 102, 241, 0.5);
     --shadow:    0 14px 34px -14px rgba(0, 0, 0, 0.6);
-    --lift:      0 22px 44px -16px rgba(0, 0, 0, 0.7), 0 0 24px rgba(76, 201, 240, 0.18);
+    --lift:      0 22px 44px -16px rgba(0, 0, 0, 0.7), 0 0 26px rgba(125, 211, 252, 0.16);
   }
   :root[data-theme="light"] {
-    --bg:        #F2F5FD;
-    --bg2:       #E9EEFB;
-    --panel:     #FFFFFF;
-    --panel-2:   #F4F7FF;
-    --bd:        #D9E1F6;
-    --bd-strong: #7FB6D9;
+    --bg:        #EEF1FB;
+    --bg2:       #E2E7F8;
+    --panel:     rgba(255, 255, 255, 0.72);
+    --panel-2:   #F3F5FE;
+    --bd:        #D6DDF3;
+    --bd-strong: #9FB6E8;
 
-    --text:      #131A38;
-    --soft:      #3E4870;
-    --muted:     #59638E;
+    --text:      #141838;
+    --soft:      #3D4570;
+    --muted:     #575F8A;
 
-    --acc:       #0E7490;
-    --acc2:      #6D28D9;
+    --acc:       #0369A1;
+    --acc2:      #A21CAF;
     --acc3:      #BE185D;
     --star:      #B45309;
     --ok:        #0B7A55;
 
-    --btn-bg:    #4338CA;
+    --glass-base:  rgba(255, 255, 255, 0.72);
+    --glass-sheen: linear-gradient(160deg, rgba(255,255,255,0.95), rgba(255,255,255,0.55) 45%, rgba(255,255,255,0.35));
+    --glass-spec:  rgba(255, 255, 255, 0.9);
+
+    --btn-bg:    #4F46E5;
+    --btn-grad:  linear-gradient(90deg, #2563EB, #7C3AED);
     --btn-text:  #FFFFFF;
     --btn2-bd:   #4338CA;
-    --btn2-text: #3A31B8;
+    --btn2-text: #3730A3;
+    --btn2-bg:   rgba(255, 255, 255, 0.6);
 
     --input-bg:  #FFFFFF;
     --av-text:   #FFFFFF;
-    --glow:      none;
-    --shadow:    0 12px 30px -14px rgba(30, 27, 75, 0.18);
-    --lift:      0 20px 40px -16px rgba(30, 27, 75, 0.28);
+    --glow:      0 8px 24px rgba(99, 102, 241, 0.35);
+    --shadow:    0 12px 30px -14px rgba(30, 35, 90, 0.18);
+    --lift:      0 20px 40px -16px rgba(30, 35, 90, 0.28);
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -83,10 +96,10 @@
     content: ""; position: fixed; z-index: -1; border-radius: 50%;
     filter: blur(110px); pointer-events: none; opacity: 0.6;
   }
-  body::before { width: 480px; height: 480px; top: -160px; right: -120px;
-    background: radial-gradient(circle, rgba(139, 92, 246, 0.35), transparent 70%); }
-  body::after { width: 520px; height: 520px; bottom: -200px; left: -160px;
-    background: radial-gradient(circle, rgba(34, 211, 238, 0.25), transparent 70%); }
+  body::before { width: 500px; height: 500px; top: -160px; right: -120px;
+    background: radial-gradient(circle, rgba(236, 72, 153, 0.38), transparent 70%); }
+  body::after { width: 560px; height: 560px; bottom: -220px; left: -170px;
+    background: radial-gradient(circle, rgba(59, 130, 246, 0.42), transparent 70%); }
   :root[data-theme="light"] body::before,
   :root[data-theme="light"] body::after { opacity: 0.35; }
 
@@ -123,13 +136,30 @@
     display: inline-flex; align-items: center; justify-content: center;
   }
   .btn {
-    display: inline-block; background: var(--btn-bg); color: var(--btn-text); text-decoration: none;
-    padding: 11px 22px; border-radius: 12px; font-weight: 800; font-size: 14px;
-    box-shadow: var(--glow); border: none; cursor: pointer;
-    font-family: inherit;
+    display: inline-block; color: var(--btn-text); text-decoration: none;
+    background-color: var(--btn-bg);   /* solid base so contrast audits see it */
+    background-image: var(--btn-grad);
+    padding: 11px 24px; border-radius: 999px; font-weight: 800; font-size: 14px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.35), var(--glow);
+    border: none; cursor: pointer; font-family: inherit;
   }
   .btn.big { padding: 14px 28px; font-size: 15.5px; }
-  .btn.ghost { background: transparent; color: var(--btn2-text); border: 1.5px solid var(--btn2-bd); box-shadow: none; }
+  .btn.ghost {
+    background-color: var(--btn2-bg); background-image: none;
+    color: var(--btn2-text); border: 1.5px solid var(--btn2-bd);
+    box-shadow: inset 0 1px 0 var(--glass-spec);
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  }
+  h2.sec::before, .eyebrow::before, .eyebrow::after { color: var(--acc2); }
+
+  /* ---- liquid glass panels: frosted blur + specular top edge ---- */
+  .card, .step, .stat, .price, .rev, .rev-form, .about, .revs-empty, .ref-strip {
+    background-color: var(--glass-base);
+    background-image: var(--glass-sheen);
+    backdrop-filter: blur(14px) saturate(1.5);
+    -webkit-backdrop-filter: blur(14px) saturate(1.5);
+    box-shadow: inset 0 1px 0 var(--glass-spec), var(--shadow);
+  }
   @media (max-width: 620px) { nav a.plain.hide-sm { display: none; } }
   @media (max-width: 480px) {
     nav .btn { padding: 9px 14px; font-size: 13px; white-space: nowrap; }
@@ -140,8 +170,22 @@
   /* ============================================================
      HERO — with gently floating emoji friends
      ============================================================ */
-  .hero { padding: 76px 0 56px; text-align: center; position: relative;
+  .hero { padding: 76px 0 56px; text-align: center; position: relative; overflow: hidden;
     background: linear-gradient(180deg, var(--bg2), var(--bg)); border-bottom: 1px solid var(--bd); }
+  .hero .shell { position: relative; z-index: 1; }
+  /* dotted texture, faded in from the top like the reference */
+  .hero::after { content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+    background-image: radial-gradient(rgba(255,255,255,0.10) 1px, transparent 1.6px);
+    background-size: 16px 16px;
+    -webkit-mask-image: radial-gradient(440px 280px at 50% 18%, #000, transparent 75%);
+    mask-image: radial-gradient(440px 280px at 50% 18%, #000, transparent 75%); }
+  :root[data-theme="light"] .hero::after { opacity: 0.45; }
+  /* light cone pouring onto the glass stat chips */
+  .beam { height: 150px; width: min(520px, 82%); margin: 6px auto -138px;
+    background: linear-gradient(180deg, rgba(125, 211, 252, 0.55), rgba(59, 130, 246, 0.12) 70%, transparent);
+    clip-path: polygon(44% 0, 56% 0, 100% 100%, 0 100%);
+    filter: blur(14px); pointer-events: none; }
+  :root[data-theme="light"] .beam { opacity: 0.35; }
   .floaty { position: absolute; font-size: 30px; opacity: 0.75; pointer-events: none;
     animation: bob 5.2s ease-in-out infinite; }
   .floaty.f1 { top: 16%; left: 7%;  animation-delay: 0s; }
@@ -159,7 +203,15 @@
   .eyebrow::before, .eyebrow::after { content: "///"; opacity: 0.6; letter-spacing: 0; }
   .hero h1 { font-size: clamp(30px, 5.4vw, 46px); font-weight: 800; letter-spacing: -0.8px;
     line-height: 1.14; max-width: 700px; margin: 0 auto 16px; }
-  .hero h1 em { font-style: normal; color: var(--acc); }
+  .hero h1 em {
+    font-style: normal; color: var(--acc);   /* fallback + what audits measure */
+    background-image: linear-gradient(90deg, #7DD3FC, #C084FC, #F0ABFC);
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  :root[data-theme="light"] .hero h1 em {
+    background-image: linear-gradient(90deg, #0369A1, #6D28D9, #A21CAF);
+  }
   .hero p.sub { font-size: clamp(15.5px, 2.3vw, 18px); color: var(--soft); max-width: 620px; margin: 0 auto 28px; }
   .hero .ctas { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
 
@@ -324,6 +376,7 @@
       <a class="btn big" href="sms:+14012828414?&amp;body=Hi%20Gloria!%20I%27d%20like%20to%20learn%20more%20about%20your%20TC%20services.">💬 Text Gloria</a>
       <a class="btn big ghost" href="mailto:MRFLTransactions@gmail.com?subject=TC%20services">✉️ Email me</a>
     </div>
+    <div class="beam" aria-hidden="true"></div>
     <div class="statrow">
       <div class="stat"><div class="n" data-count="24" data-suffix="h">24h</div><div class="l">first response</div></div>
       <div class="stat"><div class="n">$0</div><div class="l">monthly fees</div></div>
@@ -477,7 +530,7 @@
     document.documentElement.setAttribute('data-theme', t);
     document.getElementById('theme_btn').textContent = (t === 'dark') ? '☀️' : '🌙';
     var meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) meta.setAttribute('content', t === 'dark' ? '#070B1C' : '#F2F5FD');
+    if (meta) meta.setAttribute('content', t === 'dark' ? '#0A0A1F' : '#EEF1FB');
     if (persist) { try { localStorage.setItem(THEME_KEY, t); } catch (e) {} }
   }
   applyTheme(currentTheme(), false);

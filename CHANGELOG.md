@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [2.3.0] — 2026-07-06
+
+### Changed — "liquid glass" website UI (from Gloria's references)
+
+- Marketing site + referral landing restyled to a liquid-glass look:
+  deep indigo night background with pink/blue glowing orbs, frosted
+  translucent panels (backdrop blur + specular top edge) on every card,
+  a light-beam cone pouring onto the hero stat chips, dotted texture,
+  blue→violet gradient pill buttons, frosted-glass secondary buttons,
+  and gradient hero text ("on demand" in cyan→violet→pink).
+- Light theme is the same design in frosted-white glass on pale
+  blue-lavender. Both pages re-audited in both themes: 0 contrast
+  failures (gradient text/button endpoints verified individually).
+
+---
+
 ## [2.2.0] — 2026-07-06
 
 ### Added — public reviews + playful interactive site
