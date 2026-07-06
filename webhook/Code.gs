@@ -2299,6 +2299,9 @@ function operatorResponse_(params) {
     try { d = extractTabData(sheet); } catch (e) { return; }
     if (!d) return;
     const ms = d.milestones || [];
+    // v7.2 — include the parsed details sections (parties, title, lender, HOA…)
+    let details = [];
+    try { details = _portalDetailsFromValues(sheet.getDataRange().getValues()); } catch (e) { details = []; }
     deals.push({
       property: d.propertyDisplay,
       agent: d.agentRef,
@@ -2316,6 +2319,7 @@ function operatorResponse_(params) {
       milestones: ms.map(function (m) {
         return { name: m.name, date: _portalIso(m.date), completed: !!m.completed };
       }),
+      details: details,
       sheet_link: base + '#gid=' + d.sheetId
     });
   });

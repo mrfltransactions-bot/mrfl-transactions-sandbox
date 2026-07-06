@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.9.0] — 2026-07-06
+
+### Changed — dashboard v2: glass UI + full interactive drill-downs
+
+- `dashboard/index.html` rebuilt as a single-page app in a premium
+  dark-glass style (glow blobs, frosted cards, colored edge bars, day
+  pills, floating bottom nav with glowing center button → opens the
+  master sheet). Light theme kept; WCAG contrast audit passes both
+  themes across home + detail views.
+- Everything is tappable now: stat cards open filtered lists (all /
+  urgent & past due / closing in 7 days), Agents opens per-agent deal
+  lists, week day-pills show that day's deadlines, search filters by
+  property/agent/milestone, and every deal opens a **full detail view**
+  — milestone checklist plus all contact/detail sections (seller, buyer,
+  agents, title, lender, HOA, concessions) with tap-to-call/email and an
+  "Open sheet tab" button. Hash-based navigation so back works.
+- Webhook v7.2: the operator payload now includes the parsed `details`
+  sections per deal (same parser as the agent portal).
+
+---
+
 ## [1.8.0] — 2026-07-05
 
 ### Added — operator dashboard (Gloria's overview) at /dashboard/
