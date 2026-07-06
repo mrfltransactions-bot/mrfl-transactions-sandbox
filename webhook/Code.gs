@@ -1944,34 +1944,59 @@ function showPortalLinks() {
   }
   const u = _portalB64Url(execUrl);
 
-  const rows = agents.map(ref => {
+  const rows = agents.map(function (ref, i) {
     let key = props.getProperty(_portalKeyProp(ref));
     if (!key) {
       key = _portalRandomKey();
       props.setProperty(_portalKeyProp(ref), key);
     }
     const link = PORTAL_BASE_URL + '?u=' + u + '&agent=' + encodeURIComponent(ref) + '&key=' + key;
+    const msg = 'Hi ' + ref + '! 🏡 I set up a private portal for your transactions with me. ' +
+      'Your personal link shows your deals live — timelines, deadlines, and every contact on the file:\n\n' +
+      link + '\n\n' +
+      'On your phone: open it, then Share → Add to Home Screen, and it works like an app. ' +
+      'It updates automatically whenever anything changes. This link is just for you — please don\'t forward it.\n\n' +
+      '— Gloria · MRFL Transactions';
     return '<tr>' +
-      '<td style="padding:8px 12px 8px 0;font-weight:600;white-space:nowrap;vertical-align:top">' + ref + '</td>' +
-      '<td style="padding:8px 0"><input type="text" readonly value="' + link + '" ' +
-      'style="width:100%;font-size:11px;padding:6px;border:1px solid #ccc;border-radius:4px" ' +
-      'onclick="this.select();document.execCommand(\'copy\');this.nextElementSibling.style.display=\'inline\'">' +
-      '<span style="display:none;color:#10B981;font-size:11px;margin-left:6px">Copied!</span></td></tr>';
+      '<td style="padding:10px 12px 10px 0;font-weight:600;white-space:nowrap;vertical-align:top">' + _hoaEsc(ref) + '</td>' +
+      '<td style="padding:10px 0;border-bottom:1px solid #F3F4F6">' +
+      '<input type="text" readonly value="' + link + '" data-copylink ' +
+      'style="width:100%;font-size:11px;padding:6px;border:1px solid #ccc;border-radius:4px;box-sizing:border-box">' +
+      '<span style="display:none;color:#10B981;font-size:11px;margin-left:6px">Link copied!</span>' +
+      '<div style="margin-top:6px">' +
+      '<button type="button" data-copymsg="m_' + i + '" ' +
+      'style="background:#4338CA;color:#fff;border:none;padding:6px 12px;border-radius:5px;' +
+      'font-size:12px;font-weight:700;cursor:pointer">📋 Copy invite message</button>' +
+      '<span style="display:none;color:#10B981;font-size:11px;margin-left:8px">Message copied — paste into a text or email!</span>' +
+      '</div>' +
+      '<textarea id="m_' + i + '" readonly ' +
+      'style="position:absolute;left:-9999px;top:0;width:300px;height:200px">' + _hoaEsc(msg) + '</textarea>' +
+      '</td></tr>';
   }).join('');
 
   const html = '<div style="font-family:Arial,sans-serif;font-size:13px;line-height:1.5">' +
-    '<p><b>Each agent gets their own private link.</b> Click a link to copy it, then text or ' +
-    'email it to that agent. They can bookmark it or add it to their phone\'s home screen — ' +
-    'it always shows their transactions, live from this sheet.</p>' +
+    '<p><b>Each agent gets their own private link.</b> Click a link to copy just the link, or use ' +
+    '<b>📋 Copy invite message</b> for a friendly ready-to-send text with the link included.</p>' +
     '<p style="color:#991B1B">Only send each agent <b>their own</b> link — a link shows that agent\'s deals to whoever has it.</p>' +
     '<table style="width:100%;border-collapse:collapse">' + rows + '</table>' +
     '<p style="color:#9CA3AF;font-size:11px;margin-top:10px">Links use the webhook URL ending ' +
     '“…' + execUrl.slice(-14) + '”. To point them at a different webhook URL, delete the ' +
     '<b>portal_webapp_url</b> row under Apps Script → Project Settings → Script Properties, ' +
-    'then open this dialog again.</p></div>';
+    'then open this dialog again.</p>' +
+    '<script>' +
+    'function _fb(el){if(!el)return;el.style.display="inline";setTimeout(function(){el.style.display="none";},1800);}' +
+    'document.querySelectorAll("[data-copylink]").forEach(function(inp){' +
+    'inp.addEventListener("click",function(){this.select();document.execCommand("copy");_fb(this.nextElementSibling);});});' +
+    'document.querySelectorAll("[data-copymsg]").forEach(function(btn){' +
+    'btn.addEventListener("click",function(){' +
+    'var t=document.getElementById(this.getAttribute("data-copymsg"));' +
+    't.style.left="0";t.select();document.execCommand("copy");t.style.left="-9999px";' +
+    'window.getSelection&&window.getSelection().removeAllRanges();' +
+    '_fb(this.nextElementSibling);});});' +
+    '<\/script></div>';
 
   ui.showModalDialog(
-    HtmlService.createHtmlOutput(html).setWidth(680).setHeight(Math.min(160 + agents.length * 56, 560)),
+    HtmlService.createHtmlOutput(html).setWidth(680).setHeight(Math.min(190 + agents.length * 92, 600)),
     '🔗 Agent portal links'
   );
 }
