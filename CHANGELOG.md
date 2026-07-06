@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [2.4.1] — 2026-07-06
+
+### Changed — custom domain: mrfltransactions.com
+
+- All generated links now use **https://mrfltransactions.com** as the
+  canonical host: portal share links (`REFER_BASE`), Apps Script
+  `PORTAL_BASE_URL` / `SITE_BASE_URL` / `DASHBOARD_BASE_URL` (portal-link
+  dialog, dashboard-link dialog, reminder-draft buttons/footers).
+- The old `mrfl-transactions.vercel.app` host remains attached in Vercel,
+  so every link already shared with agents keeps working.
+- Requires Gloria to connect the GoDaddy domain to Vercel (Domains →
+  add; A @ → 76.76.21.21, CNAME www → cname.vercel-dns.com).
+
+---
+
 ## [2.4.0] — 2026-07-06
 
 ### Added — review management + growth features (webhook v7.5)

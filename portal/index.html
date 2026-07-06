@@ -412,8 +412,9 @@
   // endpoint returns data only with a valid per-agent or widget key.
   var PORTAL_ENDPOINT = 'https://script.google.com/macros/s/AKfycbzheiPICRaOkutzU6kkrNS3n1pVebVVMtMwqAyQtDinMrzbqnaeTxFdHaqCeKtveKEzBw/exec';
 
-  // Referral landing page (update host when the custom domain goes live).
-  var REFER_BASE = 'https://mrfl-transactions.vercel.app/refer/';
+  // Referral landing page on Gloria's custom domain (the old
+  // mrfl-transactions.vercel.app host stays attached as a fallback).
+  var REFER_BASE = 'https://mrfltransactions.com/refer/';
   var SITE_BASE = REFER_BASE.replace(/refer\/$/, '');   // public site root (reviews live at #reviews)
 
   // ---------- theme toggle ----------

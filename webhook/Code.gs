@@ -1718,8 +1718,11 @@ function jsonResponse(obj) {
 // sheet menu: 🛠 TC Tools → 🔗 Agent portal links.
 // ============================================================
 
-const PORTAL_BASE_URL = 'https://mrfl-transactions.vercel.app/portal/';
-const SITE_BASE_URL = 'https://mrfl-transactions.vercel.app/';       // public site
+// Canonical host is Gloria's custom domain (GoDaddy → Vercel). The old
+// mrfl-transactions.vercel.app host stays attached, so links already
+// shared with agents keep working.
+const PORTAL_BASE_URL = 'https://mrfltransactions.com/portal/';
+const SITE_BASE_URL = 'https://mrfltransactions.com/';               // public site
 const REFER_BASE_URL = SITE_BASE_URL + 'refer/';                     // referral landing
 
 function _portalKeyProp(agentRef) {
@@ -2286,7 +2289,7 @@ function saveHoaInfo(f) {
 // generated once and shown via 🛠 TC Tools → 🖥 My dashboard link.
 // ============================================================
 
-const DASHBOARD_BASE_URL = 'https://mrfl-transactions.vercel.app/dashboard/';
+const DASHBOARD_BASE_URL = 'https://mrfltransactions.com/dashboard/';
 
 function operatorResponse_(params) {
   const key = String(params.key || '').trim();
