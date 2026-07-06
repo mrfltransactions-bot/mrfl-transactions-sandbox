@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.8.0] — 2026-07-05
+
+### Added — operator dashboard (Gloria's overview) at /dashboard/
+
+- `dashboard/index.html`: private all-transactions overview styled after
+  modern dashboard references — dark sidebar with section anchors, greeting
+  header, stat chips, portfolio-health donut, "Needs attention" rail
+  (overdue + next 3 days, colored cards), 7-day deadline strip, pastel
+  sticky-note deal cards with milestone checklists and per-tab
+  "open sheet" links, closed deals collapsed. Dark/light toggle
+  (system default, persisted); WCAG contrast audit passes both themes.
+- Webhook v7.1: key-protected `?view=operator` GET returns every
+  transaction across all agents (status, dates, progress, milestones,
+  done counts, sheet tab links). New menu item **🖥 My dashboard link**
+  generates the operator key and shows the private link.
+- Fix: dark-theme danger red darkened (#E0353B → #C82A30) so white text
+  meets 4.5:1 — applied to the agent portal too. Mobile horizontal
+  overflow from the week strip fixed (grid min-width).
+
+---
+
 ## [1.7.1] — 2026-07-05
 
 ### Changed — portal UI redesign + dark/light mode

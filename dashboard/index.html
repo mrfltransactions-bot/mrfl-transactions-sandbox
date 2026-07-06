@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#14172B">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="MRFL HQ">
+<meta name="robots" content="noindex, nofollow">
+<title>MRFL · My Overview</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🖥</text></svg>">
+<style>
+  /* ============================================================
+     THEME TOKENS
+     ============================================================ */
+  :root {
+    --bg:            #EEF0F9;
+    --surface:       #FFFFFF;
+    --surface-2:     #F3F5FC;
+    --border:        #E3E6F3;
+
+    --text:          #191D3A;
+    --text-soft:     #4A5170;
+    --text-muted:    #596080;
+
+    --side-bg:       #14172B;       /* sidebar stays dark in both themes */
+    --side-text:     #FFFFFF;
+    --side-muted:    rgba(255,255,255,0.55);
+    --side-active:   #FFE64D;
+
+    --primary:       #4A3FE0;
+    --primary-strong:#3A31B8;
+    --primary-soft:  #ECEAFD;
+
+    --amber:         #F6A723;
+    --amber-soft:    #FDEFD3;
+    --on-amber-soft: #7A5200;
+
+    --danger:        #D92D33;
+    --on-danger:     #FFFFFF;
+    --danger-soft:   #FDE4E5;
+    --on-danger-soft:#A11218;
+
+    --success:       #17A673;
+    --success-soft:  #DDF3EA;
+    --on-success-soft:#0B7A55;
+
+    --neutral-soft:  #ECEFF7;
+    --on-neutral-soft:#4A5170;
+
+    /* pastel deal-card palette (dark ink on all of them, both themes) */
+    --p1: #FFD9E4;  --p2: #E5DcFF;  --p3: #D2F1DD;  --p4: #FFF0BC;  --p5: #D4E9FF;
+    --card-ink:      #23274A;
+    --card-ink-soft: #454B6E;
+
+    --shadow:        0 10px 28px -10px rgba(25, 29, 58, 0.14);
+    --shadow-sm:     0 2px 8px -2px rgba(25, 29, 58, 0.08);
+    --radius:        20px;
+    --radius-sm:     12px;
+  }
+  :root[data-theme="dark"] {
+    --bg:            #0E1120;
+    --surface:       #191D33;
+    --surface-2:     #232849;
+    --border:        #2A2F52;
+
+    --text:          #EDEFFC;
+    --text-soft:     #B7BCDB;
+    --text-muted:    #9BA2C6;
+
+    --side-bg:       #14172B;
+    --side-text:     #FFFFFF;
+    --side-muted:    rgba(255,255,255,0.55);
+    --side-active:   #FFE64D;
+
+    --primary:       #A5A0FF;
+    --primary-strong:#B9B4FF;
+    --primary-soft:  rgba(139,132,255,0.16);
+
+    --amber:         #F6A723;
+    --amber-soft:    rgba(246,167,35,0.16);
+    --on-amber-soft: #FFCE7E;
+
+    --danger:        #C82A30;
+    --on-danger:     #FFFFFF;
+    --danger-soft:   rgba(224,53,59,0.20);
+    --on-danger-soft:#FF9DA0;
+
+    --success:       #2BC48F;
+    --success-soft:  rgba(23,166,115,0.18);
+    --on-success-soft:#4FD6A5;
+
+    --neutral-soft:  #262B4C;
+    --on-neutral-soft:#B7BCDB;
+
+    --shadow:        0 10px 28px -10px rgba(0, 0, 0, 0.55);
+    --shadow-sm:     0 2px 8px -2px rgba(0, 0, 0, 0.4);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  html, body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Rounded", "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    /* no background/color transitions on html/body — wedges theme switch in Blink */
+  }
+
+  /* ============================================================
+     SIDEBAR (dark in both themes) + LAYOUT
+     ============================================================ */
+  .side {
+    position: fixed; left: 0; top: 0; bottom: 0; width: 76px;
+    background: var(--side-bg); z-index: 10;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 18px 0; gap: 8px;
+  }
+  .side .logo {
+    width: 44px; height: 44px; border-radius: 14px;
+    background: linear-gradient(135deg, #8B5CF6, #4A3FE0);
+    color: #fff; font-weight: 800; font-size: 18px;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 18px;
+  }
+  .side a.nav {
+    width: 44px; height: 44px; border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; text-decoration: none; color: var(--side-muted);
+    background: transparent;
+  }
+  .side a.nav:hover { background: rgba(255,255,255,0.08); }
+  .side .spacer { flex: 1; }
+  .side .dot {
+    width: 10px; height: 10px; border-radius: 50%; background: var(--side-active);
+  }
+
+  .wrap { margin-left: 76px; padding: 22px 26px 60px; }
+  .content { max-width: 1220px; margin: 0 auto; }
+
+  @media (max-width: 880px) {
+    .side {
+      position: sticky; top: 0; bottom: auto; left: auto; width: auto; height: 60px;
+      flex-direction: row; padding: 0 14px; gap: 4px;
+    }
+    .side .logo { width: 36px; height: 36px; font-size: 15px; border-radius: 11px; margin: 0 8px 0 0; }
+    .side a.nav { width: 40px; height: 40px; font-size: 16px; }
+    .side .dot { display: none; }
+    .wrap { margin-left: 0; padding: 16px 14px 50px; }
+  }
+
+  /* ============================================================
+     HEADER
+     ============================================================ */
+  .head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin: 6px 0 22px; }
+  .head h1 { font-size: 26px; font-weight: 800; letter-spacing: -0.3px; }
+  .head .date { font-size: 13.5px; color: var(--text-muted); font-weight: 600; margin-top: 2px; }
+  .head-actions { display: flex; gap: 8px; }
+  .head-actions button {
+    width: 42px; height: 42px; border-radius: 50%;
+    background: var(--surface); border: 1px solid var(--border); color: var(--text);
+    font-size: 17px; cursor: pointer; box-shadow: var(--shadow-sm);
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+
+  /* ============================================================
+     OVERVIEW GRID: main + right rail
+     ============================================================ */
+  .grid { display: grid; grid-template-columns: 1fr 330px; gap: 20px; align-items: start; }
+  .grid > div { min-width: 0; }  /* let inner scrollers (week strip) engage instead of stretching the page */
+  @media (max-width: 1020px) { .grid { grid-template-columns: 1fr; } }
+
+  /* stat chips */
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  @media (max-width: 640px) { .stats { grid-template-columns: repeat(2, 1fr); } }
+  .stat {
+    background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow);
+    padding: 15px 14px; display: flex; align-items: center; gap: 11px;
+  }
+  .stat .ic {
+    width: 40px; height: 40px; border-radius: 13px; flex: none;
+    display: flex; align-items: center; justify-content: center; font-size: 18px;
+  }
+  .stat .ic.blue  { background: var(--primary-soft); }
+  .stat .ic.amber { background: var(--amber-soft); }
+  .stat .ic.red   { background: var(--danger-soft); }
+  .stat .ic.green { background: var(--success-soft); }
+  .stat .num { font-size: 21px; font-weight: 800; line-height: 1.1; }
+  .stat .lbl { font-size: 11.5px; color: var(--text-soft); font-weight: 600; }
+
+  /* panels */
+  .panel {
+    background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow);
+    padding: 18px; margin-top: 20px;
+  }
+  .panel h2 { font-size: 15.5px; font-weight: 800; margin-bottom: 12px; letter-spacing: -0.1px; }
+  .panel h2 .sub { font-size: 12px; color: var(--text-muted); font-weight: 600; margin-left: 6px; }
+
+  /* week strip */
+  .week { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
+  .day { min-height: 86px; border-radius: var(--radius-sm); background: var(--surface-2); padding: 8px 7px; }
+  .day.today { outline: 2px solid var(--primary); outline-offset: -2px; }
+  .day .d-lbl { font-size: 10.5px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+  .day .d-num { font-size: 15px; font-weight: 800; margin-bottom: 5px; }
+  .day.today .d-num { color: var(--primary-strong); }
+  .chip {
+    display: block; font-size: 10.5px; font-weight: 700; line-height: 1.3;
+    background: var(--amber-soft); color: var(--on-amber-soft);
+    border-radius: 7px; padding: 3px 6px; margin-top: 4px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .chip.c0 { background: var(--danger-soft); color: var(--on-danger-soft); }
+  .chip.close { background: var(--success-soft); color: var(--on-success-soft); }
+  @media (max-width: 700px) {
+    .week { grid-template-columns: repeat(7, minmax(86px, 1fr)); overflow-x: auto; }
+  }
+
+  /* right rail: health donut */
+  .donut-wrap { display: flex; align-items: center; gap: 16px; }
+  .donut {
+    width: 116px; height: 116px; border-radius: 50%; flex: none; position: relative;
+  }
+  .donut::after {
+    content: ""; position: absolute; inset: 14px; border-radius: 50%;
+    background: var(--surface);
+  }
+  .donut .pct {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    font-size: 21px; font-weight: 800; z-index: 1;
+  }
+  .legend { flex: 1; }
+  .legend div { display: flex; align-items: center; gap: 8px; font-size: 12.5px; font-weight: 600; color: var(--text-soft); padding: 3px 0; }
+  .legend .sw { width: 10px; height: 10px; border-radius: 3px; flex: none; }
+
+  /* needs attention cards */
+  .att {
+    border-radius: var(--radius-sm); padding: 12px 13px; margin-top: 10px;
+    display: flex; align-items: center; gap: 10px; text-decoration: none;
+  }
+  .att.red { background: var(--danger); color: var(--on-danger); }
+  .att.amber { background: var(--amber); color: #241C05; }
+  .att .a-main { flex: 1; min-width: 0; }
+  .att .a-what { font-size: 13.5px; font-weight: 800; display: block; }
+  .att .a-sub { font-size: 11.5px; font-weight: 600; display: block; margin-top: 1px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .att .a-go { flex: none; width: 30px; height: 30px; border-radius: 50%; background: rgba(0,0,0,0.16);
+    display: flex; align-items: center; justify-content: center; font-size: 13px; }
+  .att.red .a-go { background: rgba(255,255,255,0.22); }
+  .att-empty { font-size: 13px; color: var(--text-muted); font-weight: 600; padding: 6px 0; }
+
+  /* agents */
+  .agents { display: flex; flex-wrap: wrap; gap: 8px; }
+  .agent-chip {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--surface-2); border-radius: 999px; padding: 6px 12px 6px 6px;
+    font-size: 12.5px; font-weight: 700; color: var(--text-soft);
+  }
+  .agent-chip .av {
+    width: 26px; height: 26px; border-radius: 50%; flex: none;
+    background: linear-gradient(135deg, #8B5CF6, #4A3FE0); color: #fff;
+    display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800;
+  }
+
+  /* ============================================================
+     DEAL CARDS (pastel sticky-note grid)
+     ============================================================ */
+  .deals { display: grid; grid-template-columns: repeat(auto-fill, minmax(295px, 1fr)); gap: 16px; margin-top: 14px; }
+  .deal {
+    border-radius: var(--radius); padding: 16px; color: var(--card-ink);
+    box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 10px;
+  }
+  .deal.c0 { background: var(--p1); } .deal.c1 { background: var(--p2); }
+  .deal.c2 { background: var(--p3); } .deal.c3 { background: var(--p4); }
+  .deal.c4 { background: var(--p5); }
+  .deal.gray { background: var(--neutral-soft); color: var(--on-neutral-soft); }
+  .deal-top { display: flex; justify-content: space-between; gap: 8px; align-items: flex-start; }
+  .deal-addr { font-size: 15px; font-weight: 800; line-height: 1.35; letter-spacing: -0.2px; }
+  .deal .open {
+    flex: none; width: 32px; height: 32px; border-radius: 50%;
+    background: rgba(0,0,0,0.1); color: inherit; text-decoration: none;
+    display: flex; align-items: center; justify-content: center; font-size: 13px;
+  }
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .tag {
+    font-size: 10.5px; font-weight: 800; padding: 3px 9px; border-radius: 999px;
+    background: rgba(0,0,0,0.10); color: var(--card-ink);
+  }
+  .deal.gray .tag { color: var(--on-neutral-soft); }
+  .tag.st-urgent, .tag.st-past_due { background: var(--danger); color: #fff; }
+  .tag.st-warning { background: rgba(0,0,0,0.22); color: #fff; }
+  .deal .prog { height: 7px; border-radius: 999px; background: rgba(0,0,0,0.12); overflow: hidden; }
+  .deal .prog > div { height: 100%; background: rgba(0,0,0,0.5); border-radius: 999px; }
+  .deal .prog-lbl { font-size: 11px; font-weight: 700; color: var(--card-ink-soft); }
+  .deal.gray .prog-lbl { color: inherit; }
+  .deal .mini { border-top: 1.5px dashed rgba(0,0,0,0.15); padding-top: 8px; }
+  .deal .mini .done-lbl { font-size: 11px; font-weight: 800; color: var(--card-ink-soft); margin-bottom: 4px; }
+  .mrow { display: flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 600; padding: 2px 0; }
+  .mrow .mk { width: 15px; height: 15px; border-radius: 5px; flex: none; font-size: 10px; font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(0,0,0,0.10); }
+  .mrow.on .mk { background: var(--success); color: #fff; }
+  .mrow.on { text-decoration: line-through; opacity: 0.62; }
+  .mrow .md { margin-left: auto; font-size: 11px; color: var(--card-ink-soft); font-weight: 700; white-space: nowrap; }
+  .deal .next {
+    font-size: 12px; font-weight: 700; border-radius: 9px; padding: 7px 10px;
+    background: rgba(0,0,0,0.08);
+  }
+  .deal .next.red { background: var(--danger); color: #fff; }
+
+  details.pastdeals { margin-top: 18px; }
+  details.pastdeals summary {
+    cursor: pointer; font-size: 13.5px; font-weight: 800; color: var(--text-soft);
+    padding: 10px 4px; list-style: none;
+  }
+  details.pastdeals summary::-webkit-details-marker { display: none; }
+  details.pastdeals summary::before { content: "▸ "; }
+  details.pastdeals[open] summary::before { content: "▾ "; }
+
+  /* ============================================================
+     STATES + FOOTER
+     ============================================================ */
+  .state { text-align: center; padding: 70px 24px; color: var(--text-soft); }
+  .state .big { font-size: 42px; margin-bottom: 12px; }
+  .state h2 { font-size: 17px; color: var(--text); margin-bottom: 6px; font-weight: 800; }
+  .state p { font-size: 14px; max-width: 440px; margin: 0 auto; }
+  .spinner {
+    width: 34px; height: 34px; margin: 0 auto 14px;
+    border: 3px solid var(--primary-soft); border-top-color: var(--primary);
+    border-radius: 50%; animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .updated { font-size: 11.5px; color: var(--text-muted); text-align: center; margin: 24px 0 0; font-weight: 600; }
+</style>
+<script>
+  (function () {
+    var t = null;
+    try { t = localStorage.getItem('mrfl_dash_theme'); } catch (e) {}
+    if (t !== 'dark' && t !== 'light') {
+      t = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+    }
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+</script>
+</head>
+<body>
+
+<nav class="side">
+  <div class="logo">G</div>
+  <a class="nav" href="#top" title="Overview">🏠</a>
+  <a class="nav" href="#week" title="This week">📅</a>
+  <a class="nav" href="#deals" title="All transactions">🗂</a>
+  <a class="nav" href="#agents" title="Agents">👥</a>
+  <div class="spacer"></div>
+  <div class="dot"></div>
+</nav>
+
+<div class="wrap"><div class="content" id="top">
+  <div class="head">
+    <div>
+      <h1 id="greet">My Overview</h1>
+      <div class="date" id="dateline"></div>
+    </div>
+    <div class="head-actions">
+      <button id="theme_btn" title="Switch light / dark" aria-label="Switch theme">🌙</button>
+      <button id="refresh" title="Refresh" aria-label="Refresh">↻</button>
+    </div>
+  </div>
+
+  <main id="main">
+    <div class="state" id="loading">
+      <div class="spinner"></div>
+      <p>Loading your transactions…</p>
+    </div>
+  </main>
+</div></div>
+
+<script>
+(function () {
+  'use strict';
+
+  var CFG_KEY = 'mrfl_dash_cfg';
+  var THEME_KEY = 'mrfl_dash_theme';
+  var ENDPOINT = 'https://script.google.com/macros/s/AKfycbzheiPICRaOkutzU6kkrNS3n1pVebVVMtMwqAyQtDinMrzbqnaeTxFdHaqCeKtveKEzBw/exec';
+
+  // ---------- theme ----------
+  function currentTheme() {
+    return document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+  }
+  function applyTheme(t, persist) {
+    document.documentElement.setAttribute('data-theme', t);
+    var btn = document.getElementById('theme_btn');
+    if (btn) btn.textContent = (t === 'dark') ? '☀️' : '🌙';
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute('content', t === 'dark' ? '#0E1120' : '#14172B');
+    if (persist) { try { localStorage.setItem(THEME_KEY, t); } catch (e) {} }
+  }
+  applyTheme(currentTheme(), false);
+  document.getElementById('theme_btn').addEventListener('click', function () {
+    applyTheme(currentTheme() === 'dark' ? 'light' : 'dark', true);
+  });
+
+  // ---------- key config ----------
+  function readKey() {
+    var k = new URLSearchParams(location.search).get('k') || '';
+    if (k) { try { localStorage.setItem(CFG_KEY, k); } catch (e) {} return k; }
+    try { return localStorage.getItem(CFG_KEY) || ''; } catch (e) { return ''; }
+  }
+
+  // ---------- helpers ----------
+  var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  function parseLocal(iso) {
+    var m = String(iso || '').match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (!m) return null;
+    return new Date(+m[1], +m[2] - 1, +m[3]);
+  }
+  function fmt(iso) {
+    var d = parseLocal(iso);
+    return d ? MONTHS[d.getMonth()] + ' ' + d.getDate() : '';
+  }
+  function daysFromToday(iso) {
+    var d = parseLocal(iso);
+    if (!d) return null;
+    var t = new Date(); t.setHours(0, 0, 0, 0);
+    return Math.round((d - t) / 86400000);
+  }
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function inWords(n) {
+    if (n === null || n === undefined) return '';
+    if (n < 0) return Math.abs(n) + 'd overdue';
+    if (n === 0) return 'today';
+    if (n === 1) return 'tomorrow';
+    return 'in ' + n + ' days';
+  }
+  function shortAddr(p) {
+    return String(p || '').split(',')[0];
+  }
+
+  var DONE = { closed: 1, cancelled: 1 };
+  var STATUS_LABEL = {
+    on_track: 'On track', active: 'Active', warning: 'Soon', urgent: 'Urgent',
+    past_due: 'Past due', closed: 'Closed', cancelled: 'Cancelled', on_hold: 'On hold', unknown: 'Active'
+  };
+  var STATUS_RANK = { past_due: 0, urgent: 1, warning: 2, on_track: 3, active: 3, unknown: 3, on_hold: 4 };
+  var SIDE_LABEL = { Seller: 'Listing', Buyer: 'Buyer', Both: 'Dual' };
+
+  // ---------- render ----------
+  function dealCard(deal, i, gray) {
+    var cls = gray ? 'gray' : ('c' + (i % 5));
+    var h = '<div class="deal ' + cls + '">';
+    h += '<div class="deal-top"><div class="deal-addr">' + esc(deal.property) + '</div>' +
+      (deal.sheet_link ? '<a class="open" href="' + esc(deal.sheet_link) + '" target="_blank" rel="noopener" title="Open sheet tab">↗</a>' : '') + '</div>';
+    h += '<div class="tags">';
+    h += '<span class="tag">👤 ' + esc(deal.agent) + '</span>';
+    if (deal.side) h += '<span class="tag">' + esc(SIDE_LABEL[deal.side] || deal.side) + '</span>';
+    h += '<span class="tag st-' + esc(deal.status) + '">' + esc(STATUS_LABEL[deal.status] || deal.status) + '</span>';
+    h += '</div>';
+
+    if (!gray && deal.progress_total) {
+      var pct = Math.max(3, Math.min(100, Math.round(100 * deal.progress_elapsed / deal.progress_total)));
+      h += '<div><div class="prog"><div style="width:' + pct + '%"></div></div>' +
+        '<div class="prog-lbl" style="margin-top:4px">Day ' + deal.progress_elapsed + ' of ' + deal.progress_total +
+        ' · closes ' + fmt(deal.closing_date) + '</div></div>';
+    }
+
+    if (deal.milestones && deal.milestones.length) {
+      h += '<div class="mini"><div class="done-lbl">Completed: ' + deal.done_count + '/' + deal.total_count + '</div>';
+      deal.milestones.forEach(function (m) {
+        h += '<div class="mrow' + (m.completed ? ' on' : '') + '"><span class="mk">' + (m.completed ? '✓' : '') + '</span>' +
+          '<span>' + esc(m.name) + '</span><span class="md">' + fmt(m.date) + '</span></div>';
+      });
+      h += '</div>';
+    }
+
+    if (!gray && deal.next_deadline && deal.next_deadline_date) {
+      var od = deal.days_until !== null && deal.days_until < 0;
+      h += '<div class="next' + (od ? ' red' : '') + '">⏰ ' + esc(deal.next_deadline) + ' — ' +
+        fmt(deal.next_deadline_date) + ' (' + inWords(deal.days_until) + ')</div>';
+    }
+    h += '</div>';
+    return h;
+  }
+
+  function render(data) {
+    var deals = data.deals || [];
+    var active = deals.filter(function (d) { return !DONE[d.status]; });
+    var past = deals.filter(function (d) { return DONE[d.status]; });
+    active.sort(function (a, b) {
+      var r = (STATUS_RANK[a.status] || 3) - (STATUS_RANK[b.status] || 3);
+      if (r !== 0) return r;
+      return String(a.closing_date).localeCompare(String(b.closing_date));
+    });
+
+    // ---- stats ----
+    var urgent = active.filter(function (d) { return d.status === 'urgent' || d.status === 'past_due'; }).length;
+    var warning = active.filter(function (d) { return d.status === 'warning'; }).length;
+    var okCount = active.length - urgent - warning;
+    var closing7 = active.filter(function (d) {
+      var n = daysFromToday(d.closing_date);
+      return n !== null && n >= 0 && n <= 7;
+    }).length;
+    var agents = {};
+    active.forEach(function (d) { agents[d.agent] = (agents[d.agent] || 0) + 1; });
+    var agentNames = Object.keys(agents).sort();
+
+    // ---- upcoming milestones (week strip + needs attention) ----
+    var upcoming = [];   // {days, name, property, agent, link, isClosing}
+    active.forEach(function (d) {
+      (d.milestones || []).forEach(function (m) {
+        if (m.completed || m.name === 'Effective Date') return;
+        var n = daysFromToday(m.date);
+        if (n === null) return;
+        upcoming.push({ days: n, name: m.name, property: d.property, agent: d.agent,
+          link: d.sheet_link, isClosing: m.name === 'Closing Date' });
+      });
+    });
+    upcoming.sort(function (a, b) { return a.days - b.days; });
+    var attention = upcoming.filter(function (u) { return u.days <= 3; });
+
+    var h = '';
+
+    // ============ overview grid ============
+    h += '<div class="grid"><div>';
+
+    h += '<div class="stats">';
+    h += '<div class="stat"><div class="ic blue">🏠</div><div><div class="num">' + active.length + '</div><div class="lbl">Active deals</div></div></div>';
+    h += '<div class="stat"><div class="ic red">❗</div><div><div class="num">' + urgent + '</div><div class="lbl">Urgent / past due</div></div></div>';
+    h += '<div class="stat"><div class="ic amber">📆</div><div><div class="num">' + closing7 + '</div><div class="lbl">Closing in 7 days</div></div></div>';
+    h += '<div class="stat"><div class="ic green">👥</div><div><div class="num">' + agentNames.length + '</div><div class="lbl">Agents active</div></div></div>';
+    h += '</div>';
+
+    // week strip
+    h += '<div class="panel" id="week"><h2>This week <span class="sub">deadlines in the next 7 days</span></h2><div class="week">';
+    var today = new Date(); today.setHours(0, 0, 0, 0);
+    for (var i = 0; i < 7; i++) {
+      var d = new Date(today); d.setDate(d.getDate() + i);
+      var chips = upcoming.filter(function (u) { return u.days === i; });
+      h += '<div class="day' + (i === 0 ? ' today' : '') + '">' +
+        '<div class="d-lbl">' + DAYS[d.getDay()] + '</div>' +
+        '<div class="d-num">' + d.getDate() + '</div>';
+      chips.slice(0, 3).forEach(function (c) {
+        h += '<span class="chip' + (i === 0 ? ' c0' : '') + (c.isClosing ? ' close' : '') + '" title="' +
+          esc(c.name + ' · ' + c.property) + '">' + esc(c.name.replace(' Due', '')) + ' · ' + esc(shortAddr(c.property)) + '</span>';
+      });
+      if (chips.length > 3) h += '<span class="chip">+' + (chips.length - 3) + ' more</span>';
+      h += '</div>';
+    }
+    h += '</div></div>';
+
+    // deals grid
+    h += '<div class="panel" id="deals"><h2>All transactions <span class="sub">' + active.length + ' active</span></h2>';
+    if (active.length) {
+      h += '<div class="deals">';
+      active.forEach(function (d, i) { h += dealCard(d, i, false); });
+      h += '</div>';
+    } else {
+      h += '<div class="att-empty">No active transactions right now. 🌴</div>';
+    }
+    if (past.length) {
+      h += '<details class="pastdeals"><summary>Closed & cancelled (' + past.length + ')</summary><div class="deals">';
+      past.forEach(function (d, i) { h += dealCard(d, i, true); });
+      h += '</div></details>';
+    }
+    h += '</div>';
+
+    h += '</div>';  // end main col
+
+    // ============ right rail ============
+    h += '<div>';
+
+    // portfolio health donut
+    var total = Math.max(1, active.length);
+    var pOk = Math.round(100 * okCount / total);
+    var pWarn = Math.round(100 * warning / total);
+    var pBad = 100 - pOk - pWarn;
+    h += '<div class="panel" style="margin-top:0"><h2>Portfolio health</h2><div class="donut-wrap">';
+    h += '<div class="donut" style="background:conic-gradient(var(--success) 0 ' + pOk + '%, var(--amber) ' + pOk + '% ' + (pOk + pWarn) + '%, var(--danger) ' + (pOk + pWarn) + '% 100%)">' +
+      '<div class="pct">' + pOk + '%</div></div>';
+    h += '<div class="legend">' +
+      '<div><span class="sw" style="background:var(--success)"></span>On track · ' + okCount + '</div>' +
+      '<div><span class="sw" style="background:var(--amber)"></span>Deadline soon · ' + warning + '</div>' +
+      '<div><span class="sw" style="background:var(--danger)"></span>Urgent / past due · ' + urgent + '</div>' +
+      '</div></div></div>';
+
+    // needs attention
+    h += '<div class="panel"><h2>Needs attention <span class="sub">overdue & next 3 days</span></h2>';
+    if (attention.length === 0) {
+      h += '<div class="att-empty">✅ Nothing urgent — all caught up.</div>';
+    } else {
+      attention.slice(0, 8).forEach(function (u) {
+        var red = u.days < 0;
+        h += '<a class="att ' + (red ? 'red' : 'amber') + '"' + (u.link ? ' href="' + esc(u.link) + '" target="_blank" rel="noopener"' : '') + '>' +
+          '<span class="a-main"><span class="a-what">' + esc(u.name) + ' · ' + esc(inWords(u.days)) + '</span>' +
+          '<span class="a-sub">' + esc(shortAddr(u.property)) + ' · ' + esc(u.agent) + '</span></span>' +
+          '<span class="a-go">↗</span></a>';
+      });
+      if (attention.length > 8) h += '<div class="att-empty" style="margin-top:8px">+' + (attention.length - 8) + ' more in the week view</div>';
+    }
+    h += '</div>';
+
+    // agents
+    h += '<div class="panel" id="agents"><h2>By agent</h2><div class="agents">';
+    agentNames.forEach(function (a) {
+      h += '<span class="agent-chip"><span class="av">' + esc(a.charAt(0).toUpperCase()) + '</span>' +
+        esc(a) + ' · ' + agents[a] + '</span>';
+    });
+    if (!agentNames.length) h += '<div class="att-empty">No active agents.</div>';
+    h += '</div></div>';
+
+    h += '</div>';  // end rail
+    h += '</div>';  // end grid
+
+    var t = new Date();
+    h += '<div class="updated">Updated ' + t.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) +
+      ' — live from your tracking sheet · <a href="#top" style="color:var(--primary-strong);text-decoration:none;font-weight:700">Back to top ↑</a></div>';
+
+    document.getElementById('main').innerHTML = h;
+  }
+
+  function showState(icon, title, body) {
+    document.getElementById('main').innerHTML =
+      '<div class="state"><div class="big">' + icon + '</div><h2>' + esc(title) + '</h2><p>' + body + '</p></div>';
+  }
+
+  // ---------- load ----------
+  var key = readKey();
+  var loading = false;
+
+  function load() {
+    if (loading) return;
+    if (!key) {
+      showState('🔒', 'This dashboard needs your private link',
+        'Open it using your personal link — in the sheet: 🛠 TC Tools → 🖥 My dashboard link.');
+      return;
+    }
+    loading = true;
+    fetch(ENDPOINT + '?view=operator&key=' + encodeURIComponent(key), { method: 'GET', cache: 'no-store' })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        loading = false;
+        if (!data.success) {
+          if (data.status === 'ok' || data.generated_at) {
+            showState('🛠', 'Almost ready',
+              'The dashboard endpoint isn’t deployed yet. In Apps Script: Deploy → Manage deployments → update to a New version.');
+            return;
+          }
+          showState('🔒', 'Link not valid', esc(data.error || 'Get a fresh link: 🛠 TC Tools → 🖥 My dashboard link.'));
+          return;
+        }
+        render(data);
+      })
+      .catch(function () {
+        loading = false;
+        showState('📶', 'Couldn’t load right now',
+          'Check your internet connection and tap ↻ to retry.');
+      });
+  }
+
+  document.getElementById('refresh').addEventListener('click', function () {
+    document.getElementById('main').innerHTML =
+      '<div class="state"><div class="spinner"></div><p>Refreshing…</p></div>';
+    load();
+  });
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'visible') load();
+  });
+
+  // greeting + date
+  (function () {
+    var hNow = new Date().getHours();
+    var g = hNow < 12 ? 'Good morning' : hNow < 17 ? 'Good afternoon' : 'Good evening';
+    document.getElementById('greet').textContent = g + ', Gloria! ☕';
+    var n = new Date();
+    var DAYFULL = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    var MONFULL = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    document.getElementById('dateline').textContent =
+      DAYFULL[n.getDay()] + ', ' + MONFULL[n.getMonth()] + ' ' + n.getDate() + ', ' + n.getFullYear();
+  })();
+
+  load();
+})();
+</script>
+</body>
+</html>

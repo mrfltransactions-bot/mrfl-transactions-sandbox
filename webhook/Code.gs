@@ -74,6 +74,7 @@ function onOpen() {
     .addSeparator()
     .addItem('🏘 Add / update HOA info', 'showHoaDialog')
     .addItem('🔗 Agent portal links', 'showPortalLinks')
+    .addItem('🖥 My dashboard link', 'showOperatorLink')
     .addSeparator()
     .addItem('🔔 Preview / create reminder drafts', 'previewAndDraftReminders')
     .addItem('🔔 Set up daily reminder drafts', 'setupDailyReminders')
@@ -99,6 +100,7 @@ function toggleActiveOnly() {
     .addSeparator()
     .addItem('🏘 Add / update HOA info', 'showHoaDialog')
     .addItem('🔗 Agent portal links', 'showPortalLinks')
+    .addItem('🖥 My dashboard link', 'showOperatorLink')
     .addSeparator()
     .addItem('🔔 Preview / create reminder drafts', 'previewAndDraftReminders')
     .addItem('🔔 Set up daily reminder drafts', 'setupDailyReminders')
@@ -2267,6 +2269,89 @@ function saveHoaInfo(f) {
 }
 
 // ============================================================
+// v7.1 — OPERATOR DASHBOARD (Gloria's all-transactions overview)
+//
+// GET ?view=operator&key=<operator_key> returns EVERY transaction
+// (all agents) for the private dashboard at /dashboard/. The key is
+// generated once and shown via 🛠 TC Tools → 🖥 My dashboard link.
+// ============================================================
+
+const DASHBOARD_BASE_URL = 'https://mrfl-transactions.vercel.app/dashboard/';
+
+function operatorResponse_(params) {
+  const key = String(params.key || '').trim();
+  const stored = PropertiesService.getScriptProperties().getProperty('operator_key');
+  if (!stored || stored !== key) {
+    return jsonResponse({
+      success: false,
+      error: 'This dashboard link is not valid. Open 🛠 TC Tools → 🖥 My dashboard link in the sheet for a fresh one.'
+    });
+  }
+
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const base = ss.getUrl();
+  const deals = [];
+
+  ss.getSheets().forEach(function (sheet) {
+    const name = sheet.getName();
+    if (name === DASHBOARD_TAB_NAME || name.startsWith('📊') || !name.includes('_')) return;
+    let d = null;
+    try { d = extractTabData(sheet); } catch (e) { return; }
+    if (!d) return;
+    const ms = d.milestones || [];
+    deals.push({
+      property: d.propertyDisplay,
+      agent: d.agentRef,
+      side: d.side || '',
+      status: d.status,
+      effective_date: _portalIso(d.effectiveDate),
+      closing_date: _portalIso(d.closingDate),
+      next_deadline: d.deadlineName || '',
+      next_deadline_date: _portalIso(d.deadlineDate),
+      days_until: (typeof d.daysUntil === 'number') ? d.daysUntil : null,
+      progress_elapsed: d.progressElapsed,
+      progress_total: d.progressTotal,
+      done_count: ms.filter(function (m) { return m.completed; }).length,
+      total_count: ms.length,
+      milestones: ms.map(function (m) {
+        return { name: m.name, date: _portalIso(m.date), completed: !!m.completed };
+      }),
+      sheet_link: base + '#gid=' + d.sheetId
+    });
+  });
+
+  return jsonResponse({
+    success: true,
+    generated_at: new Date().toISOString(),
+    deals: deals
+  });
+}
+
+// Menu: show (and on first run create) Gloria's private dashboard link.
+function showOperatorLink() {
+  const ui = SpreadsheetApp.getUi();
+  const props = PropertiesService.getScriptProperties();
+  let key = props.getProperty('operator_key');
+  if (!key) {
+    key = _portalRandomKey() + _portalRandomKey();  // extra-long: it opens everything
+    props.setProperty('operator_key', key);
+  }
+  const link = DASHBOARD_BASE_URL + '?k=' + key;
+  ui.showModalDialog(HtmlService.createHtmlOutput(
+    '<div style="font-family:Arial,sans-serif;font-size:13px;line-height:1.5">' +
+    '<p><b>Your personal overview dashboard.</b> Every transaction across all agents, ' +
+    'live from this sheet. Bookmark it or add it to your phone\'s home screen.</p>' +
+    '<p style="color:#991B1B"><b>Keep this link to yourself</b> — it shows ALL your transactions. ' +
+    'If it ever leaks, delete the <b>operator_key</b> row in Apps Script → Project Settings → ' +
+    'Script Properties and open this dialog again for a new one.</p>' +
+    '<input type="text" readonly value="' + link + '" ' +
+    'onclick="this.select();document.execCommand(\'copy\');this.nextElementSibling.style.display=\'inline\'" ' +
+    'style="width:100%;font-size:11px;padding:6px;border:1px solid #ccc;border-radius:4px;box-sizing:border-box">' +
+    '<span style="display:none;color:#10B981;font-size:11px">Copied!</span></div>'
+  ).setWidth(600).setHeight(220), '🖥 My dashboard link');
+}
+
+// ============================================================
 // v7.0 — DAILY DEADLINE REMINDER DRAFTS FOR AGENTS
 //
 // A daily time trigger scans every active property tab and creates a
@@ -2537,6 +2622,9 @@ function doGet(e) {
 
     // v6.6 — agent portal view (key-protected, per-agent data)
     if (params.view === 'portal') return portalResponse_(params);
+
+    // v7.1 — operator dashboard view (key-protected, ALL deals)
+    if (params.view === 'operator') return operatorResponse_(params);
 
     // v6.9 — widget data now requires the widget key (shown in the
     // "🔗 Agent portal links" dialog). Keyless requests get a health check
