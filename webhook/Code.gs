@@ -1153,6 +1153,10 @@ function onEdit(e) {
 function doPost(e) {
   try {
     const data = JSON.parse(e.postData.contents);
+
+    // v7.4 — public review submission from the marketing site
+    if (data && data.action === 'review') return _reviewSubmit(data);
+
     const ss = SpreadsheetApp.getActiveSpreadsheet();
 
     if (!data.tabName || !data.propertyAddress) {
@@ -2743,9 +2747,92 @@ const WIDGET_MASTER_SHEET_ID = '1HmBdzF8KRWvRFa01-QqmRIi9cKHF7Bh1-pf9jeDQ_7Y';
 const WIDGET_DASHBOARD_TAB = '';      // empty = first sheet; set to actual tab name if different
 const WIDGET_DEFAULT_DAYS = 4;        // default window if no ?days param
 
+// ============================================================
+// v7.4 — PUBLIC REVIEWS
+//
+// Realtors leave a review on the public site → doPost(action:'review')
+// appends it to a "⭐ Reviews" tab with "Show on site?" UNCHECKED.
+// Nothing appears publicly until Gloria ticks that checkbox — she
+// reviews everything outbound. doGet?view=reviews (keyless — public
+// content by design) returns only checked rows, newest first.
+// ============================================================
+
+const REVIEWS_TAB = '⭐ Reviews';
+const REVIEWS_HEADERS = ['Date', 'Name', 'Brokerage', 'Stars', 'Review', 'Show on site?'];
+
+function _revSheet(createIfMissing) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sh = ss.getSheetByName(REVIEWS_TAB);
+  if (!sh) {
+    if (!createIfMissing) return null;
+    sh = ss.insertSheet(REVIEWS_TAB);
+    sh.getRange(1, 1, 1, REVIEWS_HEADERS.length).setValues([REVIEWS_HEADERS])
+      .setFontWeight('bold').setBackground('#404040').setFontColor('#FFFFFF');
+    sh.setColumnWidth(1, 90);
+    sh.setColumnWidth(2, 150);
+    sh.setColumnWidth(3, 150);
+    sh.setColumnWidth(4, 60);
+    sh.setColumnWidth(5, 420);
+    sh.setColumnWidth(6, 110);
+    sh.setFrozenRows(1);
+  }
+  return sh;
+}
+
+function _revClean(s, max) {
+  return String(s || '').replace(/\s+/g, ' ').trim().slice(0, max);
+}
+
+function _reviewSubmit(data) {
+  const name = _revClean(data.name, 60);
+  const brokerage = _revClean(data.brokerage, 80);
+  const text = _revClean(data.text, 600);
+  let stars = parseInt(data.stars, 10);
+  if (!(stars >= 1 && stars <= 5)) stars = 5;
+  if (!name || !text) {
+    return jsonResponse({ success: false, error: 'Name and review text are required.' });
+  }
+
+  // Light anti-spam: at most 5 submissions per rolling hour, site-wide.
+  const cache = CacheService.getScriptCache();
+  const count = parseInt(cache.get('rev_hour_count') || '0', 10);
+  if (count >= 5) {
+    return jsonResponse({ success: false, error: 'Too many reviews right now — please try again in a bit.' });
+  }
+  cache.put('rev_hour_count', String(count + 1), 3600);
+
+  const sh = _revSheet(true);
+  sh.appendRow([new Date(), name, brokerage, stars, text, false]);
+  sh.getRange(sh.getLastRow(), 6).insertCheckboxes();
+  return jsonResponse({ success: true, message: 'Review received — it will appear once approved.' });
+}
+
+function _reviewsResponse() {
+  const sh = _revSheet(false);
+  const out = [];
+  if (sh && sh.getLastRow() > 1) {
+    const rows = sh.getRange(2, 1, sh.getLastRow() - 1, REVIEWS_HEADERS.length).getValues();
+    for (let i = rows.length - 1; i >= 0 && out.length < 30; i--) {
+      if (rows[i][5] !== true) continue;   // only rows Gloria checked
+      out.push({
+        name: String(rows[i][1] || ''),
+        brokerage: String(rows[i][2] || ''),
+        stars: Math.max(1, Math.min(5, parseInt(rows[i][3], 10) || 5)),
+        text: String(rows[i][4] || ''),
+        date: (rows[i][0] instanceof Date)
+          ? Utilities.formatDate(rows[i][0], Session.getScriptTimeZone(), 'MMM yyyy') : ''
+      });
+    }
+  }
+  return jsonResponse({ status: 'ok', reviews: out });
+}
+
 function doGet(e) {
   try {
     const params = (e && e.parameter) || {};
+
+    // v7.4 — approved public reviews (keyless — this is public content)
+    if (params.view === 'reviews') return _reviewsResponse();
 
     // v6.6 — agent portal view (key-protected, per-agent data)
     if (params.view === 'portal') return portalResponse_(params);

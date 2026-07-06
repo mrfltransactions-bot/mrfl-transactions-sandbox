@@ -9,7 +9,7 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏡</text></svg>">
 <style>
   /* ============================================================
-     THEME TOKENS — command-center dark (default) + clean light
+     THEME TOKENS — playful command-center: dark default + light
      ============================================================ */
   :root, :root[data-theme="dark"] {
     --bg:        #070B1C;
@@ -23,8 +23,10 @@
     --soft:      #BCC7EC;
     --muted:     #939DC9;
 
-    --acc:       #4CC9F0;      /* cyan — accents & numbers */
+    --acc:       #4CC9F0;      /* cyan */
     --acc2:      #A78BFA;      /* violet */
+    --acc3:      #F595C0;      /* playful pink */
+    --star:      #FBBF24;      /* review stars */
     --ok:        #4FE3AC;
 
     --btn-bg:    #4CC9F0;
@@ -32,9 +34,11 @@
     --btn2-bd:   rgba(76, 201, 240, 0.6);
     --btn2-text: #7DDCFA;
 
+    --input-bg:  rgba(255, 255, 255, 0.06);
     --av-text:   #06122B;
     --glow:      0 0 22px rgba(76, 201, 240, 0.35);
     --shadow:    0 14px 34px -14px rgba(0, 0, 0, 0.6);
+    --lift:      0 22px 44px -16px rgba(0, 0, 0, 0.7), 0 0 24px rgba(76, 201, 240, 0.18);
   }
   :root[data-theme="light"] {
     --bg:        #F2F5FD;
@@ -48,8 +52,10 @@
     --soft:      #3E4870;
     --muted:     #59638E;
 
-    --acc:       #0E7490;      /* readable cyan-teal on light */
+    --acc:       #0E7490;
     --acc2:      #6D28D9;
+    --acc3:      #BE185D;
+    --star:      #B45309;
     --ok:        #0B7A55;
 
     --btn-bg:    #4338CA;
@@ -57,9 +63,11 @@
     --btn2-bd:   #4338CA;
     --btn2-text: #3A31B8;
 
+    --input-bg:  #FFFFFF;
     --av-text:   #FFFFFF;
     --glow:      none;
     --shadow:    0 12px 30px -14px rgba(30, 27, 75, 0.18);
+    --lift:      0 20px 40px -16px rgba(30, 27, 75, 0.28);
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -68,9 +76,9 @@
     background: var(--bg); color: var(--text);
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
     font-size: 16px; line-height: 1.6; -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
     /* no bg/color transitions on body — Blink wedges theme switches */
   }
-  /* ambient nebula glows (dark shows them; light keeps them faint) */
   body::before, body::after {
     content: ""; position: fixed; z-index: -1; border-radius: 50%;
     filter: blur(110px); pointer-events: none; opacity: 0.6;
@@ -83,6 +91,20 @@
   :root[data-theme="light"] body::after { opacity: 0.35; }
 
   .shell { max-width: 1020px; margin: 0 auto; padding: 0 22px; }
+
+  /* ---- scroll-reveal + springy interactions ---- */
+  .reveal { opacity: 0; transform: translateY(20px); }
+  .reveal.in { opacity: 1; transform: none; transition: opacity .6s ease, transform .6s cubic-bezier(.22,1,.36,1); }
+  .btn, .theme-btn { transition: transform .16s cubic-bezier(.34,1.56,.64,1), box-shadow .16s ease; }
+  .btn:hover { transform: scale(1.045); }
+  .btn:active, .theme-btn:active { transform: scale(0.95); }
+  .card, .step, .stat, .price, .rev, .about { transition: transform .22s cubic-bezier(.22,1,.36,1), box-shadow .22s ease, border-color .22s ease; }
+  .card:hover, .step:hover, .price:hover, .rev:hover { transform: translateY(-6px); box-shadow: var(--lift); border-color: var(--bd-strong); }
+  .stat:hover { transform: translateY(-4px) rotate(-1deg); }
+  @media (prefers-reduced-motion: reduce) {
+    .reveal { opacity: 1; transform: none; }
+    *, *::before, *::after { transition: none !important; animation: none !important; }
+  }
 
   /* ============================================================
      NAV
@@ -102,8 +124,9 @@
   }
   .btn {
     display: inline-block; background: var(--btn-bg); color: var(--btn-text); text-decoration: none;
-    padding: 11px 22px; border-radius: 10px; font-weight: 800; font-size: 14px;
-    box-shadow: var(--glow);
+    padding: 11px 22px; border-radius: 12px; font-weight: 800; font-size: 14px;
+    box-shadow: var(--glow); border: none; cursor: pointer;
+    font-family: inherit;
   }
   .btn.big { padding: 14px 28px; font-size: 15.5px; }
   .btn.ghost { background: transparent; color: var(--btn2-text); border: 1.5px solid var(--btn2-bd); box-shadow: none; }
@@ -115,10 +138,19 @@
   }
 
   /* ============================================================
-     HERO
+     HERO — with gently floating emoji friends
      ============================================================ */
-  .hero { padding: 72px 0 56px; text-align: center;
+  .hero { padding: 76px 0 56px; text-align: center; position: relative;
     background: linear-gradient(180deg, var(--bg2), var(--bg)); border-bottom: 1px solid var(--bd); }
+  .floaty { position: absolute; font-size: 30px; opacity: 0.75; pointer-events: none;
+    animation: bob 5.2s ease-in-out infinite; }
+  .floaty.f1 { top: 16%; left: 7%;  animation-delay: 0s; }
+  .floaty.f2 { top: 12%; right: 9%; animation-delay: 1.2s; font-size: 26px; }
+  .floaty.f3 { bottom: 30%; left: 12%; animation-delay: 2.1s; font-size: 24px; }
+  .floaty.f4 { bottom: 24%; right: 11%; animation-delay: 0.7s; }
+  @keyframes bob { 0%,100% { transform: translateY(0) rotate(-4deg); } 50% { transform: translateY(-14px) rotate(5deg); } }
+  @media (max-width: 720px) { .floaty { display: none; } }
+
   .eyebrow {
     display: inline-flex; align-items: center; gap: 8px;
     font-size: 11.5px; font-weight: 800; letter-spacing: 1.6px; color: var(--acc);
@@ -133,7 +165,7 @@
 
   .statrow { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 34px; }
   .stat {
-    background: var(--panel); border: 1px solid var(--bd); border-radius: 14px;
+    background: var(--panel); border: 1px solid var(--bd); border-radius: 16px;
     padding: 12px 22px; min-width: 132px;
   }
   .stat .n { font-size: 24px; font-weight: 800; color: var(--acc); text-shadow: var(--glow); }
@@ -154,15 +186,17 @@
 
   .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
   .card {
-    background: var(--panel); border: 1px solid var(--bd); border-radius: 16px;
+    background: var(--panel); border: 1px solid var(--bd); border-radius: 18px;
     padding: 20px; box-shadow: var(--shadow);
   }
-  .card .ic { font-size: 22px; margin-bottom: 10px; display: block; }
+  .card .ic { font-size: 24px; margin-bottom: 10px; display: inline-block; }
+  .card:hover .ic { animation: wiggle .5s ease; }
+  @keyframes wiggle { 0%,100% { transform: rotate(0); } 30% { transform: rotate(-12deg) scale(1.15); } 60% { transform: rotate(9deg); } }
   .card h3 { font-size: 15.5px; font-weight: 800; margin-bottom: 5px; }
   .card p { font-size: 13.5px; color: var(--soft); }
 
   .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; counter-reset: step; }
-  .step { background: var(--panel); border: 1px solid var(--bd); border-radius: 16px; padding: 20px; }
+  .step { background: var(--panel); border: 1px solid var(--bd); border-radius: 18px; padding: 20px; }
   .step::before {
     counter-increment: step; content: "0" counter(step);
     display: block; font-size: 13px; font-weight: 800; color: var(--acc);
@@ -171,10 +205,49 @@
   .step h3 { font-size: 15px; font-weight: 800; margin-bottom: 4px; }
   .step p { font-size: 13.5px; color: var(--soft); }
 
-  /* pricing */
+  /* ---- reviews ---- */
+  .revs { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 14px; margin-bottom: 30px; }
+  .rev {
+    background: var(--panel); border: 1px solid var(--bd); border-radius: 18px;
+    padding: 20px; box-shadow: var(--shadow);
+  }
+  .rev .stars { color: var(--star); font-size: 15px; letter-spacing: 2px; margin-bottom: 8px; }
+  .rev p.q { font-size: 14px; color: var(--soft); margin-bottom: 12px; }
+  .rev .who { font-size: 13px; font-weight: 800; }
+  .rev .whosub { font-size: 12px; color: var(--muted); font-weight: 600; }
+  .revs-empty { text-align: center; color: var(--soft); font-size: 14.5px; font-weight: 600;
+    background: var(--panel); border: 1.5px dashed var(--bd-strong); border-radius: 16px;
+    padding: 22px; margin-bottom: 30px; }
+
+  .rev-form {
+    max-width: 560px; margin: 0 auto; background: var(--panel);
+    border: 1px solid var(--bd); border-radius: 20px; padding: 26px; box-shadow: var(--shadow);
+  }
+  .rev-form h3 { font-size: 17px; font-weight: 800; margin-bottom: 4px; text-align: center; }
+  .rev-form .hint { font-size: 12.5px; color: var(--muted); font-weight: 600; text-align: center; margin-bottom: 18px; }
+  .rev-form label { display: block; font-size: 12.5px; font-weight: 800; color: var(--soft); margin: 12px 0 5px; }
+  .rev-form input, .rev-form textarea {
+    width: 100%; background: var(--input-bg); border: 1px solid var(--bd); border-radius: 10px;
+    color: var(--text); font-family: inherit; font-size: 14.5px; padding: 11px 13px; outline: none;
+  }
+  .rev-form input:focus, .rev-form textarea:focus { border-color: var(--bd-strong); }
+  .rev-form textarea { min-height: 96px; resize: vertical; }
+  .starpick { display: flex; gap: 6px; justify-content: center; margin: 6px 0 2px; }
+  .starpick button {
+    background: none; border: none; cursor: pointer; font-size: 30px; line-height: 1;
+    color: var(--muted); padding: 2px; transition: transform .14s cubic-bezier(.34,1.56,.64,1);
+    font-family: inherit;
+  }
+  .starpick button.on { color: var(--star); }
+  .starpick button:hover { transform: scale(1.25) rotate(8deg); }
+  .rev-form .btn { width: 100%; margin-top: 16px; }
+  .rev-fb { display: none; margin-top: 12px; text-align: center; font-size: 14px; font-weight: 700; color: var(--ok); }
+  .rev-err { display: none; margin-top: 12px; text-align: center; font-size: 13.5px; font-weight: 700; color: var(--acc3); }
+
+  /* ---- pricing ---- */
   .prices { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; max-width: 640px; margin: 0 auto; }
   .price {
-    background: var(--panel); border: 1px solid var(--bd); border-radius: 18px;
+    background: var(--panel); border: 1px solid var(--bd); border-radius: 20px;
     padding: 26px 24px; text-align: center; box-shadow: var(--shadow);
   }
   .price.hot { border: 1.5px solid var(--bd-strong); box-shadow: var(--glow), var(--shadow); }
@@ -187,15 +260,15 @@
   .pay-note { text-align: center; margin-top: 20px; color: var(--soft); font-size: 14px; font-weight: 700; }
   .ref-strip {
     max-width: 640px; margin: 24px auto 0; background: var(--panel);
-    border: 1.5px dashed var(--acc2); border-radius: 14px; padding: 15px 20px;
+    border: 1.5px dashed var(--acc2); border-radius: 16px; padding: 15px 20px;
     text-align: center; font-size: 14px; color: var(--soft); font-weight: 600;
   }
   .ref-strip b { color: var(--text); }
   .ref-strip a { color: var(--acc); font-weight: 800; text-decoration: none; }
 
-  /* about + contact */
+  /* ---- who + contact ---- */
   .about { display: flex; gap: 20px; align-items: flex-start; max-width: 740px; margin: 0 auto;
-    background: var(--panel); border: 1px solid var(--bd); border-radius: 18px; padding: 24px; }
+    background: var(--panel); border: 1px solid var(--bd); border-radius: 20px; padding: 24px; }
   .about .face { width: 76px; height: 76px; border-radius: 50%; flex: none;
     background-color: var(--acc2); /* fallback so contrast audits see it */
     background-image: linear-gradient(135deg, var(--acc2), var(--acc));
@@ -217,7 +290,7 @@
   (function () {
     var t = null;
     try { t = localStorage.getItem('mrfl_site_theme'); } catch (e) {}
-    if (t !== 'dark' && t !== 'light') t = 'dark';   // command-center look is the default
+    if (t !== 'dark' && t !== 'light') t = 'dark';
     document.documentElement.setAttribute('data-theme', t);
   })();
 </script>
@@ -229,8 +302,8 @@
     <a class="wordmark" href="#top">MRFL <span>TRANSACTIONS</span></a>
     <div class="links">
       <a class="plain hide-sm" href="#services">Services</a>
-      <a class="plain hide-sm" href="#pricing">Pricing</a>
-      <a class="plain" href="/refer/">Referrals</a>
+      <a class="plain hide-sm" href="#reviews">Reviews</a>
+      <a class="plain hide-sm" href="/refer/">Referrals</a>
       <button class="theme-btn" id="theme_btn" title="Switch light / dark" aria-label="Switch theme">☀️</button>
       <a class="btn" href="#contact">Get started</a>
     </div>
@@ -238,6 +311,10 @@
 </nav>
 
 <header class="hero" id="top">
+  <span class="floaty f1" aria-hidden="true">🏡</span>
+  <span class="floaty f2" aria-hidden="true">🔑</span>
+  <span class="floaty f3" aria-hidden="true">📋</span>
+  <span class="floaty f4" aria-hidden="true">⏰</span>
   <div class="shell">
     <span class="eyebrow">Florida real estate transaction coordination</span>
     <h1>Your transaction coordinator, <em>on demand</em>.</h1>
@@ -248,7 +325,7 @@
       <a class="btn big ghost" href="mailto:MRFLTransactions@gmail.com?subject=TC%20services">✉️ Email me</a>
     </div>
     <div class="statrow">
-      <div class="stat"><div class="n">24h</div><div class="l">first response</div></div>
+      <div class="stat"><div class="n" data-count="24" data-suffix="h">24h</div><div class="l">first response</div></div>
       <div class="stat"><div class="n">$0</div><div class="l">monthly fees</div></div>
       <div class="stat"><div class="n">$0</div><div class="l">until closing</div></div>
     </div>
@@ -257,16 +334,16 @@
 
 <section id="services">
   <div class="shell">
-    <h2 class="sec">What you get on every file</h2>
-    <p class="seclead">One flat fee per transaction covers the whole journey, contract to closing.</p>
+    <h2 class="sec reveal">What you get on every file</h2>
+    <p class="seclead reveal">One flat fee per transaction covers the whole journey, contract to closing.</p>
     <div class="cards">
-      <div class="card"><span class="ic">📄</span><h3>Dates extracted in 24 hours</h3>
+      <div class="card reveal"><span class="ic">📄</span><h3>Dates extracted in 24 hours</h3>
         <p>Send the executed contract — every deadline is pulled, calculated, and calendared within a day.</p></div>
-      <div class="card"><span class="ic">✉️</span><h3>Intro emails, day one</h3>
+      <div class="card reveal"><span class="ic">✉️</span><h3>Intro emails, day one</h3>
         <p>Title, lender, and all parties get the full timeline and contacts — you're cc'd on everything.</p></div>
-      <div class="card"><span class="ic">⏰</span><h3>Reminders before every deadline</h3>
+      <div class="card reveal"><span class="ic">⏰</span><h3>Reminders before every deadline</h3>
         <p>Escrow, inspection, loan approval, title, HOA, closing — tracked and flagged ahead of time.</p></div>
-      <div class="card"><span class="ic">📱</span><h3>Your live deal portal</h3>
+      <div class="card reveal"><span class="ic">📱</span><h3>Your live deal portal</h3>
         <p>A private link that shows all your transactions — timelines, statuses, and every contact — updated live.</p></div>
     </div>
   </div>
@@ -274,23 +351,53 @@
 
 <section class="line" id="how">
   <div class="shell">
-    <h2 class="sec">How it works</h2>
-    <p class="seclead">Four steps — and the first three happen within 24 hours of your contract landing in my inbox.</p>
+    <h2 class="sec reveal">How it works</h2>
+    <p class="seclead reveal">Four steps — and the first three happen within 24 hours of your contract landing in my inbox.</p>
     <div class="steps">
-      <div class="step"><h3>Send your contract</h3><p>Text or email the executed PDF — addenda and all.</p></div>
-      <div class="step"><h3>I build your timeline</h3><p>Every date extracted and tracked, calendar reminders set.</p></div>
-      <div class="step"><h3>Everyone gets synced</h3><p>Intro emails to title, lender, and both sides — you're cc'd.</p></div>
-      <div class="step"><h3>You stay in control</h3><p>Your live portal + deadline reminders until the deal closes.</p></div>
+      <div class="step reveal"><h3>Send your contract</h3><p>Text or email the executed PDF — addenda and all.</p></div>
+      <div class="step reveal"><h3>I build your timeline</h3><p>Every date extracted and tracked, calendar reminders set.</p></div>
+      <div class="step reveal"><h3>Everyone gets synced</h3><p>Intro emails to title, lender, and both sides — you're cc'd.</p></div>
+      <div class="step reveal"><h3>You stay in control</h3><p>Your live portal + deadline reminders until the deal closes.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="line" id="reviews">
+  <div class="shell">
+    <h2 class="sec reveal">What agents say</h2>
+    <p class="seclead reveal">Real reviews from realtors who hand me their files.</p>
+    <div id="revs_box"><div class="revs-empty reveal">⭐ Reviews are loading…</div></div>
+
+    <div class="rev-form reveal">
+      <h3>Worked with me? Leave a review 💜</h3>
+      <div class="hint">It appears here once Gloria gives it a quick look.</div>
+      <label for="rv_name">Your name</label>
+      <input id="rv_name" maxlength="60" placeholder="e.g. Martha R." autocomplete="name">
+      <label for="rv_brok">Brokerage <span style="font-weight:600">(optional)</span></label>
+      <input id="rv_brok" maxlength="80" placeholder="e.g. Sunshine Realty Group" autocomplete="organization">
+      <label>Your rating</label>
+      <div class="starpick" id="starpick" role="radiogroup" aria-label="Star rating">
+        <button type="button" data-s="1" aria-label="1 star">★</button>
+        <button type="button" data-s="2" aria-label="2 stars">★</button>
+        <button type="button" data-s="3" aria-label="3 stars">★</button>
+        <button type="button" data-s="4" aria-label="4 stars">★</button>
+        <button type="button" data-s="5" aria-label="5 stars">★</button>
+      </div>
+      <label for="rv_text">Your review</label>
+      <textarea id="rv_text" maxlength="600" placeholder="How was it working with MRFL Transactions?"></textarea>
+      <button type="button" class="btn" id="rv_send">Send my review 🚀</button>
+      <div class="rev-fb" id="rv_fb">🎉 Thank you! Your review is in — it'll appear once approved.</div>
+      <div class="rev-err" id="rv_err"></div>
     </div>
   </div>
 </section>
 
 <section class="line" id="pricing">
   <div class="shell">
-    <h2 class="sec">Simple, flat pricing</h2>
-    <p class="seclead">No subscriptions, no surprises. One flat fee per transaction — and only when it closes.</p>
+    <h2 class="sec reveal">Simple, flat pricing</h2>
+    <p class="seclead reveal">No subscriptions, no surprises. One flat fee per transaction — and only when it closes.</p>
     <div class="prices">
-      <div class="price">
+      <div class="price reveal">
         <div class="pk">Single side</div>
         <div class="amount">$500</div>
         <div class="per">per closed transaction</div>
@@ -300,7 +407,7 @@
           <li>Deadline reminders</li>
         </ul>
       </div>
-      <div class="price hot">
+      <div class="price hot reveal">
         <div class="pk">Double sided</div>
         <div class="amount">$700</div>
         <div class="per">per closed transaction</div>
@@ -311,8 +418,8 @@
         </ul>
       </div>
     </div>
-    <div class="pay-note">💠 If a deal falls through, you owe nothing.</div>
-    <div class="ref-strip">
+    <div class="pay-note reveal">💠 If a deal falls through, you owe nothing.</div>
+    <div class="ref-strip reveal">
       🎁 <b>Referred by a colleague?</b> Your first transaction is <b>50% off</b> —
       $250 single side, $350 double sided. <a href="/refer/">See how referrals work →</a>
     </div>
@@ -321,9 +428,9 @@
 
 <section class="line" id="about">
   <div class="shell">
-    <h2 class="sec">Behind MRFL</h2>
-    <p class="seclead" style="margin-bottom:22px">One coordinator. Every file treated like it's the only one.</p>
-    <div class="about">
+    <h2 class="sec reveal">Who is MRFL?</h2>
+    <p class="seclead reveal" style="margin-bottom:22px">One coordinator. Every file treated like it's the only one.</p>
+    <div class="about reveal">
       <div class="face">G</div>
       <p><b>Hi, I'm Gloria Grullon.</b> I run MRFL Transactions — a dedicated transaction
         coordination practice for Florida realtors. Every file gets the same treatment:
@@ -336,8 +443,8 @@
 
 <section class="contact line" id="contact">
   <div class="shell">
-    <h2 class="sec">Ready to hand off your next file?</h2>
-    <p class="seclead">Text or email me the executed contract and consider it handled.</p>
+    <h2 class="sec reveal">Ready to hand off your next file?</h2>
+    <p class="seclead reveal">Text or email me the executed contract and consider it handled.</p>
     <div class="ctas">
       <a class="btn big" href="sms:+14012828414?&amp;body=Hi%20Gloria!%20I%20have%20a%20contract%20I%27d%20like%20you%20to%20coordinate.">💬 Text (401) 282-8414</a>
       <a class="btn big ghost" href="tel:+14012828414">📞 Call</a>
@@ -359,19 +466,151 @@
 <script>
 (function () {
   'use strict';
+
+  // Same web-app URL the portal/dashboard use (see CLAUDE.md).
+  var WEBHOOK = 'https://script.google.com/macros/s/AKfycbzheiPICRaOkutzU6kkrNS3n1pVebVVMtMwqAyQtDinMrzbqnaeTxFdHaqCeKtveKEzBw/exec';
+
+  /* ---------- theme ---------- */
   var THEME_KEY = 'mrfl_site_theme';
-  function current() { return document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark'; }
-  function apply(t, persist) {
+  function currentTheme() { return document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark'; }
+  function applyTheme(t, persist) {
     document.documentElement.setAttribute('data-theme', t);
     document.getElementById('theme_btn').textContent = (t === 'dark') ? '☀️' : '🌙';
     var meta = document.querySelector('meta[name="theme-color"]');
     if (meta) meta.setAttribute('content', t === 'dark' ? '#070B1C' : '#F2F5FD');
     if (persist) { try { localStorage.setItem(THEME_KEY, t); } catch (e) {} }
   }
-  apply(current(), false);
+  applyTheme(currentTheme(), false);
   document.getElementById('theme_btn').addEventListener('click', function () {
-    apply(current() === 'dark' ? 'light' : 'dark', true);
+    applyTheme(currentTheme() === 'dark' ? 'light' : 'dark', true);
   });
+
+  /* ---------- scroll reveal ---------- */
+  var io = ('IntersectionObserver' in window) ? new IntersectionObserver(function (entries) {
+    entries.forEach(function (en) {
+      if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); }
+    });
+  }, { threshold: 0.12 }) : null;
+  function watchReveals(root) {
+    (root || document).querySelectorAll('.reveal:not(.in)').forEach(function (el) {
+      if (io) io.observe(el); else el.classList.add('in');
+    });
+  }
+  watchReveals();
+
+  /* ---------- count-up stat ---------- */
+  var counter = document.querySelector('[data-count]');
+  if (counter && io) {
+    var cio = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (!en.isIntersecting) return;
+        cio.disconnect();
+        var target = parseInt(counter.getAttribute('data-count'), 10);
+        var suffix = counter.getAttribute('data-suffix') || '';
+        var start = null;
+        function tick(ts) {
+          if (start === null) start = ts;
+          var p = Math.min(1, (ts - start) / 900);
+          counter.textContent = Math.round(target * (1 - Math.pow(1 - p, 3))) + suffix;
+          if (p < 1) requestAnimationFrame(tick);
+        }
+        requestAnimationFrame(tick);
+      });
+    }, { threshold: 0.5 });
+    cio.observe(counter);
+  }
+
+  /* ---------- reviews: fetch + render ---------- */
+  function esc(s) {
+    return String(s || '').replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function starRow(n) {
+    var h = '';
+    for (var i = 1; i <= 5; i++) h += (i <= n ? '★' : '☆');
+    return h;
+  }
+  function renderReviews(list) {
+    var box = document.getElementById('revs_box');
+    if (!list || !list.length) {
+      box.innerHTML = '<div class="revs-empty reveal">🌟 Be the first to share what it\'s like working with MRFL — leave a review below!</div>';
+    } else {
+      var h = '<div class="revs">';
+      list.slice(0, 9).forEach(function (r) {
+        h += '<div class="rev reveal"><div class="stars" aria-label="' + r.stars + ' out of 5 stars">' + starRow(r.stars) + '</div>' +
+          '<p class="q">“' + esc(r.text) + '”</p>' +
+          '<div class="who">' + esc(r.name) + '</div>' +
+          '<div class="whosub">' + esc(r.brokerage || 'Realtor') + (r.date ? ' · ' + esc(r.date) : '') + '</div></div>';
+      });
+      h += '</div>';
+      box.innerHTML = h;
+    }
+    watchReveals(box);
+  }
+  function loadReviews() {
+    fetch(WEBHOOK + '?view=reviews')
+      .then(function (r) { return r.json(); })
+      .then(function (j) { renderReviews((j && j.reviews) || []); })
+      .catch(function () { renderReviews([]); });
+  }
+  loadReviews();
+
+  /* ---------- reviews: star picker + submit ---------- */
+  var picked = 5;
+  var pickBtns = Array.prototype.slice.call(document.querySelectorAll('#starpick button'));
+  function paintStars() {
+    pickBtns.forEach(function (b) {
+      b.classList.toggle('on', parseInt(b.getAttribute('data-s'), 10) <= picked);
+    });
+  }
+  pickBtns.forEach(function (b) {
+    b.addEventListener('click', function () {
+      picked = parseInt(b.getAttribute('data-s'), 10);
+      paintStars();
+    });
+  });
+  paintStars();
+
+  document.getElementById('rv_send').addEventListener('click', function () {
+    var btn = this;
+    var name = document.getElementById('rv_name').value.trim();
+    var brok = document.getElementById('rv_brok').value.trim();
+    var text = document.getElementById('rv_text').value.trim();
+    var err = document.getElementById('rv_err');
+    var fb = document.getElementById('rv_fb');
+    err.style.display = 'none'; fb.style.display = 'none';
+    if (!name || !text) {
+      err.textContent = 'Please add your name and a few words about working together.';
+      err.style.display = 'block';
+      return;
+    }
+    btn.disabled = true; btn.textContent = 'Sending… ⏳';
+    fetch(WEBHOOK, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },   // no CORS preflight
+      body: JSON.stringify({ action: 'review', name: name, brokerage: brok, stars: picked, text: text })
+    }).then(function (r) { return r.json(); }).then(function (j) {
+      btn.disabled = false; btn.textContent = 'Send my review 🚀';
+      if (j && j.success) {
+        fb.style.display = 'block';
+        document.getElementById('rv_name').value = '';
+        document.getElementById('rv_brok').value = '';
+        document.getElementById('rv_text').value = '';
+        picked = 5; paintStars();
+      } else {
+        err.textContent = (j && j.error) || 'Something went wrong — please try again.';
+        err.style.display = 'block';
+      }
+    }).catch(function () {
+      btn.disabled = false; btn.textContent = 'Send my review 🚀';
+      err.textContent = 'Couldn\'t reach the server — please try again in a minute.';
+      err.style.display = 'block';
+    });
+  });
+
+  // small hook so renders can be exercised in the preview browser
+  window._mrfl = { renderReviews: renderReviews };
 })();
 </script>
 </body>

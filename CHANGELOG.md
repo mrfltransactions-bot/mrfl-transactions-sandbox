@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [2.2.0] — 2026-07-06
+
+### Added — public reviews + playful interactive site
+
+- **Reviews on the site** (webhook v7.4): "What agents say" section on the
+  homepage. Realtors submit a review (name, optional brokerage, 1–5 star
+  picker, text) → `doPost(action:'review')` saves it to a new "⭐ Reviews"
+  sheet tab with **"Show on site?" unchecked**. Nothing goes public until
+  Gloria ticks the checkbox (she reviews everything outbound). The site
+  loads approved reviews via keyless `doGet?view=reviews` (public content
+  by design; newest first, max 30). Light anti-spam: 5 submissions/hour cap.
+- **Fun/interactive UI**: scroll-reveal animations, springy buttons,
+  cards that lift on hover, wiggling service icons, floating hero emoji
+  (hidden on phones + `prefers-reduced-motion`), count-up "24h" stat,
+  bouncy star picker. Both themes re-audited: 0 contrast failures.
+- Wording: "What is MRFL?" → **"Who is MRFL?"** (refer-page nav + About
+  heading).
+
+---
+
 ## [2.1.0] — 2026-07-06
 
 ### Changed — website redesign (command-center UI) + wording

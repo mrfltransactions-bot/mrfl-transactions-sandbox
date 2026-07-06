@@ -80,6 +80,16 @@
 
   .shell { max-width: 680px; margin: 0 auto; padding: 0 22px; }
 
+  /* springy interactions (matches the main site) */
+  .btn, .theme-btn { transition: transform .16s cubic-bezier(.34,1.56,.64,1); }
+  .btn:hover { transform: scale(1.045); }
+  .btn:active, .theme-btn:active { transform: scale(0.95); }
+  .offer { transition: transform .22s cubic-bezier(.22,1,.36,1); }
+  .offer:hover { transform: translateY(-4px); }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition: none !important; animation: none !important; }
+  }
+
   nav { position: sticky; top: 0; z-index: 20;
     background: color-mix(in srgb, var(--bg) 82%, transparent);
     backdrop-filter: blur(14px); border-bottom: 1px solid var(--bd); }
@@ -175,7 +185,7 @@
   <div class="shell">
     <a class="wordmark" href="/">MRFL <span>TRANSACTIONS</span></a>
     <div class="links">
-      <a class="plain" href="/">What is MRFL? →</a>
+      <a class="plain" href="/#about">Who is MRFL? →</a>
       <button class="theme-btn" id="theme_btn" title="Switch light / dark" aria-label="Switch theme">☀️</button>
     </div>
   </div>
