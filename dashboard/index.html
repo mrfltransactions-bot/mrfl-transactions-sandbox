@@ -453,7 +453,7 @@
     on_track: 'var(--bar-green)', active: 'var(--bar-green)', on_hold: 'var(--bar-amber)',
     closed: 'var(--bar-gray)', cancelled: 'var(--bar-gray)', unknown: 'var(--bar-green)' };
   var STATUS_RANK = { past_due: 0, urgent: 1, warning: 2, on_track: 3, active: 3, unknown: 3, on_hold: 4 };
-  var SIDE_LABEL = { Seller: 'Listing', Buyer: 'Buyer', Both: 'Dual' };
+  var SIDE_LABEL = { Seller: 'Listing', Buyer: 'Buyer', Both: 'Double sided' };
 
   function activeDeals() {
     return (DATA.deals || []).map(function (d, i) { d.__i = i; return d; })

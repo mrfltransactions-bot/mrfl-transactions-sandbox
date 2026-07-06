@@ -7,12 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [2.1.0] — 2026-07-06
+
+### Changed — website redesign (command-center UI) + wording
+
+- Marketing site and referral landing redesigned to a "command-center" look:
+  deep-navy dark theme by default with glowing cyan/violet accents and ///
+  section marks, plus a clean light theme. Theme toggle in the nav, choice
+  saved and shared across both pages; all text passes contrast checks
+  (4.5:1 / 3:1) in both themes. Hero gained quick stats (24h first response ·
+  $0 monthly fees · $0 until closing).
+- Wording: "dual agency" → **"double sided"** everywhere (site, referral
+  landing, portal share message + referral card, portal/dashboard side
+  labels).
+- Removed the "deals close on time" claim from the About section — every
+  transaction is different.
+
+---
+
 ## [2.0.0] — 2026-07-06
 
 ### Added — public website, referral program, referral tracking
 
 - **Public marketing site** at the domain root (`index.html`): hero, services,
-  how-it-works, pricing ($500 single side / $700 dual agency, pay only at
+  how-it-works, pricing ($500 single side / $700 double sided, pay only at
   close), about, contact CTAs (tap-to-text/call/email). Root redirect to the
   intake form removed from `vercel.json` — bookmark `/intake/intake-form.html`
   directly.

@@ -494,7 +494,7 @@
     urgent: 'Urgent', past_due: 'Past due', closed: 'Closed',
     cancelled: 'Cancelled', on_hold: 'On hold', unknown: 'Active'
   };
-  var SIDE_LABEL = { Seller: 'Listing side', Buyer: 'Buyer side', Both: 'Dual agency' };
+  var SIDE_LABEL = { Seller: 'Listing side', Buyer: 'Buyer side', Both: 'Double sided' };
   var DONE = { closed: 1, cancelled: 1 };
 
   // ---------- renderers ----------
@@ -658,7 +658,7 @@
     var name = (LAST && LAST.agent) || '';
     var link = REFER_BASE + '?from=' + encodeURIComponent(name);
     var msg = 'Hey! I use MRFL Transactions to run my deals — contract to close, every deadline handled. ' +
-      'Through my invite your first transaction is 50% off ($250 single side / $350 dual agency), ' +
+      'Through my invite your first transaction is 50% off ($250 single side / $350 double sided), ' +
       'and you only pay when it closes. Check it out: ' + link;
     if (navigator.share) {
       navigator.share({ text: msg }).catch(function () { /* user cancelled — fine */ });
@@ -748,7 +748,7 @@
       }
       // 🎁 referral card
       h += '<div class="refer-card"><h3>🎁 Refer an agent — you both save</h3>' +
-        '<p>Give a colleague <b>50% off their first transaction</b> ($250 single side · $350 dual agency), ' +
+        '<p>Give a colleague <b>50% off their first transaction</b> ($250 single side · $350 double sided), ' +
         'and get <b>50% off your next one</b> when their first deal closes.</p>' +
         '<button type="button" class="refer-btn" data-share="1">📲 Share your invite</button>' +
         '<div class="refer-fb" id="refer_fb">✓ Invite copied — paste it into a text or email!</div></div>';

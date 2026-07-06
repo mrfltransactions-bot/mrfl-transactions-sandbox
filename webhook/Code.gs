@@ -2367,7 +2367,7 @@ function showOperatorLink() {
 // Referrals live in a "🎁 Referrals" tab of the master sheet (source of
 // truth — Gloria can edit it directly). The menu dialog logs new ones;
 // the operator dashboard reads them via the operator view.
-// Pricing basis: $500 single-side / $700 dual; referred agents get 50%
+// Pricing basis: $500 single-side / $700 double sided; referred agents get
 // off their first closed deal; referrer gets 50% off their next deal
 // when the referral's first deal closes.
 // ============================================================
