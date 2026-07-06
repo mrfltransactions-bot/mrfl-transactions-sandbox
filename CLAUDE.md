@@ -1,7 +1,8 @@
 # CLAUDE.md — MRFL Transactions project context
 
-_Last full update: 2026-07-05 (system v1.7.0). Keep this file current whenever a
-feature ships — it is the canonical context/backup for future sessions._
+_Last full update: 2026-07-06 (system v1.9.1, webhook v7.2). Keep this file
+current whenever a feature ships — it is the canonical context/backup for
+future sessions._
 
 ## What this project is
 
@@ -14,7 +15,9 @@ Single-user operation; no staging environment — main is production.
 Pipeline: contract PDF → intake form (Claude vision extraction) → Apps Script
 webhook → master Google Sheet (per-property tabs + dashboard) → Google Calendar
 events → branded deliverables (Sheet + PDF) → **agent portal** (realtors see
-their deals live) → **morning reminder drafts** in Gloria's Gmail.
+their deals live) → **operator dashboard** (Gloria's all-transactions SPA) →
+**morning reminder drafts** in Gloria's Gmail → per-transaction **print/PDF
+overviews** from either app.
 
 > README.md and docs/ARCHITECTURE.md describe the v1.0 (May 2026) chat-based
 > flow and are partially stale. This file + CHANGELOG.md + docs/AGENT_PORTAL.md
@@ -25,9 +28,9 @@ their deals live) → **morning reminder drafts** in Gloria's Gmail.
 | Component | File | Current state |
 |---|---|---|
 | Intake form | `intake/intake-form.html` | PDF-vision extraction: sends the actual PDF to Claude (`claude-opus-4-8`, max_tokens 8000, no temperature — rejected by model) with pdf.js text as spelling aid. Applies FL AS-IS "if blank" defaults (escrow 3 / loan app 5 / loan approval 30 / inspection 15 / title 15; cash → loan fields blank; ¶9(c) "no later than 5 days" is a cap, NOT title_days). HOA detection (`has_hoa` + contact fields). Calendar buttons on date fields. Failure-only diagnostics box (bottom-left). API key: Test auto-saves; uploader falls back to typed key. pdf.js detaches ArrayBuffers → always pass a copy (`buf.slice(0)`). |
-| Webhook / Apps Script | `webhook/Code.gs` | **v7.0.** doPost (tab + calendar events + dashboard + deliverables + PDF export), doGet (health check / keyed widget view / keyed portal view), calendar sync, HOA dialog, portal links dialog, reminder drafts. ~2,300 lines, container-bound to the master sheet. |
-| Agent portal | `portal/index.html` | Mobile-first read-only app per agent: stats chips, next-deadline color-block banner (tap-to-jump, red past-due variant), deal cards (progress, milestone timeline from sheet checkboxes, collapsible Contacts & details with tap-to-call/email), past deals collapsed. `PORTAL_ENDPOINT` const = Gloria's webhook URL. **Dark/light mode** (v1.7.1): sun/moon toggle, system-preference default, choice persisted (`mrfl_portal_theme`); ALL colors are CSS theme tokens — run the WCAG contrast audit in both themes after any styling change (audit snippet in session history). Header is just "Hello, [name]! 👋" — no brand row/subline/"South Florida" (Gloria's personalization choice). Do NOT add background/color transitions on html/body — wedges the theme switch in Blink. |
-| Operator dashboard | `dashboard/index.html` | Gloria's private all-transactions SPA (v1.9.0, dark-glass style): hash-router views — #home (search, tappable stat cards, week day-pills w/ per-day deadline timeline, attention preview), #agents → #deals/agent/<name>, #deals/all|urgent|closing, #deal/<i> full detail (milestone checklist + ALL details sections + tel/mailto + Open-sheet-tab). Floating bottom nav; center ＋ opens the master sheet. Fed by `doGet?view=operator&key=<operator_key>` (v7.2 payload includes `details`); link via 🛠 TC Tools → "🖥 My dashboard link". Same dark/light token system + contrast-audit rule as the portal; `ENDPOINT` const = webhook URL. |
+| Webhook / Apps Script | `webhook/Code.gs` | **v7.2.** doPost (tab + calendar events + dashboard + deliverables + PDF export), doGet (health check / keyed widget view / keyed per-agent portal view / keyed all-deals operator view incl. `details`), calendar sync, HOA dialog, portal links dialog, operator-link dialog, reminder drafts. ~2,600 lines, container-bound to the master sheet. |
+| Agent portal | `portal/index.html` | Mobile-first read-only app per agent: stats chips, next-deadline color-block banner (tap-to-jump, red past-due variant), deal cards (progress, milestone timeline from sheet checkboxes, collapsible Contacts & details with tap-to-call/email), past deals collapsed. `PORTAL_ENDPOINT` const = Gloria's webhook URL. **Dark/light mode** (v1.7.1): sun/moon toggle, system-preference default, choice persisted (`mrfl_portal_theme`); ALL colors are CSS theme tokens — run the WCAG contrast audit in both themes after any styling change (audit snippet in session history). Header is just "Hello, [name]! 👋" — no brand row/subline/"South Florida" (Gloria's personalization choice). Every deal card has a "🖨 Print / save as PDF" button (v1.9.1) → hidden `#printview` + `@media print` branded Transaction Overview. Do NOT add background/color transitions on html/body — wedges the theme switch in Blink. |
+| Operator dashboard | `dashboard/index.html` | Gloria's private all-transactions SPA (v1.9.0, dark-glass style): hash-router views — #home (search, tappable stat cards, week day-pills w/ per-day deadline timeline, attention preview), #agents → #deals/agent/<name>, #deals/all|urgent|closing, #deal/<i> full detail (milestone checklist + ALL details sections + tel/mailto + Open-sheet-tab). Floating bottom nav; center ＋ opens the master sheet. Fed by `doGet?view=operator&key=<operator_key>` (v7.2 payload includes `details`); link via 🛠 TC Tools → "🖥 My dashboard link". Detail view has "Open sheet tab ↗" + "🖨 Print / save as PDF" (same print pattern as the portal). Same dark/light token system + contrast-audit rule as the portal; `ENDPOINT` const = webhook URL. |
 | Widget | `widget/index.html` (web) + `scriptable/mrfl_widget.js` (legacy iOS) | Upcoming-deadlines dashboard. Now requires `&key=<widget_key>` on the URL. Web version stores URL in localStorage (⚙ gear to change); shares `tc_webhook_url` key with the intake form. |
 | Deliverables | `deliverables/` + Code.gs `_buildDeliverableSheet` / `_exportDeliverableAsPdf` | Branded combined Sheet + PDF per transaction, saved to Drive on submit. |
 | Portal mockup | `portal/agent-dashboard.html` | Static design mockup only (source of the design tokens). Not live. |
@@ -108,6 +111,16 @@ their deals live) → **morning reminder drafts** in Gloria's Gmail.
   draft. Menu: "🔔 Set up daily reminder drafts" / "🔔 Preview / create
   reminder drafts". Excludes Effective Date, checked milestones,
   closed/cancelled/on-hold deals, and overdue items.
+- **Operator dashboard endpoint (v7.1-7.2):** `doGet?view=operator&key=`
+  validates `operator_key`, returns ALL deals across agents (status, dates,
+  progress, milestones, done counts, per-tab `sheet_link`, and — v7.2 — the
+  parsed `details` sections). Link dialog: 🛠 TC Tools → "🖥 My dashboard
+  link" (`showOperatorLink`; extra-long key; revoke = delete the property).
+- **Print/PDF overviews (v1.9.1, front-end only):** portal deal cards and the
+  dashboard detail view have "🖨 Print / save as PDF" — builds a branded
+  black-on-white Transaction Overview into hidden `#printview`, `@media print`
+  hides the app chrome, `window.print()` opens the dialog (phones: share →
+  save PDF). Duplicated builder per file by design (self-contained pages).
 - **Intake extraction** (intake-form.html): see Components table. The
   extraction system prompt (`EXTRACTION_SYSTEM_PROMPT`) is paragraph-by-
   paragraph FL AS-IS rules — edit surgically, it's battle-tested.
@@ -120,13 +133,14 @@ their deals live) → **morning reminder drafts** in Gloria's Gmail.
 | `portal_key_<agentref>` | Agent's private portal key (delete → revoke; regenerates on next dialog open) |
 | `portal_email_<agentref>` | Optional agent-email override for reminder drafts |
 | `widget_key` | Key protecting the widget data view |
+| `operator_key` | Gloria's private dashboard key (ALL deals — never share; delete to revoke) |
 | `evt_<tabGid>_<milestone>` | DocumentProperties — calendar event id cache for sync |
 
 ## 🛠 TC Tools menu (current)
 
 Refresh Dashboard · Show Active Only/All · Sync dates → Calendar · Set up
-calendar sync · Add / update HOA info · Agent portal links · Preview / create
-reminder drafts · Set up daily reminder drafts · About.
+calendar sync · Add / update HOA info · Agent portal links · My dashboard
+link · Preview / create reminder drafts · Set up daily reminder drafts · About.
 
 ## Working with Gloria
 
