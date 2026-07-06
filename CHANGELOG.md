@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.7.1] — 2026-07-05
+
+### Changed — portal UI redesign + dark/light mode
+
+- Portal restyled after a modern mobile-app reference: dark rounded hero,
+  soft tinted background, floating rounded cards, icon-badge stat chips,
+  amber color-block next-deadline card (red past-due variant), list-row
+  milestones. MRFL indigo kept as primary accent, amber secondary.
+- Dark/light mode: sun/moon toggle in the header; defaults to the phone's
+  system preference, manual choice persisted per device. All colors are
+  theme tokens; a programmatic WCAG contrast audit of every text element
+  passes in BOTH themes (0 failures).
+- Personalization pass: brand row and subline removed — the header is just
+  "Hello, [name]! 👋"; "South Florida" dropped from the footer.
+- Fixed a Blink quirk where transitioning var-derived backgrounds on
+  html/body wedged the background mid-theme-switch (transitions removed;
+  theme now switches instantly).
+
+---
+
 ## [1.7.0] — 2026-07-05
 
 ### Added — daily deadline reminder DRAFTS for agents (webhook v7.0)

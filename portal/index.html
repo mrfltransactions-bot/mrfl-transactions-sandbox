@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#1E1B4B">
+<meta name="theme-color" content="#1D2144">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="MRFL">
@@ -11,33 +11,88 @@
 <title>MRFL · My Transactions</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📋</text></svg>">
 <style>
+  /* ============================================================
+     THEME TOKENS — every color lives here, in BOTH themes.
+     ============================================================ */
   :root {
-    --indigo-deep:   #4338CA;
-    --indigo-navy:   #312E81;
-    --indigo-darker: #1E1B4B;
-    --purple:        #8B5CF6;
-    --lavender:      #DDD6FE;
-    --purple-tint:   #F5F3FF;
-
-    --bg:            #FAFAFA;
+    --bg:            #E9EDF9;
     --surface:       #FFFFFF;
-    --border:        #E5E7EB;
-    --border-soft:   #F3F4F6;
+    --surface-2:     #F1F4FC;
+    --border:        #E2E6F4;
 
-    --text:          #1E1B4B;
-    --text-soft:     #4B5563;
-    --text-muted:    #9CA3AF;
+    --text:          #191D3A;
+    --text-soft:     #4A5170;
+    --text-muted:    #596080;
 
-    --past-due:      #991B1B;
-    --urgent:        #EF4444;
-    --warning:       #F59E0B;
-    --on-track:      #10B981;
-    --closed:        #6B7280;
-    --on-hold:       #F97316;
+    --hero-bg:       #1D2144;
+    --hero-text:     #FFFFFF;
+    --hero-sub:      rgba(255,255,255,0.75);
+    --hero-btn:      rgba(255,255,255,0.12);
 
-    --shadow:        0 4px 12px -2px rgba(30, 27, 75, 0.08);
-    --radius:        12px;
-    --radius-sm:     8px;
+    --primary:       #4A3FE0;
+    --primary-strong:#3A31B8;
+    --on-primary:    #FFFFFF;
+    --primary-soft:  #ECEAFD;
+
+    --amber:         #F6A723;
+    --on-amber:      #241C05;
+    --amber-soft:    #FDEFD3;
+    --on-amber-soft: #7A5200;
+
+    --danger:        #D92D33;
+    --on-danger:     #FFFFFF;
+    --danger-soft:   #FDE4E5;
+    --on-danger-soft:#A11218;
+
+    --success-soft:  #DDF3EA;
+    --on-success-soft:#0B7A55;
+
+    --neutral-soft:  #ECEFF7;
+    --on-neutral-soft:#4A5170;
+
+    --shadow:        0 8px 24px -8px rgba(25, 29, 58, 0.12);
+    --shadow-sm:     0 2px 8px -2px rgba(25, 29, 58, 0.08);
+    --radius:        20px;
+    --radius-sm:     12px;
+  }
+  :root[data-theme="dark"] {
+    --bg:            #0E1120;
+    --surface:       #191D33;
+    --surface-2:     #232849;
+    --border:        #2A2F52;
+
+    --text:          #EDEFFC;
+    --text-soft:     #B7BCDB;
+    --text-muted:    #9198BFF0;
+
+    --hero-bg:       #232849;
+    --hero-text:     #FFFFFF;
+    --hero-sub:      rgba(255,255,255,0.72);
+    --hero-btn:      rgba(255,255,255,0.10);
+
+    --primary:       #A5A0FF;
+    --primary-strong:#B9B4FF;
+    --on-primary:    #FFFFFF;
+    --primary-soft:  rgba(139,132,255,0.16);
+
+    --amber:         #F6A723;
+    --on-amber:      #241C05;
+    --amber-soft:    rgba(246,167,35,0.16);
+    --on-amber-soft: #FFCE7E;
+
+    --danger:        #E0353B;
+    --on-danger:     #FFFFFF;
+    --danger-soft:   rgba(224,53,59,0.20);
+    --on-danger-soft:#FF9DA0;
+
+    --success-soft:  rgba(23,166,115,0.18);
+    --on-success-soft:#4FD6A5;
+
+    --neutral-soft:  #262B4C;
+    --on-neutral-soft:#B7BCDB;
+
+    --shadow:        0 8px 24px -8px rgba(0, 0, 0, 0.5);
+    --shadow-sm:     0 2px 8px -2px rgba(0, 0, 0, 0.4);
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -45,173 +100,228 @@
   html, body {
     background: var(--bg);
     color: var(--text);
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Rounded", "SF Pro Text", "Segoe UI", system-ui, sans-serif;
     font-size: 15px;
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
     min-height: 100vh;
+    /* NOTE: no background/color transition here — transitioning var-derived
+       backgrounds on html/body wedged mid-switch in Blink (bg stuck on the
+       old theme). Theme changes apply instantly instead. */
   }
-  .shell { max-width: 720px; margin: 0 auto; padding: 16px; }
+  .shell { max-width: 720px; margin: 0 auto; padding: 0 16px; }
 
-  /* ---------- header ---------- */
-  header.top {
-    background: var(--indigo-darker);
-    color: #fff;
-    padding: max(14px, env(safe-area-inset-top)) 0 14px;
+  /* ============================================================
+     HERO — dark rounded header card
+     ============================================================ */
+  header.hero {
+    background: var(--hero-bg);
+    color: var(--hero-text);
+    padding: max(16px, env(safe-area-inset-top)) 0 42px;
+    border-radius: 0 0 28px 28px;
   }
-  header.top .shell { padding-top: 0; padding-bottom: 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-  .brand { font-weight: 800; font-size: 14px; letter-spacing: 1.5px; white-space: nowrap; }
-  .brand .accent { color: var(--purple); }
-  .refresh-btn {
-    background: rgba(255,255,255,0.1); border: none; color: #fff;
-    width: 36px; height: 36px; border-radius: 50%; font-size: 16px; cursor: pointer;
+  .hero-top { display: flex; align-items: center; justify-content: flex-end; }
+  .hero-actions { display: flex; gap: 8px; }
+  .hero-actions button {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: var(--hero-btn); border: none; color: var(--hero-text);
+    font-size: 17px; cursor: pointer; line-height: 1;
+    display: inline-flex; align-items: center; justify-content: center;
   }
-  .refresh-btn:active { background: rgba(255,255,255,0.25); }
+  .hero-actions button:active { background: rgba(255,255,255,0.25); }
+  .hero-greet { margin-top: 10px; }
+  .hero-greet h1 { font-size: 26px; font-weight: 800; letter-spacing: -0.2px; }
 
-  .hero {
-    background: var(--indigo-darker); color: #fff;
-    padding: 6px 0 22px;
+  /* ============================================================
+     STAT CHIPS
+     ============================================================ */
+  .stats {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+    margin: -26px 0 20px;
   }
-  .hero h1 { font-size: 22px; font-weight: 700; }
-  .hero .sub { font-size: 13px; color: rgba(255,255,255,0.65); margin-top: 2px; }
-
-  /* ---------- stats ---------- */
-  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: -14px auto 18px; }
   .stat {
-    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
-    padding: 12px 10px; text-align: center; box-shadow: var(--shadow);
+    background: var(--surface); border-radius: var(--radius);
+    padding: 14px 8px 12px; text-align: center; box-shadow: var(--shadow);
   }
-  .stat .num { font-size: 22px; font-weight: 800; color: var(--indigo-navy); line-height: 1.2; }
-  .stat .lbl { font-size: 11px; color: var(--text-soft); margin-top: 2px; }
+  .stat .ic {
+    width: 36px; height: 36px; border-radius: 50%; margin: 0 auto 8px;
+    display: flex; align-items: center; justify-content: center; font-size: 17px;
+  }
+  .stat .ic.blue  { background: var(--primary-soft); }
+  .stat .ic.amber { background: var(--amber-soft); }
+  .stat .num { font-size: 21px; font-weight: 800; color: var(--text); line-height: 1.15; }
+  .stat .lbl { font-size: 11px; color: var(--text-soft); margin-top: 2px; font-weight: 600; }
 
-  /* ---------- next-deadline banner ---------- */
+  /* ============================================================
+     NEXT-DEADLINE COLOR-BLOCK CARD
+     ============================================================ */
   a.next-banner {
-    display: flex; gap: 10px; align-items: flex-start;
-    background: #FFFBEB; border: 1px solid #FDE68A; border-radius: var(--radius);
-    padding: 12px 14px; margin: 0 0 18px; text-decoration: none;
-    color: #92400E; box-shadow: var(--shadow);
+    display: flex; align-items: center; gap: 12px;
+    background: var(--amber); color: var(--on-amber);
+    border-radius: var(--radius); padding: 16px 16px 16px 18px;
+    margin: 0 0 22px; text-decoration: none; box-shadow: var(--shadow);
   }
-  a.next-banner.red { background: #FEF2F2; border-color: #FECACA; color: #991B1B; }
-  .nb-icon { font-size: 18px; line-height: 1.3; }
+  a.next-banner.red { background: var(--danger); color: var(--on-danger); }
+  .nb-main { flex: 1; min-width: 0; }
   .nb-k {
-    display: block; font-size: 10.5px; font-weight: 800; letter-spacing: 0.8px;
-    text-transform: uppercase; opacity: 0.75; margin-bottom: 2px;
+    display: block; font-size: 10.5px; font-weight: 800; letter-spacing: 1px;
+    text-transform: uppercase; opacity: 0.8; margin-bottom: 3px;
   }
-  .nb-what { font-size: 14.5px; line-height: 1.4; }
-  .nb-prop { display: block; font-size: 12.5px; margin-top: 2px; opacity: 0.85; }
+  .nb-what { font-size: 17px; font-weight: 800; line-height: 1.3; display: block; }
+  .nb-when { font-size: 13.5px; font-weight: 600; display: block; margin-top: 1px; }
+  .nb-prop { display: block; font-size: 12.5px; margin-top: 5px; opacity: 0.85; font-weight: 600; }
+  .nb-go {
+    flex: none; width: 40px; height: 40px; border-radius: 50%;
+    background: rgba(0,0,0,0.14); display: flex; align-items: center; justify-content: center;
+    font-size: 17px; font-weight: 800;
+  }
+  a.next-banner.red .nb-go { background: rgba(255,255,255,0.2); }
 
-  /* ---------- deal cards ---------- */
-  .section-title { font-size: 13px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; color: var(--text-soft); margin: 20px 2px 10px; }
+  /* ============================================================
+     SECTIONS + DEAL CARDS
+     ============================================================ */
+  .section-title {
+    font-size: 15px; font-weight: 800; color: var(--text);
+    margin: 22px 2px 12px; letter-spacing: -0.1px;
+  }
   .deal {
-    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
-    box-shadow: var(--shadow); padding: 16px; margin-bottom: 14px;
+    background: var(--surface); border-radius: var(--radius);
+    box-shadow: var(--shadow); padding: 18px; margin-bottom: 16px;
   }
   .deal-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
-  .deal-addr { font-size: 16px; font-weight: 700; line-height: 1.35; }
-  .pills { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+  .deal-addr { font-size: 16.5px; font-weight: 800; line-height: 1.35; color: var(--text); letter-spacing: -0.2px; }
+  .pills { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
   .pill {
-    display: inline-block; font-size: 11px; font-weight: 600; padding: 3px 9px;
+    display: inline-block; font-size: 11px; font-weight: 700; padding: 4px 10px;
     border-radius: 999px; white-space: nowrap;
   }
-  .pill.side { background: var(--purple-tint); color: var(--indigo-deep); border: 1px solid var(--lavender); }
-  .pill.st-on_track, .pill.st-active { background: #ECFDF5; color: #065F46; }
-  .pill.st-warning  { background: #FFFBEB; color: #92400E; }
-  .pill.st-urgent, .pill.st-past_due { background: #FEF2F2; color: #991B1B; }
-  .pill.st-closed   { background: #F3F4F6; color: #4B5563; }
-  .pill.st-cancelled{ background: #FEF2F2; color: #7F1D1D; }
-  .pill.st-on_hold  { background: #FFF7ED; color: #9A3412; }
+  .pill.side { background: var(--primary-soft); color: var(--primary-strong); }
+  .pill.st-on_track, .pill.st-active { background: var(--success-soft); color: var(--on-success-soft); }
+  .pill.st-warning  { background: var(--amber-soft); color: var(--on-amber-soft); }
+  .pill.st-urgent, .pill.st-past_due { background: var(--danger-soft); color: var(--on-danger-soft); }
+  .pill.st-closed   { background: var(--neutral-soft); color: var(--on-neutral-soft); }
+  .pill.st-cancelled{ background: var(--danger-soft); color: var(--on-danger-soft); }
+  .pill.st-on_hold  { background: var(--amber-soft); color: var(--on-amber-soft); }
 
-  .daypill { font-size: 12px; font-weight: 700; color: var(--indigo-deep); white-space: nowrap; }
+  .daypill {
+    flex: none; font-size: 11.5px; font-weight: 800; white-space: nowrap;
+    background: var(--hero-bg); color: #FFFFFF;
+    padding: 6px 11px; border-radius: 999px;
+  }
 
-  .progress { height: 6px; background: var(--border-soft); border-radius: 999px; margin: 12px 0 4px; overflow: hidden; }
-  .progress > div { height: 100%; background: linear-gradient(90deg, var(--purple), var(--indigo-deep)); border-radius: 999px; }
-  .progress-lbl { font-size: 11px; color: var(--text-muted); }
+  .progress { height: 8px; background: var(--surface-2); border-radius: 999px; margin: 14px 0 5px; overflow: hidden; }
+  .progress > div { height: 100%; background: linear-gradient(90deg, #8B5CF6, #4A3FE0); border-radius: 999px; }
+  :root[data-theme="dark"] .progress > div { background: linear-gradient(90deg, #9F7DFF, #7C74FF); }
+  .progress-lbl { font-size: 11.5px; color: var(--text-muted); font-weight: 600; }
 
   .callout {
     display: flex; gap: 8px; align-items: flex-start;
-    background: #FFFBEB; border: 1px solid #FDE68A; border-radius: var(--radius-sm);
-    padding: 10px 12px; margin: 12px 0 4px; font-size: 13px; color: #92400E;
+    background: var(--amber-soft); color: var(--on-amber-soft);
+    border-radius: var(--radius-sm);
+    padding: 11px 13px; margin: 13px 0 4px; font-size: 13px; font-weight: 600;
   }
-  .callout.red { background: #FEF2F2; border-color: #FECACA; color: #991B1B; }
-  .callout b { font-weight: 700; }
+  .callout.red { background: var(--danger-soft); color: var(--on-danger-soft); }
+  .callout b { font-weight: 800; }
 
-  .miles { margin-top: 12px; border-top: 1px solid var(--border-soft); padding-top: 6px; }
-  .mile { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--border-soft); }
+  /* milestone list rows */
+  .miles { margin-top: 13px; border-top: 1px solid var(--border); padding-top: 7px; }
+  .mile { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--border); }
   .mile:last-child { border-bottom: none; }
-  .mile .dot { width: 20px; height: 20px; border-radius: 50%; flex: none; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; }
-  .mile.done .dot   { background: #ECFDF5; color: var(--on-track); }
-  .mile.late .dot   { background: #FEF2F2; color: var(--urgent); }
-  .mile.soon .dot   { background: #FFFBEB; color: var(--warning); }
-  .mile.future .dot { background: var(--border-soft); color: var(--text-muted); }
-  .mile .mname { flex: 1; font-size: 13.5px; }
-  .mile.done .mname { color: var(--text-muted); text-decoration: line-through; text-decoration-color: rgba(75,85,99,0.35); }
-  .mile .mdate { font-size: 12.5px; color: var(--text-soft); white-space: nowrap; }
-  .mile.late .mdate, .mile.late .mname { color: var(--urgent); font-weight: 600; }
-  .mile.soon .mdate { color: #92400E; font-weight: 600; }
+  .mile .dot {
+    width: 28px; height: 28px; border-radius: 50%; flex: none;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 800;
+  }
+  .mile.done .dot   { background: var(--success-soft); color: var(--on-success-soft); }
+  .mile.late .dot   { background: var(--danger-soft); color: var(--on-danger-soft); }
+  .mile.soon .dot   { background: var(--amber-soft); color: var(--on-amber-soft); }
+  .mile.future .dot { background: var(--neutral-soft); color: var(--on-neutral-soft); }
+  .mile .mname { flex: 1; font-size: 13.5px; font-weight: 600; color: var(--text); }
+  .mile.done .mname { color: var(--text-muted); text-decoration: line-through; text-decoration-color: currentColor; font-weight: 500; }
+  .mile .mdate { font-size: 12.5px; color: var(--text-soft); white-space: nowrap; font-weight: 600; }
+  .mile.late .mdate, .mile.late .mname { color: var(--on-danger-soft); font-weight: 700; }
+  .mile.soon .mdate { color: var(--on-amber-soft); font-weight: 700; }
 
-  /* ---------- contacts & details ---------- */
-  details.contacts { margin-top: 10px; border-top: 1px solid var(--border-soft); }
+  /* ============================================================
+     CONTACTS & DETAILS
+     ============================================================ */
+  details.contacts { margin-top: 12px; }
   details.contacts summary {
-    cursor: pointer; font-size: 13px; font-weight: 700; color: var(--indigo-deep);
-    padding: 10px 2px 6px; list-style: none;
+    cursor: pointer; font-size: 13px; font-weight: 800; color: var(--primary-strong);
+    background: var(--primary-soft);
+    padding: 11px 14px; border-radius: var(--radius-sm); list-style: none;
+    display: flex; justify-content: space-between; align-items: center;
   }
   details.contacts summary::-webkit-details-marker { display: none; }
-  details.contacts summary::before { content: "▸ "; }
-  details.contacts[open] summary::before { content: "▾ "; }
-  .csec { margin: 6px 0 12px; }
+  details.contacts summary::after { content: "▾"; font-size: 12px; }
+  details.contacts[open] summary::after { content: "▴"; }
+  .csec { margin: 14px 2px 14px; }
   .ctitle {
-    font-size: 11px; font-weight: 800; letter-spacing: 0.7px; text-transform: uppercase;
-    color: var(--purple); margin-bottom: 4px;
+    font-size: 11px; font-weight: 800; letter-spacing: 0.8px; text-transform: uppercase;
+    color: var(--primary-strong); margin-bottom: 5px;
   }
-  .crow { display: flex; gap: 10px; padding: 3px 0; font-size: 13px; }
-  .clabel { flex: 0 0 108px; color: var(--text-muted); }
-  .cval { flex: 1; color: var(--text); word-break: break-word; }
-  .cval a { color: var(--indigo-deep); text-decoration: none; font-weight: 600; }
+  .crow { display: flex; gap: 10px; padding: 3.5px 0; font-size: 13px; }
+  .clabel { flex: 0 0 112px; color: var(--text-muted); font-weight: 600; }
+  .cval { flex: 1; color: var(--text); word-break: break-word; font-weight: 500; }
+  .cval a { color: var(--primary-strong); text-decoration: none; font-weight: 700; }
 
-  details.past { margin-top: 8px; }
+  /* past transactions */
+  details.past { margin-top: 10px; }
   details.past summary {
-    cursor: pointer; font-size: 13px; font-weight: 700; color: var(--text-soft);
-    padding: 10px 2px; list-style: none;
+    cursor: pointer; font-size: 13.5px; font-weight: 800; color: var(--text-soft);
+    padding: 12px 4px; list-style: none;
   }
   details.past summary::-webkit-details-marker { display: none; }
   details.past summary::before { content: "▸ "; }
   details.past[open] summary::before { content: "▾ "; }
-  details.past .deal { opacity: 0.75; }
+  details.past .deal { opacity: 0.8; }
 
-  /* ---------- states ---------- */
-  .state { text-align: center; padding: 60px 24px; color: var(--text-soft); }
-  .state .big { font-size: 40px; margin-bottom: 12px; }
-  .state h2 { font-size: 17px; color: var(--text); margin-bottom: 6px; }
+  /* ============================================================
+     STATES + FOOTER
+     ============================================================ */
+  .state { text-align: center; padding: 56px 24px; color: var(--text-soft); }
+  .state .big { font-size: 42px; margin-bottom: 12px; }
+  .state h2 { font-size: 17px; color: var(--text); margin-bottom: 6px; font-weight: 800; }
   .state p { font-size: 14px; max-width: 420px; margin: 0 auto; }
   .spinner {
     width: 34px; height: 34px; margin: 0 auto 14px;
-    border: 3px solid var(--lavender); border-top-color: var(--indigo-deep);
+    border: 3px solid var(--primary-soft); border-top-color: var(--primary);
     border-radius: 50%; animation: spin 0.8s linear infinite;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  footer { text-align: center; padding: 26px 16px 40px; font-size: 12.5px; color: var(--text-muted); }
-  footer a { color: var(--indigo-deep); text-decoration: none; font-weight: 600; }
-  .updated { font-size: 11.5px; color: var(--text-muted); text-align: center; margin: 4px 0 0; }
+  footer { text-align: center; padding: 26px 16px 40px; font-size: 12.5px; color: var(--text-muted); font-weight: 500; }
+  footer a { color: var(--primary-strong); text-decoration: none; font-weight: 700; }
+  .updated { font-size: 11.5px; color: var(--text-muted); text-align: center; margin: 6px 0 0; font-weight: 600; }
 </style>
+<script>
+  // Apply the theme BEFORE first paint: saved choice, else system preference.
+  (function () {
+    var t = null;
+    try { t = localStorage.getItem('mrfl_portal_theme'); } catch (e) {}
+    if (t !== 'dark' && t !== 'light') {
+      t = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+    }
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+</script>
 </head>
 <body>
 
-<header class="top">
-  <div class="shell">
-    <div class="brand">MRFL <span class="accent">TRANSACTIONS</span></div>
-    <button class="refresh-btn" id="refresh" title="Refresh" aria-label="Refresh">↻</button>
+<header class="hero">
+  <div class="shell hero-top">
+    <div class="hero-actions">
+      <button id="theme_btn" title="Switch light / dark" aria-label="Switch theme">🌙</button>
+      <button id="refresh" title="Refresh" aria-label="Refresh">↻</button>
+    </div>
+  </div>
+  <div class="shell hero-greet">
+    <h1 id="welcome">My Transactions</h1>
   </div>
 </header>
-<div class="hero">
-  <div class="shell">
-    <h1 id="welcome">My Transactions</h1>
-    <div class="sub" id="subline">Live view of your deals with MRFL</div>
-  </div>
-</div>
 
 <main class="shell" id="main">
-  <div class="state" id="loading">
+  <div class="state" id="loading" style="padding-top:80px">
     <div class="spinner"></div>
     <p>Loading your transactions…</p>
   </div>
@@ -221,7 +331,7 @@
   Questions about a deal? Contact Gloria —
   <a href="mailto:MRFLTransactions@gmail.com">MRFLTransactions@gmail.com</a> ·
   <a href="tel:+14012828414">(401) 282-8414</a><br>
-  MRFL Transactions · South Florida
+  MRFL Transactions
 </footer>
 
 <script>
@@ -229,10 +339,28 @@
   'use strict';
 
   var CFG_KEY = 'mrfl_portal_cfg';
+  var THEME_KEY = 'mrfl_portal_theme';
 
   // Webhook web-app URL used by SHORT links (?a=&k=). Safe to publish: the
   // endpoint returns data only with a valid per-agent or widget key.
   var PORTAL_ENDPOINT = 'https://script.google.com/macros/s/AKfycbzheiPICRaOkutzU6kkrNS3n1pVebVVMtMwqAyQtDinMrzbqnaeTxFdHaqCeKtveKEzBw/exec';
+
+  // ---------- theme toggle ----------
+  function currentTheme() {
+    return document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+  }
+  function applyTheme(t, persist) {
+    document.documentElement.setAttribute('data-theme', t);
+    var btn = document.getElementById('theme_btn');
+    if (btn) btn.textContent = (t === 'dark') ? '☀️' : '🌙';
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute('content', t === 'dark' ? '#0E1120' : '#1D2144');
+    if (persist) { try { localStorage.setItem(THEME_KEY, t); } catch (e) {} }
+  }
+  applyTheme(currentTheme(), false);  // sync button glyph + meta with pre-paint theme
+  document.getElementById('theme_btn').addEventListener('click', function () {
+    applyTheme(currentTheme() === 'dark' ? 'light' : 'dark', true);
+  });
 
   // ---------- config: URL params, falling back to localStorage ----------
   function readConfig() {
@@ -325,6 +453,20 @@
     return { done: '✓', late: '!', soon: '●', future: '○' }[cls] || '○';
   }
 
+  // Emails → tap-to-email, phones → tap-to-call; everything else plain text.
+  function contactValue(label, value) {
+    var l = String(label || '').toLowerCase();
+    var v = String(value || '');
+    if (/email/.test(l) && v.indexOf('@') > 0) {
+      return '<a href="mailto:' + esc(v) + '">' + esc(v) + '</a>';
+    }
+    if (/phone|mobile/.test(l)) {
+      var digits = v.replace(/[^\d+]/g, '');
+      if (digits.length >= 10) return '<a href="tel:' + esc(digits) + '">' + esc(v) + '</a>';
+    }
+    return esc(v);
+  }
+
   function dealCard(deal) {
     var isDone = !!DONE[deal.status];
     var h = '<div class="deal">';
@@ -380,23 +522,9 @@
     return h;
   }
 
-  // Emails → tap-to-email, phones → tap-to-call; everything else plain text.
-  function contactValue(label, value) {
-    var l = String(label || '').toLowerCase();
-    var v = String(value || '');
-    if (/email/.test(l) && v.indexOf('@') > 0) {
-      return '<a href="mailto:' + esc(v) + '">' + esc(v) + '</a>';
-    }
-    if (/phone|mobile/.test(l)) {
-      var digits = v.replace(/[^\d+]/g, '');
-      if (digits.length >= 10) return '<a href="tel:' + esc(digits) + '">' + esc(v) + '</a>';
-    }
-    return esc(v);
-  }
-
   function render(data) {
     var main = document.getElementById('main');
-    document.getElementById('welcome').textContent = 'Welcome back, ' + data.agent;
+    document.getElementById('welcome').textContent = 'Hello, ' + data.agent + '! 👋';
 
     var active = data.deals.filter(function (d) { return !DONE[d.status]; });
     var past = data.deals.filter(function (d) { return DONE[d.status]; });
@@ -416,19 +544,19 @@
 
     var h = '';
     h += '<div class="stats">';
-    h += '<div class="stat"><div class="num">' + active.length + '</div><div class="lbl">Active deal' + (active.length === 1 ? '' : 's') + '</div></div>';
-    h += '<div class="stat"><div class="num">' + closingSoon + '</div><div class="lbl">Closing within 7 days</div></div>';
-    h += '<div class="stat"><div class="num">' + (next === null ? '—' : (next.days < 0 ? '❗' : (next.days === 0 ? 'Today' : next.days + 'd'))) + '</div><div class="lbl">Next deadline</div></div>';
+    h += '<div class="stat"><div class="ic blue">🏠</div><div class="num">' + active.length + '</div><div class="lbl">Active deal' + (active.length === 1 ? '' : 's') + '</div></div>';
+    h += '<div class="stat"><div class="ic amber">📆</div><div class="num">' + closingSoon + '</div><div class="lbl">Closing in 7 days</div></div>';
+    h += '<div class="stat"><div class="ic amber">⏰</div><div class="num">' + (next === null ? '—' : (next.days < 0 ? '❗' : (next.days === 0 ? 'Today' : next.days + 'd'))) + '</div><div class="lbl">Next deadline</div></div>';
     h += '</div>';
 
     if (next !== null) {
       var overdue = next.days < 0;
       h += '<a class="next-banner' + (overdue ? ' red' : '') + '" href="#deal_' + next.idx + '">' +
-        '<span class="nb-icon">' + (overdue ? '❗' : '⏰') + '</span>' +
-        '<span class="nb-main"><span class="nb-k">' + (overdue ? 'Past due — needs attention' : 'Next deadline') + '</span>' +
-        '<span class="nb-what"><b>' + esc(next.deal.next_deadline) + '</b> — ' +
-        fmt(next.deal.next_deadline_date) + ' (' + inWords(next.days) + ')</span>' +
-        '<span class="nb-prop">📍 ' + esc(next.deal.property) + '</span></span></a>';
+        '<span class="nb-main"><span class="nb-k">' + (overdue ? '❗ Past due — needs attention' : '⏰ Next deadline') + '</span>' +
+        '<span class="nb-what">' + esc(next.deal.next_deadline) + '</span>' +
+        '<span class="nb-when">' + fmt(next.deal.next_deadline_date) + ' · ' + inWords(next.days) + '</span>' +
+        '<span class="nb-prop">📍 ' + esc(next.deal.property) + '</span></span>' +
+        '<span class="nb-go">→</span></a>';
     }
 
     if (active.length === 0 && past.length === 0) {
@@ -489,7 +617,7 @@
           if (data.status === 'ok' || data.generated_at) {
             showState('🛠', 'Almost ready',
               'The portal isn’t switched on yet on Gloria’s side. Let her know you saw this. ' +
-              '<span style="color:#9CA3AF">(For Gloria: the webhook deployment is running an older version — ' +
+              '<span style="opacity:.7">(For Gloria: the webhook deployment is running an older version — ' +
               'open Apps Script → Deploy → Manage deployments and update it to a New version.)</span>');
             return;
           }
@@ -508,7 +636,7 @@
 
   document.getElementById('refresh').addEventListener('click', function () {
     document.getElementById('main').innerHTML =
-      '<div class="state" id="loading"><div class="spinner"></div><p>Refreshing…</p></div>';
+      '<div class="state" id="loading" style="padding-top:80px"><div class="spinner"></div><p>Refreshing…</p></div>';
     load();
   });
 
