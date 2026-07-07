@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [2.5.1] — 2026-07-07
+
+### Changed
+
+- Closing CTAs (Gloria's picks): homepage "Ready to hand off your next
+  file?" → **"Let's get your next deal moving."**; invite page "Ready to
+  take them up on it?" → **"<Referrer>'s deals are in good hands. Yours
+  can be too."**
+- Domain fully live: mrfltransactions.com connected (GoDaddy → Vercel);
+  **www.mrfltransactions.com is the primary host** (apex 307-redirects,
+  path+query preserved — generated apex links all work).
+
+---
+
 ## [2.5.0] — 2026-07-06
 
 ### Changed — dashboard aurora liquid-glass + send portal links (webhook v7.6)
