@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [2.7.0] — 2026-07-07
+
+### Added — ✏️ Add / update details (fill in missing info mid-deal)
+
+- New 🛠 TC Tools → **✏️ Add / update details** dialog (webhook v7.7):
+  add or correct the contact sections agents most often forget up front
+  — buyer/closing title company, **seller's title company**, loan
+  officer, loan processor — without re-entering the whole contract.
+  Prefills from the tab, writes full `Label: value` lines into column A
+  (the format the portal, dashboard, and deliverables all re-read),
+  replacing an existing section in place (no duplicate headers) or
+  appending a new one. Split-vs-single buyer-title header handled
+  automatically. Blank fields are left untouched; HOA keeps its own 🏘
+  dialog. Same live-reflect principle as the HOA feature — save once,
+  the tab + agent portal + dashboard all update.
+- Verified in-browser against a simulated sheet: add-new section,
+  in-place update, split-header logic, prefill, and empty-submit
+  guard, each confirmed to round-trip through the portal parser.
+
+---
+
 ## [2.6.2] — 2026-07-07
 
 ### Fixed — sheet submission rides through Google hiccups too

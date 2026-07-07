@@ -109,6 +109,16 @@ connected to Vercel 2026-07-06; www is the primary host, apex 307-redirects).
   updates HOA milestone rows above Closing Date, then in-dialog calendar-sync
   offer. (`SpreadsheetApp.getUi().alert()` from `google.script.run` silently
   fails — that's why the reminder is in-dialog. Remember this.)
+- **Add / update details dialog (v7.7):** 🛠 TC Tools → "✏️ Add / update
+  details" — generalizes the HOA pattern to the contact sections agents most
+  often add later (buyer/closing title, **seller's title**, loan officer,
+  loan processor). `DETAIL_EDIT_SECTIONS` config drives `showDetailsDialog` /
+  `saveTransactionDetails`; `_detailSectionRange`/`_detailReadExisting`
+  prefill + replace-in-place. Writes full `Label: value` lines into column A
+  so `_portalDetailsFromValues` (portal + dashboard) shows them. Buyer-title
+  header is split-aware (`Escrow Agent/ Title` vs `Escrow Agent/ Buyer Title`
+  when a seller-title block exists). Parties/agents are still edited directly
+  in the tab.
 - **Endpoint hardening (v6.9):** keyless GET → `{status:'ok'}` health check
   only (keeps intake form's webhook Test green); widget data needs
   `key=<widget_key>`; portal needs per-agent keys.
@@ -165,9 +175,9 @@ connected to Vercel 2026-07-06; www is the primary host, apex 307-redirects).
 ## 🛠 TC Tools menu (current)
 
 Refresh Dashboard · Show Active Only/All · Sync dates → Calendar · Set up
-calendar sync · Add / update HOA info · Agent portal links · My dashboard
-link · Log a referral · Manage reviews · Preview / create reminder drafts ·
-Set up daily reminder drafts · About.
+calendar sync · Add / update HOA info · **Add / update details** · Agent
+portal links · My dashboard link · Log a referral · Manage reviews ·
+Preview / create reminder drafts · Set up daily reminder drafts · About.
 
 ## Working with Gloria
 

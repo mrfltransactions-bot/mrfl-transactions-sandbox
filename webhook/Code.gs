@@ -73,6 +73,7 @@ function onOpen() {
     .addItem('📅 Set up calendar sync', 'setupCalendarSync')
     .addSeparator()
     .addItem('🏘 Add / update HOA info', 'showHoaDialog')
+    .addItem('✏️ Add / update details', 'showDetailsDialog')
     .addItem('🔗 Agent portal links', 'showPortalLinks')
     .addItem('🖥 My dashboard link', 'showOperatorLink')
     .addItem('🎁 Log a referral', 'showReferralDialog')
@@ -101,6 +102,7 @@ function toggleActiveOnly() {
     .addItem('📅 Set up calendar sync', 'setupCalendarSync')
     .addSeparator()
     .addItem('🏘 Add / update HOA info', 'showHoaDialog')
+    .addItem('✏️ Add / update details', 'showDetailsDialog')
     .addItem('🔗 Agent portal links', 'showPortalLinks')
     .addItem('🖥 My dashboard link', 'showOperatorLink')
     .addItem('🎁 Log a referral', 'showReferralDialog')
@@ -2279,6 +2281,211 @@ function saveHoaInfo(f) {
     msg: '✓ ' + [detailsMsg, datesMsg].filter(String).join(' · '),
     datesSaved: wanted.length > 0
   };
+}
+
+// ============================================================
+// v7.7 — ADD / UPDATE TRANSACTION DETAILS (mid-deal)
+//
+// Same idea as the HOA dialog, generalized to the contact sections an
+// agent most often forgets to add up front: both title companies and
+// the lender. Writes full "Label: value" lines into column A — the
+// exact format the portal, dashboard, and deliverables all re-read —
+// replacing an existing section in place or appending a new one.
+// ============================================================
+
+// Sections this dialog can edit. Each: menu title, canonical sheet
+// header, header alias(es) used to find an existing block, and the
+// ordered fields (id, sheet-label, placeholder). Labels match what the
+// intake form writes so the sheet stays consistent.
+const DETAIL_EDIT_SECTIONS = [
+  {
+    key: 'buyertitle',
+    title: 'Closing / Title company (buyer side)',
+    headerAliases: ['Escrow Agent/ Buyer Title', 'Escrow Agent/ Title'],
+    defaultHeader: 'Escrow Agent/ Title',
+    fields: [['company', 'Company', 'Sunshine Title, LLC'], ['contact', 'Contact', 'Jane Closer'], ['email', 'Email', 'closings@title.com'], ['phone', 'Phone', '(555) 123-4567']]
+  },
+  {
+    key: 'sellertitle',
+    title: "Seller's title company",
+    headerAliases: ['Seller Title'],
+    defaultHeader: 'Seller Title',
+    fields: [['company', 'Company', 'Seller Title Co.'], ['contact', 'Contact', ''], ['email', 'Email', ''], ['phone', 'Phone', '']]
+  },
+  {
+    key: 'loanofficer',
+    title: 'Loan Officer',
+    headerAliases: ['Loan Officer'],
+    defaultHeader: 'Loan Officer',
+    fields: [['company', 'Company', 'ABC Mortgage'], ['contact', 'Contact', ''], ['email', 'Email', ''], ['mobile', 'Mobile', '']]
+  },
+  {
+    key: 'loanprocessor',
+    title: 'Loan Processor',
+    headerAliases: ['Loan Processor'],
+    defaultHeader: 'Loan Processor',
+    fields: [['company', 'Company', ''], ['contact', 'Contact', ''], ['email', 'Email', ''], ['mobile', 'Mobile', '']]
+  }
+];
+
+// Standalone-header names + party-start prefixes — used as boundaries so
+// one section's block never bleeds into the next when we scan its extent.
+const DETAIL_ALL_HEADERS = ['Escrow Agent/ Buyer Title', 'Escrow Agent/ Title', 'Seller Title', 'Loan Officer', 'Loan Processor', 'HOA / Association'];
+const DETAIL_PARTY_STARTS = ["Seller(s):", "Buyer(s):", "Seller's Agent:", "Co-Seller's Agent:", "Buyer's Agent:", "Co-Buyer's Agent:"];
+
+// Locate a standalone-header section's row range (1-indexed, header row
+// included). Returns { start, end, header } or null.
+function _detailSectionRange(values, headerAliases) {
+  for (let i = 0; i < values.length; i++) {
+    const l = String(values[i][0] || '').trim();
+    if (headerAliases.indexOf(l) < 0) continue;
+    let end = i + 1;  // header only, if it has no value rows
+    for (let j = i + 1; j < values.length; j++) {
+      const line = String(values[j][0] || '').trim();
+      if (!line) break;
+      if (DETAIL_ALL_HEADERS.indexOf(line) >= 0) break;
+      if (DETAIL_PARTY_STARTS.some(function (p) { return line.indexOf(p) === 0; })) break;
+      if (line.indexOf(':') < 0) break;
+      end = j + 1;
+    }
+    return { start: i + 1, end: end, header: l };
+  }
+  return null;
+}
+
+// Read current section values keyed as "<sectionkey>_<fieldid>" for prefill.
+function _detailReadExisting(values) {
+  const out = {};
+  DETAIL_EDIT_SECTIONS.forEach(function (sec) {
+    sec.fields.forEach(function (f) { out[sec.key + '_' + f[0]] = ''; });
+    const range = _detailSectionRange(values, sec.headerAliases);
+    if (!range) return;
+    for (let r = range.start; r < range.end; r++) {
+      const line = String(values[r][0] || '').trim();
+      const idx = line.indexOf(':');
+      if (idx <= 0) continue;
+      const label = line.substring(0, idx).trim().toLowerCase();
+      const value = line.substring(idx + 1).trim();
+      sec.fields.forEach(function (f) {
+        if (f[1].toLowerCase() === label) out[sec.key + '_' + f[0]] = value;
+      });
+    }
+  });
+  return out;
+}
+
+function showDetailsDialog() {
+  const ui = SpreadsheetApp.getUi();
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  const name = sheet.getName();
+  if (name === DASHBOARD_TAB_NAME || name.startsWith('📊') || !name.includes('_')) {
+    ui.alert('Open the property tab you want to update, then run 🛠 TC Tools → ✏️ Add / update details again.');
+    return;
+  }
+  const values = sheet.getDataRange().getValues();
+  const cur = _detailReadExisting(values);
+  const property = String(values[0][0] || name).trim();
+
+  let body = '';
+  const allIds = [];
+  DETAIL_EDIT_SECTIONS.forEach(function (sec) {
+    body += '<div style="margin:16px 0 4px;font-weight:700;color:#312E81;border-bottom:1px solid #E5E7EB;padding-bottom:3px">' +
+      _hoaEsc(sec.title) + '</div>';
+    sec.fields.forEach(function (fld) {
+      const id = sec.key + '_' + fld[0];
+      allIds.push(id);
+      body += '<label style="display:block;margin:8px 0 2px;font-weight:600;font-size:12px">' + _hoaEsc(fld[1]) + '</label>' +
+        '<input id="' + id + '" type="text" value="' + _hoaEsc(cur[id]) + '" placeholder="' + _hoaEsc(fld[2]) + '" ' +
+        'style="width:100%;padding:6px;border:1px solid #ccc;border-radius:4px;box-sizing:border-box;font-size:13px">';
+    });
+  });
+
+  const html =
+    '<div style="font-family:Arial,sans-serif;font-size:13px;line-height:1.4">' +
+    '<p style="margin:0 0 4px;color:#4B5563">Fill in whatever you need to add or change — blank fields are left as they are. ' +
+    'Saving updates this tab, the agent portal, and your dashboard right away. ' +
+    '(HOA info has its own 🏘 button; other parties can be edited directly in the tab.)</p>' +
+    body +
+    '<div id="out" style="margin-top:12px;color:#10B981;font-weight:600"></div>' +
+    '<div style="margin-top:14px;text-align:right">' +
+    '<button id="save" style="background:#4338CA;color:#fff;border:none;padding:9px 18px;' +
+    'border-radius:6px;font-weight:700;cursor:pointer">Save details</button></div>' +
+    '<script>' +
+    'var IDS=' + JSON.stringify(allIds) + ';' +
+    'document.getElementById("save").onclick=function(){' +
+    'var b=this;b.disabled=true;b.textContent="Saving…";' +
+    'var f={sheetId:' + sheet.getSheetId() + '};' +
+    'IDS.forEach(function(id){f[id]=document.getElementById(id).value.trim();});' +
+    'google.script.run.withSuccessHandler(function(res){' +
+    'document.getElementById("out").textContent=(res&&res.msg)||"✓ Saved";' +
+    'setTimeout(function(){google.script.host.close();},2400);' +
+    '}).withFailureHandler(function(e){' +
+    'document.getElementById("out").style.color="#991B1B";' +
+    'document.getElementById("out").textContent="Error: "+e.message;b.disabled=false;b.textContent="Save details";' +
+    '}).saveTransactionDetails(f);};' +
+    '<\/script></div>';
+
+  ui.showModalDialog(
+    HtmlService.createHtmlOutput(html).setWidth(450).setHeight(640),
+    '✏️ Add / update details — ' + property
+  );
+}
+
+function saveTransactionDetails(f) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheets().find(function (s) { return s.getSheetId() === Number(f.sheetId); });
+  if (!sheet) throw new Error('Could not find the property tab. Close the dialog and try again.');
+
+  // Will a seller-title block exist after this save? Controls whether a
+  // brand-new buyer-title block uses the split ("Buyer Title") header.
+  const sellerSec = DETAIL_EDIT_SECTIONS.filter(function (s) { return s.key === 'sellertitle'; })[0];
+  const sellerTitleFilled = sellerSec.fields.some(function (fld) {
+    return String(f['sellertitle_' + fld[0]] || '').trim();
+  });
+
+  const changed = [];
+  DETAIL_EDIT_SECTIONS.forEach(function (sec) {
+    const lines = [];
+    sec.fields.forEach(function (fld) {
+      const v = String(f[sec.key + '_' + fld[0]] || '').trim();
+      if (v) lines.push(fld[1] + ': ' + v);
+    });
+    if (lines.length === 0) return;  // nothing entered — leave any existing block as-is
+
+    let values = sheet.getDataRange().getValues();
+    const range = _detailSectionRange(values, sec.headerAliases);
+
+    let header = range ? range.header : sec.defaultHeader;
+    if (!range && sec.key === 'buyertitle') {
+      const hasSeller = sellerTitleFilled || !!_detailSectionRange(values, ['Seller Title']);
+      header = hasSeller ? 'Escrow Agent/ Buyer Title' : 'Escrow Agent/ Title';
+    }
+
+    let insertAt, verb;
+    if (range) {
+      sheet.deleteRows(range.start, range.end - range.start + 1);
+      sheet.insertRowsBefore(range.start, lines.length + 1);
+      insertAt = range.start;
+      verb = 'updated';
+    } else {
+      const lastRow = sheet.getLastRow();
+      if (lastRow + lines.length + 2 > sheet.getMaxRows()) {
+        sheet.insertRowsAfter(sheet.getMaxRows(), lines.length + 2);
+      }
+      insertAt = lastRow + 2;  // one blank spacer row before the new section
+      verb = 'added';
+    }
+    sheet.getRange(insertAt, 1).setValue(header).setFontWeight('bold').setFontColor('#000000');
+    for (let i = 0; i < lines.length; i++) {
+      sheet.getRange(insertAt + 1 + i, 1).setValue(lines[i]).setFontWeight('normal').setFontColor('#000000');
+    }
+    changed.push(sec.title.replace(/\s*\(.*\)$/, '') + ' ' + verb);
+  });
+
+  try { rebuildDashboard(); } catch (e) { /* non-fatal */ }
+
+  if (!changed.length) return { msg: 'Nothing to save — fill in at least one field first.' };
+  return { msg: '✓ ' + changed.join(' · ') + '. Tab, agent portal, and dashboard updated.' };
 }
 
 // ============================================================
