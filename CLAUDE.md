@@ -196,6 +196,12 @@ Set up daily reminder drafts · About.
   deployments as "Almost ready").
 - She personally reviews everything outbound: reminder emails are drafts she
   sends herself; deliverables she shares herself. Preserve this principle.
+- **PRIVACY RULE (Gloria, 2026-07-07): the clients' (buyers'/sellers')
+  personal email/phone must NEVER appear in communications sent to the
+  other parties** — outbound emails show client NAMES only. The tab stores
+  `Seller(s)/Buyer(s) Email:/Phone:` lines for her reference; any feature
+  that builds outbound content from tab data must strip them (see
+  `_sumParseTab`'s privacy filter).
 - Verify every change in the preview browser (localhost:8099 via
   `.claude/launch.json` "intake" config) before pushing; git push = live.
 - Costs matter: the stack is intentionally $0/month (Vercel free, Apps
