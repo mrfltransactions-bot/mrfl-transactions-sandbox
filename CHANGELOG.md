@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [2.6.1] — 2026-07-07
+
+### Fixed — intake extraction rides through Anthropic outages
+
+- The intake form's Claude call now retries automatically on transient
+  API errors (500 api_error, 529 overloaded, 429 rate-limit w/
+  retry-after honored, network blips): up to 4 attempts with
+  exponential backoff, progress logged to the diagnostics box.
+  Non-retryable errors (bad key, bad request) still fail fast.
+  Root cause of the report that prompted this: a live "Elevated
+  errors" incident on status.claude.com (Jul 7, 20:02 UTC) — the
+  form previously gave up on the first 500.
+
+---
+
 ## [2.6.0] — 2026-07-07
 
 ### Changed — clarity + differentiation pass (competitor-informed)

@@ -3260,6 +3260,52 @@ CANONICAL JSON SCHEMA (output exactly these keys, in this order):
   "concessions": []
 }`;
 
+  // Anthropic's API occasionally returns transient server errors (500
+  // api_error, 529 overloaded, 429 rate limit) — all officially retryable.
+  // Retry with exponential backoff so a blip on their side never costs an
+  // upload. Non-retryable errors (bad key, bad request) fail immediately.
+  async function _apiFetchWithRetry(requestBody, apiKey) {
+    const RETRYABLE = [429, 500, 502, 503, 504, 529];
+    const MAX_TRIES = 4;
+    let lastErr = null;
+    for (let attempt = 1; attempt <= MAX_TRIES; attempt++) {
+      let res = null;
+      let retryAfterSec = NaN;
+      try {
+        res = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': apiKey,
+            'anthropic-version': '2023-06-01',
+            'anthropic-dangerous-direct-browser-access': 'true'
+          },
+          body: JSON.stringify(requestBody)
+        });
+      } catch (netErr) {
+        lastErr = new Error('Network error: ' + (netErr.message || netErr));
+      }
+      if (res) {
+        if (res.ok) return res;
+        const errBody = await res.text().catch(() => '');
+        lastErr = new Error('API ' + res.status + ': ' + errBody.slice(0, 300));
+        if (RETRYABLE.indexOf(res.status) < 0) throw lastErr;  // 400/401/403… — retrying won't help
+        retryAfterSec = parseInt(res.headers.get('retry-after') || '', 10);
+      }
+      if (attempt === MAX_TRIES) break;
+      const delayMs = (isFinite(retryAfterSec) && retryAfterSec > 0)
+        ? Math.min(retryAfterSec, 30) * 1000
+        : Math.min(2000 * Math.pow(2, attempt - 1), 15000) + Math.floor(Math.random() * 500);
+      _dbg('Claude\'s servers hiccuped (' + (res ? 'HTTP ' + res.status : 'network') +
+           ') — retrying in ' + Math.round(delayMs / 1000) + 's (attempt ' +
+           (attempt + 1) + ' of ' + MAX_TRIES + ')…');
+      await new Promise(r => setTimeout(r, delayMs));
+    }
+    _dbg('Still failing after ' + MAX_TRIES + ' tries — Anthropic may be having ' +
+         'an outage. Check status.claude.com and try the upload again in a few minutes.', 'err');
+    throw lastErr;
+  }
+
   async function _pdfApiExtract(pdfBase64, contractText, apiKey) {
     const today = new Date().toISOString().slice(0, 10);
 
@@ -3297,21 +3343,7 @@ CANONICAL JSON SCHEMA (output exactly these keys, in this order):
       messages: [{ role: 'user', content: userContent }]
     };
 
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
-      },
-      body: JSON.stringify(requestBody)
-    });
-
-    if (!res.ok) {
-      const errBody = await res.text().catch(() => '');
-      throw new Error('API ' + res.status + ': ' + errBody.slice(0, 300));
-    }
+    const res = await _apiFetchWithRetry(requestBody, apiKey);
 
     const data = await res.json();
     const text = (data.content || [])
