@@ -74,6 +74,7 @@ function onOpen() {
     .addSeparator()
     .addItem('🏘 Add / update HOA info', 'showHoaDialog')
     .addItem('✏️ Add / update details', 'showDetailsDialog')
+    .addItem('✉️ Recreate summary email', 'createSummaryEmailDraft')
     .addItem('🔗 Agent portal links', 'showPortalLinks')
     .addItem('🖥 My dashboard link', 'showOperatorLink')
     .addItem('🎁 Log a referral', 'showReferralDialog')
@@ -103,6 +104,7 @@ function toggleActiveOnly() {
     .addSeparator()
     .addItem('🏘 Add / update HOA info', 'showHoaDialog')
     .addItem('✏️ Add / update details', 'showDetailsDialog')
+    .addItem('✉️ Recreate summary email', 'createSummaryEmailDraft')
     .addItem('🔗 Agent portal links', 'showPortalLinks')
     .addItem('🖥 My dashboard link', 'showOperatorLink')
     .addItem('🎁 Log a referral', 'showReferralDialog')
@@ -2486,6 +2488,352 @@ function saveTransactionDetails(f) {
 
   if (!changed.length) return { msg: 'Nothing to save — fill in at least one field first.' };
   return { msg: '✓ ' + changed.join(' · ') + '. Tab, agent portal, and dashboard updated.' };
+}
+
+// ============================================================
+// v7.8 — RECREATE SUMMARY EMAIL (Gmail draft, from the live tab)
+//
+// Rebuilds the intake form's "First Email — Transaction Summary"
+// from the CURRENT tab contents, so after any mid-deal update (✏️
+// details dialog, HOA dialog, direct tab edits, date changes) Gloria
+// can resend an accurate summary without redoing the intake. Same
+// To/Cc policy as the intake composer. DRAFT ONLY — never sends.
+// ============================================================
+
+function _sumFmtDate(v) {
+  if (v instanceof Date) {
+    return Utilities.formatDate(v, Session.getScriptTimeZone(), 'EEEE, MMM d, yyyy');
+  }
+  return String(v == null ? '' : v).trim();
+}
+
+function _sumFmtMoney(v) {
+  if (typeof v === 'number') {
+    return '$' + v.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  }
+  const s = String(v == null ? '' : v).trim();
+  const m = s.match(/^\$?\s*([\d,]+(?:\.\d{1,2})?)$/);
+  if (!m) return s;
+  const n = parseFloat(m[1].replace(/,/g, ''));
+  if (isNaN(n)) return s;
+  return '$' + n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+
+// Read everything the email needs from the tab in one pass.
+function _sumParseTab(sheet) {
+  const values = sheet.getDataRange().getValues();
+  const out = {
+    property: String(values[0][0] || sheet.getName()).trim(),
+    milestones: [], detailLines: [], concessions: [],
+    side: '', isCash: false
+  };
+
+  let detailsStart = -1;
+  for (let i = 0; i < values.length; i++) {
+    if (String(values[i][0] || '').trim().indexOf('Property Address:') === 0) { detailsStart = i; break; }
+  }
+
+  for (let i = 1; i < values.length; i++) {
+    const line = String(values[i][0] || '').trim();
+    if (detailsStart >= 0 && i >= detailsStart) {
+      if (line.indexOf('Side Represented:') === 0) {
+        out.side = line.substring('Side Represented:'.length).trim();
+        continue;
+      }
+      if (line.indexOf('Manual Status:') === 0) continue;
+      if (line.indexOf('Financing Type:') === 0 && /cash/i.test(line)) out.isCash = true;
+      out.detailLines.push(line);  // '' rows keep their place as separators
+      continue;
+    }
+    if (!line || line === 'Milestone') continue;
+    if (CAL_KNOWN_MILESTONES.indexOf(line) >= 0) {
+      out.milestones.push({
+        name: line,
+        date: _sumFmtDate(values[i][1]),
+        done: values[i][2] === true,
+        amount: values[i][3],
+        timeframe: String(values[i][4] || '').trim()
+      });
+      continue;
+    }
+    // Non-milestone line above the details block → concession/agreement
+    out.concessions.push(line);
+  }
+  // Trim trailing blank detail lines
+  while (out.detailLines.length && out.detailLines[out.detailLines.length - 1] === '') out.detailLines.pop();
+  return out;
+}
+
+// Stateful scan of the detail lines → named contacts with emails, for the
+// To/Cc policy. Tracks which section each generic "Email:" line belongs to.
+function _sumContacts(detailLines) {
+  const c = {
+    lst: { name: '', email: '' }, coLst: { name: '', email: '' },
+    byr: { name: '', email: '' }, coByr: { name: '', email: '' },
+    byrTitle: { name: '', email: '' }, slrTitle: { name: '', email: '' },
+    lo: { name: '', email: '' }, lp: { name: '', email: '' }
+  };
+  let section = '';
+  detailLines.forEach(function (raw) {
+    const line = String(raw || '').trim();
+    if (!line) return;
+    if (line.indexOf("Co-Seller's Agent:") === 0) { section = 'coLst'; c.coLst.name = line.substring(18).replace(/Lic#.*$/i, '').trim(); return; }
+    if (line.indexOf("Seller's Agent:") === 0) { section = 'lst'; c.lst.name = line.substring(15).replace(/Lic#.*$/i, '').trim(); return; }
+    if (line.indexOf("Co-Buyer's Agent:") === 0) { section = 'coByr'; c.coByr.name = line.substring(17).replace(/Lic#.*$/i, '').trim(); return; }
+    if (line.indexOf("Buyer's Agent:") === 0) { section = 'byr'; c.byr.name = line.substring(14).replace(/Lic#.*$/i, '').trim(); return; }
+    if (line === 'Escrow Agent/ Buyer Title' || line === 'Escrow Agent/ Title') { section = 'byrTitle'; return; }
+    if (line === 'Seller Title') { section = 'slrTitle'; return; }
+    if (line === 'Loan Officer') { section = 'lo'; return; }
+    if (line === 'Loan Processor') { section = 'lp'; return; }
+    if (line === 'HOA / Association' || line.indexOf('Seller(s):') === 0 || line.indexOf('Buyer(s):') === 0) { section = ''; return; }
+
+    const idx = line.indexOf(':');
+    if (idx <= 0) return;
+    const label = line.substring(0, idx).trim();
+    const value = line.substring(idx + 1).trim();
+    if (!value) return;
+    if (section === 'lst' || section === 'byr') {
+      if (label === 'Agent Email') c[section].email = value;
+    } else if (section === 'coLst' || section === 'coByr') {
+      if (label === 'Co-Agent Email') c[section].email = value;
+    } else if (section === 'byrTitle' || section === 'slrTitle' || section === 'lo' || section === 'lp') {
+      if (label === 'Email') c[section].email = value;
+      if (label === 'Contact') c[section].name = value;
+    }
+  });
+  return c;
+}
+
+// Same To/Cc policy as the intake composer (locked): write TO the other
+// side + title + lender, Cc the represented agent(s).
+function _sumRecipients(c, side, isCash) {
+  const s = String(side || '').toLowerCase();
+  const to = [], cc = [];
+  const push = function (arr, p) {
+    const e = (p.email || '').trim();
+    if (!e) return;
+    if (arr.some(function (x) { return x.email.toLowerCase() === e.toLowerCase(); })) return;
+    if (to !== arr && to.some(function (x) { return x.email.toLowerCase() === e.toLowerCase(); })) return;
+    arr.push({ email: e, name: p.name || '' });
+  };
+  if (s === 'buyer') {
+    push(to, c.lst); push(to, c.coLst);
+    push(to, c.slrTitle); push(to, c.byrTitle);
+    if (!isCash) { push(to, c.lo); push(to, c.lp); }
+    push(cc, c.byr); push(cc, c.coByr);
+  } else if (s === 'both' || s === 'dual') {
+    push(to, c.byrTitle); push(to, c.slrTitle);
+    if (!isCash) { push(to, c.lo); push(to, c.lp); }
+    push(cc, c.lst);
+  } else {  // seller / listing / unset
+    push(to, c.byr); push(to, c.coByr);
+    push(to, c.byrTitle); push(to, c.slrTitle);
+    if (!isCash) { push(to, c.lo); push(to, c.lp); }
+    push(cc, c.lst); push(cc, c.coLst);
+  }
+  return { to: to, cc: cc };
+}
+
+function _sumGreeting(toList) {
+  const names = toList.map(function (r) { return String(r.name || '').trim().split(/\s+/)[0]; })
+    .filter(function (n) { return n; });
+  if (!names.length) return 'Hello,';
+  let joined;
+  if (names.length === 1) joined = names[0];
+  else if (names.length === 2) joined = names[0] + ' and ' + names[1];
+  else joined = names.slice(0, -1).join(', ') + ', and ' + names[names.length - 1];
+  return 'Hello ' + joined + ',';
+}
+
+// Concession text → {source, amount, purpose} when it carries a $ amount
+// (ported from the intake composer); non-$ lines become "other agreements".
+function _sumParseConcession(text) {
+  const t = String(text || '').trim();
+  if (!t) return null;
+  const amtMatch = t.match(/\$\s*([\d,]+(?:\.\d{2})?)/);
+  if (!amtMatch) return null;
+  const amount = _sumFmtMoney(amtMatch[0].replace(/^\$\s*/, '$'));
+  const before = t.slice(0, amtMatch.index).trim();
+  const after = t.slice(amtMatch.index + amtMatch[0].length).trim()
+    .replace(/^[,.\s]+/, '').replace(/[.\s]+$/, '');
+  let source = 'Seller Contribution';
+  const buyerAgentMatch = before.match(/Buyer['’]?s?\s+(?:Agent|Broker)\s*(?:\(([^)]+)\))?/i);
+  if (buyerAgentMatch) {
+    source = "Buyer's Agent Contribution" + (buyerAgentMatch[1] ? ' (' + buyerAgentMatch[1].trim() + ')' : '');
+  } else if (/\b(additional|additionally|extra|further)\b/i.test(before.toLowerCase())) {
+    source = 'Additional Seller Contribution';
+  }
+  let purpose = after ? after.charAt(0).toUpperCase() + after.slice(1) : "Toward buyer's closing costs";
+  return { source: source, amount: amount, purpose: purpose };
+}
+
+const _SUM_SIGNATURE_PLAIN = 'Gloria Grullon\nTransaction Coordinator | MRFL Transactions\n📞 401.282.8414\n✉ MRFLTransactions@gmail.com';
+
+function _sumBuildPlain(tab, greeting, primaryName) {
+  let out = greeting + '\n\n';
+  out += '⚠ UPDATED SUMMARY — this replaces any earlier transaction summary for this file. Please use the version below going forward.\n\n';
+  out += "I'm Gloria Grullon, Transaction Coordinator for " + (primaryName || 'this transaction') +
+    '. Please be sure to copy me on all communications from here on out so I can keep everything on track.\n\n';
+  out += "You'll find the current contract dates and contact details for everyone involved listed below. Take a quick look when you have a moment and let me know if anything needs to be corrected or updated.\n\n";
+
+  out += tab.detailLines.join('\n') + '\n';
+
+  out += '\nCRITICAL DEADLINES\n\n';
+  out += '| Milestone | Deadline | Status | Amount | Timeframe |\n';
+  out += '|-----------|----------|:------:|--------|-----------|\n';
+  tab.milestones.forEach(function (m) {
+    const anchor = (m.name === 'Effective Date' || m.name === 'Closing Date');
+    const nm = anchor ? '**' + m.name + '**' : m.name;
+    const status = anchor ? '—' : (m.done ? '✓' : '☐');
+    out += '| ' + nm + ' | ' + m.date + ' | ' + status + ' | ' + _sumFmtMoney(m.amount) + ' | *' + m.timeframe + '* |\n';
+  });
+
+  const rows = [], others = [];
+  let total = 0;
+  tab.concessions.forEach(function (t) {
+    const p = _sumParseConcession(t);
+    if (p) { rows.push(p); total += parseFloat(p.amount.replace(/[$,]/g, '')) || 0; }
+    else others.push(t);
+  });
+  if (rows.length) {
+    out += '\n★ CLOSING COST CONTRIBUTIONS — TOTAL CREDIT TO BUYER: ' + _sumFmtMoney(total) + '\n\n';
+    out += '| Source | Amount | Purpose |\n|--------|--------|---------|\n';
+    rows.forEach(function (r) { out += '| ' + r.source + ' | ' + r.amount + ' | ' + r.purpose + ' |\n'; });
+  }
+  if (others.length) {
+    out += '\nOTHER AGREEMENTS\n';
+    others.forEach(function (t) { out += '• ' + t + '\n'; });
+  }
+
+  out += '\nIMPORTANT NOTES\n';
+  out += '• All deadlines are calculated from the Effective Date unless otherwise noted (CD = Closing Date).\n';
+  out += '• Any deadline that falls on a Saturday, Sunday, or national legal holiday shall extend to 5:00 PM of the next business day.\n';
+  out += '\n' + _SUM_SIGNATURE_PLAIN + '\n';
+  return out;
+}
+
+function _sumBuildHtml(tab, greeting, primaryName) {
+  const esc = _hoaEsc;
+  const FONT = "font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 14px; line-height: 1.55; color: #1A1F2E;";
+  const isHeaderLine = function (line) {
+    return DETAIL_ALL_HEADERS.indexOf(line) >= 0 || line.indexOf('EFFECTIVE DATE:') === 0 ||
+      DETAIL_PARTY_STARTS.some(function (p) { return line.indexOf(p) === 0; });
+  };
+  const detailsHtml = tab.detailLines.map(function (line) {
+    if (line === '') return '<br>';
+    if (isHeaderLine(line)) {
+      return '<div style="font-weight: 700; color: #312E81; margin-top: 4px;">' + esc(line) + '</div>';
+    }
+    return '<div>' + esc(line) + '</div>';
+  }).join('');
+
+  const th = function (h, bg) {
+    return '<th style="background: ' + bg + '; color: #FFFFFF; padding: 10px 12px; text-align: left; font-size: 12px; letter-spacing: 0.04em; text-transform: uppercase; border: 1px solid ' + bg + ';">' + h + '</th>';
+  };
+  const tableHead = '<thead><tr>' + ['Milestone', 'Deadline', 'Status', 'Amount', 'Timeframe']
+    .map(function (h) { return th(h, '#312E81'); }).join('') + '</tr></thead>';
+  const tableBody = '<tbody>' + tab.milestones.map(function (m, i) {
+    const bg = (i % 2 === 0) ? '#FFFFFF' : '#FAFAF7';
+    const tdBase = 'padding: 8px 12px; border: 1px solid #E5DFD0; vertical-align: top; font-size: 13px;';
+    const anchor = (m.name === 'Effective Date' || m.name === 'Closing Date');
+    const nameCell = anchor
+      ? '<td style="' + tdBase + ' background: ' + bg + '; font-weight: 700; color: #312E81;">' + esc(m.name) + '</td>'
+      : '<td style="' + tdBase + ' background: ' + bg + ';">' + esc(m.name) + '</td>';
+    const status = anchor ? '—' : (m.done ? '✓' : '☐');
+    return '<tr>' + nameCell +
+      '<td style="' + tdBase + ' background: ' + bg + ';">' + esc(m.date) + '</td>' +
+      '<td style="' + tdBase + ' background: ' + bg + '; text-align: center;">' + status + '</td>' +
+      '<td style="' + tdBase + ' background: ' + bg + ';">' + esc(_sumFmtMoney(m.amount)) + '</td>' +
+      '<td style="' + tdBase + ' background: ' + bg + '; font-style: italic; color: #4B5563;">' + esc(m.timeframe) + '</td>' +
+      '</tr>';
+  }).join('') + '</tbody>';
+
+  const rows = [], others = [];
+  let total = 0;
+  tab.concessions.forEach(function (t) {
+    const p = _sumParseConcession(t);
+    if (p) { rows.push(p); total += parseFloat(p.amount.replace(/[$,]/g, '')) || 0; }
+    else others.push(t);
+  });
+  let contribHtml = '';
+  if (rows.length) {
+    const cHead = '<thead><tr>' + ['Source', 'Amount', 'Purpose']
+      .map(function (h) { return th(h, '#4338CA'); }).join('') + '</tr></thead>';
+    const cBody = '<tbody>' + rows.map(function (r, i) {
+      const bg = (i % 2 === 0) ? '#F5F3FF' : '#EDE9FE';
+      const tdBase = 'padding: 8px 12px; border: 1px solid #DDD6FE; font-size: 13px;';
+      return '<tr><td style="' + tdBase + ' background: ' + bg + ';">' + esc(r.source) + '</td>' +
+        '<td style="' + tdBase + ' background: ' + bg + '; font-weight: 600;">' + esc(r.amount) + '</td>' +
+        '<td style="' + tdBase + ' background: ' + bg + ';">' + esc(r.purpose) + '</td></tr>';
+    }).join('') + '</tbody>';
+    contribHtml =
+      '<div style="font-weight: 700; color: #4338CA; margin: 22px 0 8px; letter-spacing: 0.04em;">★ CLOSING COST CONTRIBUTIONS — TOTAL CREDIT TO BUYER: ' + esc(_sumFmtMoney(total)) + '</div>' +
+      '<table style="border-collapse: collapse; width: 100%; ' + FONT + '">' + cHead + cBody + '</table>';
+  }
+  let othersHtml = '';
+  if (others.length) {
+    othersHtml = '<div style="font-weight: 700; color: #312E81; margin: 22px 0 8px; letter-spacing: 0.04em;">OTHER AGREEMENTS</div>' +
+      others.map(function (t) { return '<div>• ' + esc(t) + '</div>'; }).join('');
+  }
+
+  return '<div style="' + FONT + ' max-width: 720px;">' +
+    '<p style="margin: 0 0 14px;">' + esc(greeting) + '</p>' +
+    '<div style="background: #FEF3C7; border-left: 4px solid #F59E0B; padding: 10px 14px; margin: 0 0 16px; font-weight: 600; color: #92400E;">' +
+    '⚠ UPDATED SUMMARY — this replaces any earlier transaction summary for this file. Please use the version below going forward.</div>' +
+    '<p style="margin: 0 0 14px;">I\'m Gloria Grullon, Transaction Coordinator for <b>' + esc(primaryName || 'this transaction') + '</b>. ' +
+    'Please be sure to copy me on all communications from here on out so I can keep everything on track.</p>' +
+    '<p style="margin: 0 0 18px;">You\'ll find the current contract dates and contact details for everyone involved listed below. ' +
+    'Take a quick look when you have a moment and let me know if anything needs to be corrected or updated.</p>' +
+    detailsHtml +
+    '<div style="font-weight: 700; color: #312E81; margin: 18px 0 8px; letter-spacing: 0.04em;">CRITICAL DEADLINES</div>' +
+    '<table style="border-collapse: collapse; width: 100%; ' + FONT + '">' + tableHead + tableBody + '</table>' +
+    contribHtml + othersHtml +
+    '<div style="font-weight: 700; color: #312E81; margin: 22px 0 6px; letter-spacing: 0.04em;">IMPORTANT NOTES</div>' +
+    '<div>• All deadlines are calculated from the Effective Date unless otherwise noted (CD = Closing Date).</div>' +
+    '<div>• Any deadline that falls on a Saturday, Sunday, or national legal holiday shall extend to 5:00 PM of the next business day.</div>' +
+    '<p style="margin: 20px 0 0;">Gloria Grullon<br>Transaction Coordinator | MRFL Transactions<br>📞 401.282.8414<br>✉ MRFLTransactions@gmail.com</p>' +
+    '</div>';
+}
+
+// Menu entry point. Creates the draft and reports where it went.
+function createSummaryEmailDraft() {
+  const ui = SpreadsheetApp.getUi();
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  const name = sheet.getName();
+  if (name === DASHBOARD_TAB_NAME || name.startsWith('📊') || !name.includes('_')) {
+    ui.alert('Open the property tab you want the summary email for, then run ✉️ Recreate summary email again.');
+    return;
+  }
+
+  const tab = _sumParseTab(sheet);
+  const contacts = _sumContacts(tab.detailLines);
+  const rec = _sumRecipients(contacts, tab.side, tab.isCash);
+  const greeting = _sumGreeting(rec.to);
+  const sideKey = String(tab.side || '').toLowerCase();
+  const primaryName = (sideKey === 'buyer') ? contacts.byr.name : (contacts.lst.name || contacts.byr.name);
+
+  const subject = 'UPDATED — Transaction Summary: ' + tab.property;
+  const plain = _sumBuildPlain(tab, greeting, primaryName);
+  const html = _sumBuildHtml(tab, greeting, primaryName);
+
+  let to = rec.to.map(function (r) { return r.email; }).join(',');
+  const cc = rec.cc.map(function (r) { return r.email; }).join(',');
+  let note = '';
+  if (!to) {
+    to = Session.getEffectiveUser().getEmail();
+    note = '\n\n⚠ No recipient emails were found on the tab, so the draft is addressed to YOU — set the To line in Gmail before sending.';
+  }
+
+  GmailApp.createDraft(to, subject, plain, {
+    cc: cc || undefined,
+    htmlBody: html,
+    name: 'MRFL Transactions'
+  });
+
+  ui.alert('✉️ Draft created in your Gmail (Drafts folder) — nothing was sent.\n\n' +
+    'To: ' + to + (cc ? '\nCc: ' + cc : '') +
+    '\n\nIt was built from this tab as it is RIGHT NOW, so any details you added or changed are included. ' +
+    'Review it, adjust anything you like, and hit Send yourself.' + note);
 }
 
 // ============================================================

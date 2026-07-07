@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [2.7.1] — 2026-07-07
+
+### Added — ✉️ Recreate summary email (webhook v7.8)
+
+- New 🛠 TC Tools → **✉️ Recreate summary email**: rebuilds the intake
+  form's "First Email — Transaction Summary" from the tab **as it is
+  right now** and drops it in Gloria's Gmail as a **draft** (never
+  sent). Use after any mid-deal change — ✏️ details, HOA, date edits —
+  to resend an accurate summary without redoing the intake.
+- Same To/Cc policy as the intake composer (write TO the other side +
+  title + lender, Cc the represented agent; double-sided → titles +
+  lender only; cash deals exclude the lender). Greeting built from the
+  To names. Subject prefixed "UPDATED —" with an amber banner telling
+  recipients to disregard earlier versions. Non-monetary concessions
+  now appear under "OTHER AGREEMENTS" (the original email dropped
+  them). No recipients found → draft addressed to Gloria with a note.
+- Verified in-browser against a simulated tab: recipient routing for
+  all three sides, cash-excludes-lender, checked milestones show ✓,
+  newly added seller-title section appears in the body, internal lines
+  (Side Represented / Manual Status) excluded.
+
+---
+
 ## [2.7.0] — 2026-07-07
 
 ### Added — ✏️ Add / update details (fill in missing info mid-deal)

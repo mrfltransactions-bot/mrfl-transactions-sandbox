@@ -109,6 +109,14 @@ connected to Vercel 2026-07-06; www is the primary host, apex 307-redirects).
   updates HOA milestone rows above Closing Date, then in-dialog calendar-sync
   offer. (`SpreadsheetApp.getUi().alert()` from `google.script.run` silently
   fails — that's why the reminder is in-dialog. Remember this.)
+- **Recreate summary email (v7.8):** 🛠 TC Tools → "✉️ Recreate summary
+  email" — `createSummaryEmailDraft` + `_sum*` helpers rebuild the intake
+  form's Transaction Summary email from the ACTIVE tab's current contents
+  and create a Gmail **draft** (drafts-only constraint applies). Recipient
+  policy mirrors the intake composer's `_emailComputeRecipients` (side from
+  the tab's `Side Represented:` line; cash excludes lender). Subject
+  "UPDATED — Transaction Summary: <address>" + amber disregard-earlier
+  banner; non-$ concessions listed under OTHER AGREEMENTS.
 - **Add / update details dialog (v7.7):** 🛠 TC Tools → "✏️ Add / update
   details" — generalizes the HOA pattern to the contact sections agents most
   often add later (buyer/closing title, **seller's title**, loan officer,
@@ -175,9 +183,10 @@ connected to Vercel 2026-07-06; www is the primary host, apex 307-redirects).
 ## 🛠 TC Tools menu (current)
 
 Refresh Dashboard · Show Active Only/All · Sync dates → Calendar · Set up
-calendar sync · Add / update HOA info · **Add / update details** · Agent
-portal links · My dashboard link · Log a referral · Manage reviews ·
-Preview / create reminder drafts · Set up daily reminder drafts · About.
+calendar sync · Add / update HOA info · **Add / update details** ·
+**Recreate summary email** · Agent portal links · My dashboard link ·
+Log a referral · Manage reviews · Preview / create reminder drafts ·
+Set up daily reminder drafts · About.
 
 ## Working with Gloria
 
