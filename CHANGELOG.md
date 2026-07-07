@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [2.4.3] — 2026-07-06
+
+### Changed
+
+- Hero headline: **"Your deals, in good hands."** (warm/bold/short, per
+  Gloria; gradient on "in good hands").
+
+---
+
 ## [2.4.2] — 2026-07-06
 
 ### Changed — calmer hero
