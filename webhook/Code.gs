@@ -2605,13 +2605,19 @@ function _sumContacts(detailLines) {
 }
 
 // Same To/Cc policy as the intake composer (locked): write TO the other
-// side + title + lender, Cc the represented agent(s).
+// side + title + lender, Cc the represented agent(s). Values that aren't
+// real email addresses (websites, phone numbers, typos) are collected in
+// `skipped` instead of crashing GmailApp.createDraft.
 function _sumRecipients(c, side, isCash) {
   const s = String(side || '').toLowerCase();
-  const to = [], cc = [];
+  const to = [], cc = [], skipped = [];
   const push = function (arr, p) {
     const e = (p.email || '').trim();
     if (!e) return;
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)) {
+      if (skipped.indexOf(e) < 0) skipped.push(e);
+      return;
+    }
     if (arr.some(function (x) { return x.email.toLowerCase() === e.toLowerCase(); })) return;
     if (to !== arr && to.some(function (x) { return x.email.toLowerCase() === e.toLowerCase(); })) return;
     arr.push({ email: e, name: p.name || '' });
@@ -2631,7 +2637,7 @@ function _sumRecipients(c, side, isCash) {
     if (!isCash) { push(to, c.lo); push(to, c.lp); }
     push(cc, c.lst); push(cc, c.coLst);
   }
-  return { to: to, cc: cc };
+  return { to: to, cc: cc, skipped: skipped };
 }
 
 function _sumGreeting(toList) {
@@ -2821,14 +2827,25 @@ function createSummaryEmailDraft() {
   let note = '';
   if (!to) {
     to = Session.getEffectiveUser().getEmail();
-    note = '\n\n⚠ No recipient emails were found on the tab, so the draft is addressed to YOU — set the To line in Gmail before sending.';
+    note = '\n\n⚠ No valid recipient emails were found on the tab, so the draft is addressed to YOU — set the To line in Gmail before sending.';
+  }
+  if (rec.skipped.length) {
+    note += '\n\n⚠ Skipped — not valid email addresses (probably a website or typo on the tab):\n• ' +
+      rec.skipped.join('\n• ') +
+      '\nFix them with ✏️ Add / update details (or directly on the tab), or add the right address in Gmail before sending.';
   }
 
-  GmailApp.createDraft(to, subject, plain, {
-    cc: cc || undefined,
-    htmlBody: html,
-    name: 'MRFL Transactions'
-  });
+  try {
+    GmailApp.createDraft(to, subject, plain, {
+      cc: cc || undefined,
+      htmlBody: html,
+      name: 'MRFL Transactions'
+    });
+  } catch (err) {
+    ui.alert('Could not create the draft: ' + err.message +
+      '\n\nCheck the email addresses on this tab (✏️ Add / update details) and try again.');
+    return;
+  }
 
   ui.alert('✉️ Draft created in your Gmail (Drafts folder) — nothing was sent.\n\n' +
     'To: ' + to + (cc ? '\nCc: ' + cc : '') +

@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [2.7.2] — 2026-07-07
+
+### Fixed — recreate-email crash on non-email "Email:" values
+
+- A tab line like `Email: kelleygrantlaw.com` (a website, not an
+  address) made GmailApp throw "Exception: Invalid email". Recipient
+  collection now validates each address; invalid ones are skipped and
+  listed in the result dialog with a pointer to ✏️ Add / update
+  details. Draft creation is also wrapped so any residual failure
+  shows a plain-English message instead of a raw exception toast.
+
+---
+
 ## [2.7.1] — 2026-07-07
 
 ### Added — ✉️ Recreate summary email (webhook v7.8)
