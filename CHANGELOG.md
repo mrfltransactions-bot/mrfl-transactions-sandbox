@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [2.6.0] — 2026-07-07
+
+### Changed — clarity + differentiation pass (competitor-informed)
+
+- Hero sub now names the service outright: "**Transaction coordination
+  for Florida realtors.** Send me your executed contract — I handle every
+  date, document, and follow-up through closing day."
+- New **"Not your typical TC"** section right under the hero: side-by-side
+  compare — The usual way (✕ email chains, quote-on-request pricing,
+  shared queue, self-tracked deadlines) vs With MRFL (✓ live portal,
+  flat public pricing, one coordinator, dates calendared in 24h +
+  reminders). Informed by a scan of FL competitor TC sites (none show a
+  live portal; most hide pricing).
+
+---
+
 ## [2.5.1] — 2026-07-07
 
 ### Changed

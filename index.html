@@ -153,7 +153,7 @@
   h2.sec::before { color: var(--acc2); }
 
   /* ---- liquid glass panels: frosted blur + specular top edge ---- */
-  .card, .step, .stat, .price, .rev, .rev-form, .about, .revs-empty, .ref-strip {
+  .card, .step, .stat, .price, .rev, .rev-form, .about, .revs-empty, .ref-strip, .vs-col {
     background-color: var(--glass-base);
     background-image: var(--glass-sheen);
     backdrop-filter: blur(14px) saturate(1.5);
@@ -198,6 +198,7 @@
     background-image: linear-gradient(90deg, #0369A1, #6D28D9, #A21CAF);
   }
   .hero p.sub { font-size: clamp(15.5px, 2.3vw, 18px); color: var(--soft); max-width: 620px; margin: 0 auto 28px; }
+  .hero p.sub b { color: var(--text); }
   .hero .ctas { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
 
   .statrow { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 34px; }
@@ -231,6 +232,20 @@
   @keyframes wiggle { 0%,100% { transform: rotate(0); } 30% { transform: rotate(-12deg) scale(1.15); } 60% { transform: rotate(9deg); } }
   .card h3 { font-size: 15.5px; font-weight: 800; margin-bottom: 5px; }
   .card p { font-size: 13.5px; color: var(--soft); }
+
+  /* ---- The MRFL difference (vs a typical TC) ---- */
+  .vs { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; max-width: 760px; margin: 0 auto; }
+  .vs-col { border: 1px solid var(--bd); border-radius: 20px; padding: 22px; }
+  .vs-col.mrfl { border: 1.5px solid var(--bd-strong); box-shadow: var(--glow), var(--shadow); }
+  .vs-col h3 { font-size: 13px; font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 14px; text-align: center; }
+  .vs-col.mrfl h3 { color: var(--acc); }
+  .vs-col ul { list-style: none; }
+  .vs-col li { display: flex; gap: 10px; align-items: flex-start; padding: 7px 0;
+    font-size: 14px; color: var(--soft); }
+  .vs-col li .m { flex: none; font-weight: 800; color: var(--muted); }
+  .vs-col.mrfl li .m { color: var(--ok); }
+  .vs-col li b { color: var(--text); }
 
   .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; counter-reset: step; }
   .step { background: var(--panel); border: 1px solid var(--bd); border-radius: 18px; padding: 20px; }
@@ -356,8 +371,9 @@
 <header class="hero" id="top">
   <div class="shell">
     <h1>Your deals, <em>in good hands</em>.</h1>
-    <p class="sub">From executed contract to closing day — dates, deadlines, documents,
-      and every party kept in sync. You focus on selling; I run the file.</p>
+    <p class="sub"><b>Transaction coordination for Florida realtors.</b> Send me your
+      executed contract — I handle every date, document, and follow-up through
+      closing day. You focus on selling.</p>
     <div class="ctas">
       <a class="btn big" href="sms:+14012828414?&amp;body=Hi%20Gloria!%20I%27d%20like%20to%20learn%20more%20about%20your%20TC%20services.">💬 Text Gloria</a>
       <a class="btn big ghost" href="mailto:MRFLTransactions@gmail.com?subject=TC%20services">✉️ Email me</a>
@@ -371,7 +387,35 @@
   </div>
 </header>
 
-<section id="services">
+<section id="why">
+  <div class="shell">
+    <h2 class="sec reveal">Not your typical TC</h2>
+    <p class="seclead reveal">Most coordination services run on email chains and "call for pricing."
+      Here's what working with me looks like instead.</p>
+    <div class="vs">
+      <div class="vs-col reveal">
+        <h3>The usual way</h3>
+        <ul>
+          <li><span class="m">✕</span><span>Updates buried in email chains and phone tag</span></li>
+          <li><span class="m">✕</span><span>Pricing quoted on request</span></li>
+          <li><span class="m">✕</span><span>Your file sits in a shared queue</span></li>
+          <li><span class="m">✕</span><span>You keep your own list of deadlines</span></li>
+        </ul>
+      </div>
+      <div class="vs-col mrfl reveal">
+        <h3>With MRFL</h3>
+        <ul>
+          <li><span class="m">✓</span><span><b>Your live portal</b> — every deal, deadline, and contact in one private link, always current</span></li>
+          <li><span class="m">✓</span><span><b>Flat, public pricing</b> — $500 single side · $700 double sided, pay only when it closes</span></li>
+          <li><span class="m">✓</span><span><b>One coordinator</b> who knows every one of your files: me</span></li>
+          <li><span class="m">✓</span><span><b>Dates calendared within 24 hours</b> — and a reminder before every deadline</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="line" id="services">
   <div class="shell">
     <h2 class="sec reveal">What you get on every file</h2>
     <p class="seclead reveal">One flat fee per transaction covers the whole journey, contract to closing.</p>
