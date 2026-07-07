@@ -150,7 +150,7 @@
     box-shadow: inset 0 1px 0 var(--glass-spec);
     backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
   }
-  h2.sec::before, .eyebrow::before, .eyebrow::after { color: var(--acc2); }
+  h2.sec::before { color: var(--acc2); }
 
   /* ---- liquid glass panels: frosted blur + specular top edge ---- */
   .card, .step, .stat, .price, .rev, .rev-form, .about, .revs-empty, .ref-strip {
@@ -186,21 +186,6 @@
     clip-path: polygon(44% 0, 56% 0, 100% 100%, 0 100%);
     filter: blur(14px); pointer-events: none; }
   :root[data-theme="light"] .beam { opacity: 0.35; }
-  .floaty { position: absolute; font-size: 30px; opacity: 0.75; pointer-events: none;
-    animation: bob 5.2s ease-in-out infinite; }
-  .floaty.f1 { top: 16%; left: 7%;  animation-delay: 0s; }
-  .floaty.f2 { top: 12%; right: 9%; animation-delay: 1.2s; font-size: 26px; }
-  .floaty.f3 { bottom: 30%; left: 12%; animation-delay: 2.1s; font-size: 24px; }
-  .floaty.f4 { bottom: 24%; right: 11%; animation-delay: 0.7s; }
-  @keyframes bob { 0%,100% { transform: translateY(0) rotate(-4deg); } 50% { transform: translateY(-14px) rotate(5deg); } }
-  @media (max-width: 720px) { .floaty { display: none; } }
-
-  .eyebrow {
-    display: inline-flex; align-items: center; gap: 8px;
-    font-size: 11.5px; font-weight: 800; letter-spacing: 1.6px; color: var(--acc);
-    text-transform: uppercase; margin-bottom: 18px;
-  }
-  .eyebrow::before, .eyebrow::after { content: "///"; opacity: 0.6; letter-spacing: 0; }
   .hero h1 { font-size: clamp(30px, 5.4vw, 46px); font-weight: 800; letter-spacing: -0.8px;
     line-height: 1.14; max-width: 700px; margin: 0 auto 16px; }
   .hero h1 em {
@@ -369,13 +354,8 @@
 </nav>
 
 <header class="hero" id="top">
-  <span class="floaty f1" aria-hidden="true">🏡</span>
-  <span class="floaty f2" aria-hidden="true">🔑</span>
-  <span class="floaty f3" aria-hidden="true">📋</span>
-  <span class="floaty f4" aria-hidden="true">⏰</span>
   <div class="shell">
-    <span class="eyebrow">Florida real estate transaction coordination</span>
-    <h1>Your transaction coordinator, <em>on demand</em>.</h1>
+    <h1>Hand me your contract.<br><em>I'll take it from there.</em></h1>
     <p class="sub">From executed contract to closing day — dates, deadlines, documents,
       and every party kept in sync. You focus on selling; I run the file.</p>
     <div class="ctas">

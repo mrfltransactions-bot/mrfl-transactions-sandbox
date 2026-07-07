@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [2.4.2] — 2026-07-06
+
+### Changed — calmer hero
+
+- New headline: "Hand me your contract. I'll take it from there."
+  (gradient on the second line). Removed the floating emoji icons and
+  the "Florida real estate transaction coordination" eyebrow — the
+  light beam, dotted texture, and glass stat chips carry the hero now.
+
+---
+
 ## [2.4.1] — 2026-07-06
 
 ### Changed — custom domain: mrfltransactions.com
