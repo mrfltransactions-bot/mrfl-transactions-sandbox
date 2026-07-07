@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [2.6.2] — 2026-07-07
+
+### Fixed — sheet submission rides through Google hiccups too
+
+- `submitViaWebhook` now retries up to 3 times (2s/4s backoff) when
+  Google answers with a non-JSON page or the connection drops — but
+  NOT when Apps Script returns a definitive JSON verdict (re-sending a
+  processed request could double-create the tab). If a retry reports
+  "tab already exists", the form now explains the first attempt
+  actually landed and tells Gloria to check the sheet. Failure
+  messages are plain-English with next steps.
+
+---
+
 ## [2.6.1] — 2026-07-07
 
 ### Fixed — intake extraction rides through Anthropic outages

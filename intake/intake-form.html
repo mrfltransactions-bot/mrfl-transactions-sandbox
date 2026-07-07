@@ -2736,25 +2736,55 @@
   }
 
   // ============ SUBMIT VIA WEBHOOK ============
+  // Google Apps Script occasionally has transient hiccups (HTML error pages,
+  // dropped connections). Retry ONLY when we didn't get a JSON verdict — a
+  // parsed JSON answer means the script processed the request, and re-sending
+  // it could double-create the tab. If a retry reports "already exists", the
+  // first attempt actually landed before its response was lost — say so.
   async function submitViaWebhook(payload) {
     const url = getStoredUrl();
     if (!url) return { success: false, error: 'No webhook URL configured.' };
-    try {
-      const res = await fetch(url, {
-        method: 'POST',
-        // text/plain content-type avoids CORS preflight; Apps Script reads the raw body
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify(payload)
-      });
-      const txt = await res.text();
+    const MAX_TRIES = 3;
+    let lastFail = null;
+    for (let attempt = 1; attempt <= MAX_TRIES; attempt++) {
       try {
-        return JSON.parse(txt);
-      } catch {
-        return { success: false, error: 'Invalid response from webhook: ' + txt.substring(0, 200) };
+        const res = await fetch(url, {
+          method: 'POST',
+          // text/plain content-type avoids CORS preflight; Apps Script reads the raw body
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(payload)
+        });
+        const txt = await res.text();
+        try {
+          const parsed = JSON.parse(txt);
+          if (attempt > 1 && parsed && parsed.success === false &&
+              /already exists/i.test(parsed.error || '')) {
+            return {
+              success: false,
+              error: 'Good news with a catch: your first attempt DID reach the sheet — the tab "' +
+                payload.tabName + '" was created. Open the sheet and check that tab. If the ' +
+                'milestones or details look incomplete, delete the tab and click Generate again.'
+            };
+          }
+          if (parsed && parsed.success === false && !parsed.error) {
+            parsed.error = 'The webhook answered without details. If this keeps happening, ' +
+              'paste the latest Code.gs into Apps Script and Deploy → New version.';
+          }
+          return parsed;
+        } catch (parseErr) {
+          lastFail = { success: false, error: 'Google returned an unexpected page instead of an ' +
+            'answer (usually a temporary hiccup on their side). Response began: ' + txt.substring(0, 160) };
+        }
+      } catch (err) {
+        lastFail = { success: false, error: 'Network error: ' + (err.message || 'connection failed') };
       }
-    } catch (err) {
-      return { success: false, error: 'Network error: ' + err.message };
+      if (attempt < MAX_TRIES) {
+        await new Promise(r => setTimeout(r, 2000 * attempt));
+      }
     }
+    lastFail.error = lastFail.error + ' — tried ' + MAX_TRIES + ' times. Use the manual paste ' +
+      'below for this one, or wait a minute and click Generate again.';
+    return lastFail;
   }
 
   // ============ GENERATE BUTTON ============
