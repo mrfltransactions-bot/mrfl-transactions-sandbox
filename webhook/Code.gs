@@ -2541,6 +2541,10 @@ function _sumParseTab(sheet) {
         continue;
       }
       if (line.indexOf('Manual Status:') === 0) continue;
+      // PRIVACY: the clients' own contact info stays off the email — the
+      // first email only ever shows their names, and this must match. The
+      // tab keeps these lines for Gloria; they just never enter the body.
+      if (/^(Seller|Buyer)\(s\)\s+(Email|Phone|Mobile|Address)\s*:/i.test(line)) continue;
       if (line.indexOf('Financing Type:') === 0 && /cash/i.test(line)) out.isCash = true;
       out.detailLines.push(line);  // '' rows keep their place as separators
       continue;

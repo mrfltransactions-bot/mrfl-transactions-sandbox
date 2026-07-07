@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [2.7.3] — 2026-07-07
+
+### Fixed — PRIVACY: clients' contact info leaked into the recreated email
+
+- The recreated summary email copied the tab's details block verbatim,
+  which includes `Seller(s)/Buyer(s) Email:`/`Phone:` lines the tab
+  keeps for Gloria's reference — but the first email deliberately only
+  shows client NAMES. Those lines are now stripped from the email body
+  (regex covers Email/Phone/Mobile/Address variants). Clients were
+  never in To/Cc; this closes the body leak. Verified: client email +
+  phone absent from To, Cc, plain, and HTML; names and professional
+  contacts unchanged.
+
+---
+
 ## [2.7.2] — 2026-07-07
 
 ### Fixed — recreate-email crash on non-email "Email:" values
