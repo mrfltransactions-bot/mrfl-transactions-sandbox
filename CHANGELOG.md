@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [2.5.0] — 2026-07-06
+
+### Changed — dashboard aurora liquid-glass + send portal links (webhook v7.6)
+
+- **Dashboard restyle** to Gloria's liquid-glass references: deeper
+  violet-black backdrop with three vivid aurora blobs (violet/blue/
+  magenta), stronger frosted blur, bright specular top edge on every
+  glass panel and the floating nav, glowing blue→violet ＋ button,
+  deeper avatar gradients (now with solid audit-visible fallbacks).
+- **🔗 Send portal link from the dashboard**: every agent row in the
+  Agents tab has a glass 🔗 button — tap to share (or auto-copy) the
+  same friendly invite message + that agent's personal portal link the
+  sheet dialog generates. Webhook v7.6 adds `portal_links` to the
+  operator payload (keys generated on demand; payload already requires
+  the operator key).
+- Row titles/subtitles now stack properly at any width (were inline
+  spans).
+- Contrast audit (emoji pictographs excluded — CSS color doesn't paint
+  them): 0 failures across home/agents/urgent in both themes.
+
+---
+
 ## [2.4.3] — 2026-07-06
 
 ### Changed

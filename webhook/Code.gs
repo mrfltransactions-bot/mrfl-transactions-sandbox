@@ -2343,12 +2343,34 @@ function operatorResponse_(params) {
   let reviewStats = { pending: 0, shown: 0 };
   try { reviewStats = _revStats(); } catch (e) {}
 
+  // v7.6 — each agent's personal portal link, so Gloria can send them
+  // straight from her dashboard (same keys as the sheet's links dialog;
+  // generated here if an agent doesn't have one yet). Safe to include:
+  // this payload already requires her private operator key.
+  const portalLinks = {};
+  try {
+    const props = PropertiesService.getScriptProperties();
+    const seen = {};
+    deals.forEach(function (d) {
+      const ref = d.agent;
+      if (!ref || seen[ref]) return;
+      seen[ref] = true;
+      let k = props.getProperty(_portalKeyProp(ref));
+      if (!k) {
+        k = _portalRandomKey();
+        props.setProperty(_portalKeyProp(ref), k);
+      }
+      portalLinks[ref] = PORTAL_BASE_URL + '?a=' + encodeURIComponent(ref) + '&k=' + k;
+    });
+  } catch (e) { /* dashboard still works without links */ }
+
   return jsonResponse({
     success: true,
     generated_at: new Date().toISOString(),
     deals: deals,
     referrals: referrals,
-    reviews: reviewStats
+    reviews: reviewStats,
+    portal_links: portalLinks
   });
 }
 

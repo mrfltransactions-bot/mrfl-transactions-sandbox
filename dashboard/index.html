@@ -16,13 +16,14 @@
      ============================================================ */
   :root {
     --bg0:        #EDF0FA;
-    --blob1:      rgba(167, 139, 250, 0.35);
-    --blob2:      rgba(96, 165, 250, 0.35);
-    --blob3:      rgba(244, 114, 182, 0.22);
+    --blob1:      rgba(167, 139, 250, 0.45);
+    --blob2:      rgba(96, 165, 250, 0.45);
+    --blob3:      rgba(232, 121, 249, 0.30);
 
     --glass:      rgba(255, 255, 255, 0.72);
     --glass2:     rgba(255, 255, 255, 0.92);
     --bd:         rgba(25, 29, 58, 0.10);
+    --spec:       rgba(255, 255, 255, 0.95);   /* specular top edge */
 
     --text:       #181C38;
     --soft:       #454C70;
@@ -54,14 +55,15 @@
     --glow:       0 6px 22px rgba(37, 99, 235, 0.45);
   }
   :root[data-theme="dark"] {
-    --bg0:        #0A0D18;
-    --blob1:      rgba(109, 40, 217, 0.30);
-    --blob2:      rgba(37, 99, 235, 0.28);
-    --blob3:      rgba(219, 39, 119, 0.16);
+    --bg0:        #0A0716;      /* deep violet-black, aurora behind glass */
+    --blob1:      rgba(139, 92, 246, 0.55);
+    --blob2:      rgba(37, 99, 235, 0.50);
+    --blob3:      rgba(217, 70, 239, 0.38);
 
-    --glass:      rgba(255, 255, 255, 0.06);
-    --glass2:     rgba(255, 255, 255, 0.11);
-    --bd:         rgba(255, 255, 255, 0.10);
+    --glass:      rgba(255, 255, 255, 0.07);
+    --glass2:     rgba(255, 255, 255, 0.12);
+    --bd:         rgba(255, 255, 255, 0.14);
+    --spec:       rgba(255, 255, 255, 0.28);   /* specular top edge */
 
     --text:       #F2F4FF;
     --soft:       #C0C6E4;
@@ -90,7 +92,7 @@
     --bar-gray:   #6F77A0;
 
     --shadow:     0 12px 30px -12px rgba(0, 0, 0, 0.65);
-    --glow:       0 6px 24px rgba(59, 130, 246, 0.55);
+    --glow:       0 6px 26px rgba(99, 102, 241, 0.65), 0 0 18px rgba(217, 70, 239, 0.25);
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -109,10 +111,15 @@
     content: ""; position: fixed; z-index: -1; border-radius: 50%;
     filter: blur(90px); pointer-events: none;
   }
-  body::before { width: 420px; height: 420px; top: -120px; left: -120px;
+  body::before { width: 480px; height: 480px; top: -130px; left: -130px;
     background: radial-gradient(circle, var(--blob1), transparent 70%); }
-  body::after { width: 480px; height: 480px; bottom: -160px; right: -140px;
+  body::after { width: 540px; height: 540px; bottom: -180px; right: -160px;
     background: radial-gradient(circle, var(--blob2), transparent 70%); }
+  /* third aurora blob — magenta, mid-right like the reference */
+  #blob3 { position: fixed; z-index: -1; width: 420px; height: 420px;
+    top: 32%; right: -180px; border-radius: 50%; filter: blur(95px);
+    background: radial-gradient(circle, var(--blob3), transparent 70%);
+    pointer-events: none; }
 
   .app { max-width: 620px; margin: 0 auto; padding: 18px 16px 118px; }
 
@@ -121,11 +128,11 @@
      ============================================================ */
   .g {
     background: var(--glass);
-    backdrop-filter: blur(18px) saturate(150%);
-    -webkit-backdrop-filter: blur(18px) saturate(150%);
+    backdrop-filter: blur(20px) saturate(160%);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
     border: 1px solid var(--bd);
     border-radius: 22px;
-    box-shadow: var(--shadow);
+    box-shadow: inset 0 1px 0 var(--spec), var(--shadow);
   }
   .tap { cursor: pointer; text-decoration: none; color: inherit; display: block; }
   .tap:active { transform: scale(0.985); }
@@ -136,7 +143,8 @@
   .hdr { display: flex; align-items: center; gap: 12px; margin: 4px 2px 18px; }
   .avatar {
     width: 52px; height: 52px; border-radius: 50%; flex: none;
-    background: linear-gradient(135deg, #A78BFA, #4D8DFF);
+    background-color: #6D28D9; /* solid fallback so contrast audits see it */
+    background-image: linear-gradient(135deg, #7C3AED, #2563EB);
     display: flex; align-items: center; justify-content: center;
     color: #fff; font-weight: 800; font-size: 20px;
     box-shadow: 0 0 0 2.5px var(--bg0), 0 0 0 4.5px #F6A723;
@@ -216,8 +224,8 @@
      ============================================================ */
   .row { display: flex; gap: 12px; padding: 14px; border-radius: 20px; margin-bottom: 12px; align-items: center; }
   .row .r-main { flex: 1; min-width: 0; }
-  .row .r-title { font-size: 14.5px; font-weight: 800; line-height: 1.35; }
-  .row .r-sub { font-size: 12px; color: var(--soft); font-weight: 600; margin-top: 2px; }
+  .row .r-title { display: block; font-size: 14.5px; font-weight: 800; line-height: 1.35; }
+  .row .r-sub { display: block; font-size: 12px; color: var(--soft); font-weight: 600; margin-top: 2px; }
   .row .chev { color: var(--muted); flex: none; font-size: 16px; }
   .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 7px; }
   .chip {
@@ -240,7 +248,8 @@
     width: 44px; height: 44px; border-radius: 50%; flex: none;
     display: flex; align-items: center; justify-content: center;
     color: #fff; font-weight: 800; font-size: 16px;
-    background: linear-gradient(135deg, #A78BFA, #4D8DFF);
+    background-color: #6D28D9; /* solid fallback so contrast audits see it */
+    background-image: linear-gradient(135deg, #7C3AED, #2563EB);
   }
 
   /* ============================================================
@@ -325,16 +334,38 @@
     border-radius: 999px; display: flex; align-items: center; justify-content: space-around;
     background: var(--glass2);
     backdrop-filter: blur(24px) saturate(160%); -webkit-backdrop-filter: blur(24px) saturate(160%);
-    border: 1px solid var(--bd); box-shadow: var(--shadow);
+    border: 1px solid var(--bd); box-shadow: inset 0 1px 0 var(--spec), var(--shadow);
   }
   .bnav a { color: var(--muted); font-size: 20px; text-decoration: none; width: 46px; height: 46px;
     display: flex; align-items: center; justify-content: center; border-radius: 50%; }
   .bnav a.on { color: var(--blue-t); }
   .bnav .plus {
     width: 54px; height: 54px; border-radius: 50%; margin-top: -26px;
-    background-color: var(--cta); background-image: linear-gradient(160deg, #3B82F6, #2563EB);
-    color: #fff; font-size: 24px; font-weight: 800; box-shadow: var(--glow);
+    background-color: var(--cta); background-image: linear-gradient(160deg, #3B82F6, #7C3AED);
+    color: #fff; font-size: 24px; font-weight: 800;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.4), var(--glow);
     border: 3px solid var(--bg0);
+  }
+
+  /* send-portal-link button on agent rows */
+  .linkbtn {
+    width: 40px; height: 40px; border-radius: 50%; flex: none; cursor: pointer;
+    border: 1px solid var(--bd); background: var(--glass2); color: var(--blue-t);
+    font-size: 15px; box-shadow: inset 0 1px 0 var(--spec);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  }
+  .linkbtn:active { transform: scale(0.92); }
+
+  /* toast */
+  #toast {
+    position: fixed; left: 50%; bottom: 92px; transform: translateX(-50%);
+    z-index: 60; max-width: min(400px, calc(100% - 40px));
+    background: var(--glass2); color: var(--text);
+    border: 1px solid var(--bd); border-radius: 999px; padding: 11px 20px;
+    font-size: 13px; font-weight: 700; text-align: center;
+    box-shadow: inset 0 1px 0 var(--spec), var(--shadow);
+    backdrop-filter: blur(20px) saturate(160%); -webkit-backdrop-filter: blur(20px) saturate(160%);
+    display: none;
   }
 
   /* states */
@@ -360,6 +391,7 @@
 </script>
 </head>
 <body>
+<div id="blob3" aria-hidden="true"></div>
 
 <div class="app">
   <div class="hdr">
@@ -385,6 +417,7 @@
 </nav>
 
 <div id="printview" aria-hidden="true"></div>
+<div id="toast" role="status"></div>
 
 <script>
 (function () {
@@ -697,6 +730,7 @@
         '<span class="r-main"><span class="r-title">' + esc(n) + '</span>' +
         '<span class="r-sub">' + deals.length + ' active deal' + (deals.length === 1 ? '' : 's') +
         (next ? ' · next: ' + esc(next.name) + ' ' + esc(inWords(next.days)) : '') + '</span></span>' +
+        '<button type="button" class="linkbtn" data-linkref="' + esc(n) + '" title="Send ' + esc(n) + ' their portal link">🔗</button>' +
         '<span class="chev">›</span></a>';
     });
     setMain(h);
@@ -858,6 +892,57 @@
     document.getElementById('printview').innerHTML = buildPrintHtml(d);
     window.print();
   });
+
+  // ---------- send an agent their portal link (🔗 on agent rows) ----------
+  var toastTimer = null;
+  function toast(msg) {
+    var t = document.getElementById('toast');
+    t.textContent = msg;
+    t.style.display = 'block';
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { t.style.display = 'none'; }, 3500);
+  }
+  function legacyCopy(text) {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;left:-9999px;top:0';
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); } catch (err) {}
+    ta.remove();
+  }
+  function shareAgentLink(ref) {
+    var link = DATA && DATA.portal_links && DATA.portal_links[ref];
+    if (!link) {
+      toast('No link yet — paste the latest Code.gs (v7.6) and deploy a New version, then refresh ↻');
+      return;
+    }
+    var msg = 'Hi ' + ref + '! 🏡 I set up a private portal for your transactions with me. ' +
+      'Your personal link shows your deals live — timelines, deadlines, and every contact on the file:\n\n' +
+      link + '\n\n' +
+      'On your phone: open it, then Share → Add to Home Screen, and it works like an app. ' +
+      'It updates automatically whenever anything changes. This link is just for you — please don’t forward it.\n\n' +
+      '— Gloria · MRFL Transactions';
+    if (navigator.share) {
+      navigator.share({ text: msg }).catch(function () { /* cancelled — fine */ });
+      return;
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(msg).then(function () {
+        toast('✓ Invite for ' + ref + ' copied — paste it into a text or email');
+      }).catch(function () { legacyCopy(msg); toast('✓ Invite for ' + ref + ' copied — paste it into a text or email'); });
+    } else {
+      legacyCopy(msg);
+      toast('✓ Invite for ' + ref + ' copied — paste it into a text or email');
+    }
+  }
+  document.addEventListener('click', function (e) {
+    var btn = e.target.closest ? e.target.closest('[data-linkref]') : null;
+    if (!btn) return;
+    e.preventDefault();
+    e.stopPropagation();
+    shareAgentLink(btn.getAttribute('data-linkref'));
+  }, true);
 
   // ---------- shell ----------
   function setMain(html) {
