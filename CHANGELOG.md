@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [2.9.0] — 2026-07-08
+
+### Changed — "ink & azure" website restyle (TVM Engineering reference)
+
+- Marketing site + referral landing restyled flat and engineering-clean
+  from Gloria's tvm-engineering.com reference: deep ink navy #040729,
+  one bright azure accent #00A3FF, ice-blue #E8F3FF tints, Hanken
+  Grotesk (Google Fonts), hairline-bordered solid cards with azure
+  top-accent bars, azure heading rules replacing the /// marks, 10px
+  rounded-rect buttons (azure bg, ink text). All glass/glow/gradients
+  removed: orbs, hero light-beam + dotted texture, backdrop blur,
+  specular edges, gradient hero text, pill buttons.
+- Light theme: ice-tinted white with white cards; azure darkened to
+  #0072AD where used as text. Audits: 0 contrast failures both themes,
+  both pages (avatar circles moved to azure-bg + ink-text tokens);
+  no mobile overflow; console clean.
+
+---
+
 ## [2.8.0] — 2026-07-08
 
 ### Added — shared deals between two agents (webhook v7.9)

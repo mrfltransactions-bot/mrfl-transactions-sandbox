@@ -3,105 +3,101 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#0A0A1F">
+<meta name="theme-color" content="#040729">
 <title>MRFL Transactions · Your Transaction Coordinator, On Demand</title>
 <meta name="description" content="Florida real estate transaction coordination for busy agents. Contract dates extracted in 24 hours, every party kept in sync, reminders before every deadline. Pay only when you close.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏡</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
   /* ============================================================
      THEME TOKENS — playful command-center: dark default + light
      ============================================================ */
+  /* Ink & azure — flat engineering-clean (from Gloria's TVM reference):
+     deep ink navy, one bright azure accent, ice-blue tints, hairline
+     borders, Hanken Grotesk. No glass, no glow, no gradients. */
   :root, :root[data-theme="dark"] {
-    --bg:        #0A0A1F;      /* deep indigo night */
-    --bg2:       #12122E;
-    --panel:     rgba(255, 255, 255, 0.06);
-    --panel-2:   rgba(255, 255, 255, 0.10);
-    --bd:        rgba(255, 255, 255, 0.16);
-    --bd-strong: rgba(147, 197, 253, 0.55);
+    --bg:        #040729;      /* deep ink navy */
+    --bg2:       #071033;
+    --panel:     #0A1438;
+    --panel-2:   #0E1A44;
+    --bd:        rgba(232, 243, 255, 0.14);
+    --bd-strong: rgba(0, 163, 255, 0.6);
 
-    --text:      #F2F4FF;
-    --soft:      #C3CAF0;
-    --muted:     #99A2D4;
+    --text:      #FFFFFF;
+    --soft:      #C7D6EE;
+    --muted:     #8FA3C8;
 
-    --acc:       #7DD3FC;      /* icy cyan */
-    --acc2:      #F0ABFC;      /* pink */
-    --acc3:      #F595C0;
+    --acc:       #00A3FF;      /* bright azure */
+    --acc2:      #E8F3FF;      /* ice blue */
+    --acc3:      #E8F3FF;
     --star:      #FBBF24;      /* review stars */
     --ok:        #4FE3AC;
 
-    /* liquid glass */
-    --glass-base:  rgba(255, 255, 255, 0.06);
-    --glass-sheen: linear-gradient(160deg, rgba(255,255,255,0.13), rgba(255,255,255,0.03) 42%, rgba(255,255,255,0.01));
-    --glass-spec:  rgba(255, 255, 255, 0.28);
+    /* flat surfaces — glass tokens neutralized, selectors reuse them */
+    --glass-base:  #0A1438;
+    --glass-sheen: none;
+    --glass-spec:  transparent;
 
-    --btn-bg:    #4F46E5;      /* solid fallback under the gradient */
-    --btn-grad:  linear-gradient(90deg, #2563EB, #7C3AED);
-    --btn-text:  #FFFFFF;
-    --btn2-bd:   rgba(255, 255, 255, 0.32);
-    --btn2-text: #EAF0FF;
-    --btn2-bg:   rgba(255, 255, 255, 0.08);
+    --btn-bg:    #00A3FF;      /* azure button, ink text */
+    --btn-grad:  none;
+    --btn-text:  #040729;
+    --btn2-bd:   rgba(0, 163, 255, 0.55);
+    --btn2-text: #6FC9FF;
+    --btn2-bg:   transparent;
 
-    --input-bg:  rgba(255, 255, 255, 0.07);
-    --av-text:   #101336;
-    --glow:      0 8px 28px rgba(99, 102, 241, 0.5);
-    --shadow:    0 14px 34px -14px rgba(0, 0, 0, 0.6);
-    --lift:      0 22px 44px -16px rgba(0, 0, 0, 0.7), 0 0 26px rgba(125, 211, 252, 0.16);
+    --input-bg:  #081035;
+    --av-text:   #040729;
+    --glow:      none;
+    --shadow:    0 10px 26px -14px rgba(0, 0, 0, 0.55);
+    --lift:      0 16px 34px -16px rgba(0, 0, 0, 0.6);
   }
   :root[data-theme="light"] {
-    --bg:        #EEF1FB;
-    --bg2:       #E2E7F8;
-    --panel:     rgba(255, 255, 255, 0.72);
-    --panel-2:   #F3F5FE;
-    --bd:        #D6DDF3;
-    --bd-strong: #9FB6E8;
+    --bg:        #F5F9FF;
+    --bg2:       #E8F3FF;      /* TVM's ice-blue tint */
+    --panel:     #FFFFFF;
+    --panel-2:   #F0F6FF;
+    --bd:        #D6E4F5;
+    --bd-strong: #7FBCE0;
 
-    --text:      #141838;
-    --soft:      #3D4570;
-    --muted:     #575F8A;
+    --text:      #04142E;
+    --soft:      #33486B;
+    --muted:     #54678C;
 
-    --acc:       #0369A1;
-    --acc2:      #A21CAF;
-    --acc3:      #BE185D;
+    --acc:       #0072AD;      /* azure, dark enough for text on white */
+    --acc2:      #04142E;
+    --acc3:      #04142E;
     --star:      #B45309;
     --ok:        #0B7A55;
 
-    --glass-base:  rgba(255, 255, 255, 0.72);
-    --glass-sheen: linear-gradient(160deg, rgba(255,255,255,0.95), rgba(255,255,255,0.55) 45%, rgba(255,255,255,0.35));
-    --glass-spec:  rgba(255, 255, 255, 0.9);
+    --glass-base:  #FFFFFF;
+    --glass-sheen: none;
+    --glass-spec:  transparent;
 
-    --btn-bg:    #4F46E5;
-    --btn-grad:  linear-gradient(90deg, #2563EB, #7C3AED);
-    --btn-text:  #FFFFFF;
-    --btn2-bd:   #4338CA;
-    --btn2-text: #3730A3;
-    --btn2-bg:   rgba(255, 255, 255, 0.6);
+    --btn-bg:    #00A3FF;
+    --btn-grad:  none;
+    --btn-text:  #04142E;
+    --btn2-bd:   #0072AD;
+    --btn2-text: #005E8F;
+    --btn2-bg:   transparent;
 
     --input-bg:  #FFFFFF;
-    --av-text:   #FFFFFF;
-    --glow:      0 8px 24px rgba(99, 102, 241, 0.35);
-    --shadow:    0 12px 30px -14px rgba(30, 35, 90, 0.18);
-    --lift:      0 20px 40px -16px rgba(30, 35, 90, 0.28);
+    --av-text:   #04142E;
+    --glow:      none;
+    --shadow:    0 8px 22px -12px rgba(4, 20, 46, 0.14);
+    --lift:      0 14px 30px -14px rgba(4, 20, 46, 0.2);
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html { scroll-behavior: smooth; }
   body {
     background: var(--bg); color: var(--text);
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+    font-family: 'Hanken Grotesk', -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
     font-size: 16px; line-height: 1.6; -webkit-font-smoothing: antialiased;
     overflow-x: hidden;
     /* no bg/color transitions on body — Blink wedges theme switches */
   }
-  body::before, body::after {
-    content: ""; position: fixed; z-index: -1; border-radius: 50%;
-    filter: blur(110px); pointer-events: none; opacity: 0.6;
-  }
-  body::before { width: 500px; height: 500px; top: -160px; right: -120px;
-    background: radial-gradient(circle, rgba(236, 72, 153, 0.38), transparent 70%); }
-  body::after { width: 560px; height: 560px; bottom: -220px; left: -170px;
-    background: radial-gradient(circle, rgba(59, 130, 246, 0.42), transparent 70%); }
-  :root[data-theme="light"] body::before,
-  :root[data-theme="light"] body::after { opacity: 0.35; }
 
   .shell { max-width: 1020px; margin: 0 auto; padding: 0 22px; }
 
@@ -137,28 +133,21 @@
   }
   .btn {
     display: inline-block; color: var(--btn-text); text-decoration: none;
-    background-color: var(--btn-bg);   /* solid base so contrast audits see it */
-    background-image: var(--btn-grad);
-    padding: 11px 24px; border-radius: 999px; font-weight: 800; font-size: 14px;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.35), var(--glow);
-    border: none; cursor: pointer; font-family: inherit;
+    background-color: var(--btn-bg);
+    padding: 12px 26px; border-radius: 10px; font-weight: 800; font-size: 14px;
+    box-shadow: none; border: none; cursor: pointer; font-family: inherit;
   }
   .btn.big { padding: 14px 28px; font-size: 15.5px; }
   .btn.ghost {
     background-color: var(--btn2-bg); background-image: none;
     color: var(--btn2-text); border: 1.5px solid var(--btn2-bd);
-    box-shadow: inset 0 1px 0 var(--glass-spec);
-    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    box-shadow: none;
   }
-  h2.sec::before { color: var(--acc2); }
 
-  /* ---- liquid glass panels: frosted blur + specular top edge ---- */
+  /* ---- flat panels: solid surface + hairline border ---- */
   .card, .step, .stat, .price, .rev, .rev-form, .about, .revs-empty, .ref-strip, .vs-col {
-    background-color: var(--glass-base);
-    background-image: var(--glass-sheen);
-    backdrop-filter: blur(14px) saturate(1.5);
-    -webkit-backdrop-filter: blur(14px) saturate(1.5);
-    box-shadow: inset 0 1px 0 var(--glass-spec), var(--shadow);
+    background-color: var(--panel);
+    box-shadow: var(--shadow);
   }
   @media (max-width: 620px) { nav a.plain.hide-sm { display: none; } }
   @media (max-width: 480px) {
@@ -170,43 +159,21 @@
   /* ============================================================
      HERO — with gently floating emoji friends
      ============================================================ */
-  .hero { padding: 76px 0 56px; text-align: center; position: relative; overflow: hidden;
-    background: linear-gradient(180deg, var(--bg2), var(--bg)); border-bottom: 1px solid var(--bd); }
-  .hero .shell { position: relative; z-index: 1; }
-  /* dotted texture, faded in from the top like the reference */
-  .hero::after { content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
-    background-image: radial-gradient(rgba(255,255,255,0.10) 1px, transparent 1.6px);
-    background-size: 16px 16px;
-    -webkit-mask-image: radial-gradient(440px 280px at 50% 18%, #000, transparent 75%);
-    mask-image: radial-gradient(440px 280px at 50% 18%, #000, transparent 75%); }
-  :root[data-theme="light"] .hero::after { opacity: 0.45; }
-  /* light cone pouring onto the glass stat chips */
-  .beam { height: 150px; width: min(520px, 82%); margin: 6px auto -138px;
-    background: linear-gradient(180deg, rgba(125, 211, 252, 0.55), rgba(59, 130, 246, 0.12) 70%, transparent);
-    clip-path: polygon(44% 0, 56% 0, 100% 100%, 0 100%);
-    filter: blur(14px); pointer-events: none; }
-  :root[data-theme="light"] .beam { opacity: 0.35; }
-  .hero h1 { font-size: clamp(30px, 5.4vw, 46px); font-weight: 800; letter-spacing: -0.8px;
-    line-height: 1.14; max-width: 700px; margin: 0 auto 16px; }
-  .hero h1 em {
-    font-style: normal; color: var(--acc);   /* fallback + what audits measure */
-    background-image: linear-gradient(90deg, #7DD3FC, #C084FC, #F0ABFC);
-    -webkit-background-clip: text; background-clip: text;
-    -webkit-text-fill-color: transparent;
-  }
-  :root[data-theme="light"] .hero h1 em {
-    background-image: linear-gradient(90deg, #0369A1, #6D28D9, #A21CAF);
-  }
+  .hero { padding: 84px 0 60px; text-align: center; position: relative;
+    background: var(--bg2); border-bottom: 1px solid var(--bd); }
+  .hero h1 { font-size: clamp(32px, 5.8vw, 52px); font-weight: 800; letter-spacing: -1px;
+    line-height: 1.12; max-width: 760px; margin: 0 auto 18px; }
+  .hero h1 em { font-style: normal; color: var(--acc); }
   .hero p.sub { font-size: clamp(15.5px, 2.3vw, 18px); color: var(--soft); max-width: 620px; margin: 0 auto 28px; }
   .hero p.sub b { color: var(--text); }
   .hero .ctas { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
 
-  .statrow { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 34px; }
+  .statrow { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 38px; }
   .stat {
-    background: var(--panel); border: 1px solid var(--bd); border-radius: 16px;
-    padding: 12px 22px; min-width: 132px;
+    background: var(--panel); border: 1px solid var(--bd); border-radius: 12px;
+    padding: 14px 24px; min-width: 136px; border-top: 3px solid var(--acc);
   }
-  .stat .n { font-size: 24px; font-weight: 800; color: var(--acc); text-shadow: var(--glow); }
+  .stat .n { font-size: 26px; font-weight: 800; color: var(--acc); }
   .stat .l { font-size: 11.5px; font-weight: 700; color: var(--muted); letter-spacing: 0.3px; }
 
   /* ============================================================
@@ -219,7 +186,8 @@
     font-size: clamp(21px, 3.4vw, 28px); font-weight: 800; letter-spacing: -0.4px;
     text-align: center; margin-bottom: 8px;
   }
-  h2.sec::before { content: "///"; color: var(--acc); font-size: 0.6em; opacity: 0.8; }
+  h2.sec::before { content: ""; width: 26px; height: 3px; background: var(--acc); flex: none; }
+  h2.sec::after { content: ""; width: 26px; height: 3px; background: var(--acc); flex: none; }
   p.seclead { text-align: center; color: var(--soft); max-width: 560px; margin: 0 auto 32px; font-size: 15px; }
 
   .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
@@ -236,7 +204,7 @@
   /* ---- The MRFL difference (vs a typical TC) ---- */
   .vs { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; max-width: 760px; margin: 0 auto; }
   .vs-col { border: 1px solid var(--bd); border-radius: 20px; padding: 22px; }
-  .vs-col.mrfl { border: 1.5px solid var(--bd-strong); box-shadow: var(--glow), var(--shadow); }
+  .vs-col.mrfl { border: 1.5px solid var(--bd-strong); border-top: 3px solid var(--acc); box-shadow: var(--shadow); }
   .vs-col h3 { font-size: 13px; font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase;
     color: var(--muted); margin-bottom: 14px; text-align: center; }
   .vs-col.mrfl h3 { color: var(--acc); }
@@ -252,7 +220,7 @@
   .step::before {
     counter-increment: step; content: "0" counter(step);
     display: block; font-size: 13px; font-weight: 800; color: var(--acc);
-    letter-spacing: 1.5px; margin-bottom: 8px; text-shadow: var(--glow);
+    letter-spacing: 1.5px; margin-bottom: 8px;
   }
   .step h3 { font-size: 15px; font-weight: 800; margin-bottom: 4px; }
   .step p { font-size: 13.5px; color: var(--soft); }
@@ -273,9 +241,7 @@
   .g-strip { text-align: center; margin: -12px 0 30px; }
   .g-btn { display: inline-block; color: var(--acc); font-weight: 800; font-size: 14px;
     text-decoration: none; border: 1.5px solid var(--bd-strong); border-radius: 999px;
-    padding: 10px 20px; background-color: var(--glass-base); background-image: var(--glass-sheen);
-    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-    box-shadow: inset 0 1px 0 var(--glass-spec); }
+    padding: 10px 20px; background-color: var(--panel); }
 
   .rev-form {
     max-width: 560px; margin: 0 auto; background: var(--panel);
@@ -308,9 +274,9 @@
     background: var(--panel); border: 1px solid var(--bd); border-radius: 20px;
     padding: 26px 24px; text-align: center; box-shadow: var(--shadow);
   }
-  .price.hot { border: 1.5px solid var(--bd-strong); box-shadow: var(--glow), var(--shadow); }
+  .price.hot { border: 1.5px solid var(--bd-strong); border-top: 3px solid var(--acc); box-shadow: var(--shadow); }
   .price .pk { font-size: 11.5px; font-weight: 800; letter-spacing: 1.4px; text-transform: uppercase; color: var(--muted); }
-  .price .amount { font-size: 44px; font-weight: 800; color: var(--acc); margin: 8px 0 2px; text-shadow: var(--glow); }
+  .price .amount { font-size: 44px; font-weight: 800; color: var(--acc); margin: 8px 0 2px; }
   .price .per { font-size: 12.5px; color: var(--muted); font-weight: 700; margin-bottom: 14px; }
   .price ul { list-style: none; text-align: left; margin: 0 auto 4px; max-width: 240px; }
   .price li { font-size: 13.5px; color: var(--soft); padding: 4px 0 4px 24px; position: relative; }
@@ -328,9 +294,8 @@
   .about { display: flex; gap: 20px; align-items: flex-start; max-width: 740px; margin: 0 auto;
     background: var(--panel); border: 1px solid var(--bd); border-radius: 20px; padding: 24px; }
   .about .face { width: 76px; height: 76px; border-radius: 50%; flex: none;
-    background-color: var(--acc2); /* fallback so contrast audits see it */
-    background-image: linear-gradient(135deg, var(--acc2), var(--acc));
-    color: var(--av-text); display: flex; align-items: center; justify-content: center;
+    background-color: var(--btn-bg); color: var(--btn-text);
+    display: flex; align-items: center; justify-content: center;
     font-size: 30px; font-weight: 800; }
   .about p { color: var(--soft); font-size: 14.5px; }
   .about b { color: var(--text); }
@@ -378,7 +343,6 @@
       <a class="btn big" href="sms:+14012828414?&amp;body=Hi%20Gloria!%20I%27d%20like%20to%20learn%20more%20about%20your%20TC%20services.">💬 Text Gloria</a>
       <a class="btn big ghost" href="mailto:MRFLTransactions@gmail.com?subject=TC%20services">✉️ Email me</a>
     </div>
-    <div class="beam" aria-hidden="true"></div>
     <div class="statrow">
       <div class="stat"><div class="n" data-count="24" data-suffix="h">24h</div><div class="l">first response</div></div>
       <div class="stat"><div class="n">$0</div><div class="l">monthly fees</div></div>
@@ -560,7 +524,7 @@
     document.documentElement.setAttribute('data-theme', t);
     document.getElementById('theme_btn').textContent = (t === 'dark') ? '☀️' : '🌙';
     var meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) meta.setAttribute('content', t === 'dark' ? '#0A0A1F' : '#EEF1FB');
+    if (meta) meta.setAttribute('content', t === 'dark' ? '#040729' : '#F5F9FF');
     if (persist) { try { localStorage.setItem(THEME_KEY, t); } catch (e) {} }
   }
   applyTheme(currentTheme(), false);
