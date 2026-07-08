@@ -1,0 +1,98 @@
+---
+import '~/styles/global.css';
+import Nav from '~/components/Nav.astro';
+import Footer from '~/components/Footer.astro';
+
+const {
+  title = 'MRFL Transactions · Your Transaction Coordinator, On Demand',
+  description = 'Florida real estate transaction coordination for busy agents. Contract dates extracted in 24 hours, every party kept in sync, reminders before every deadline. Pay only when you close.',
+  image,
+  article = false,
+} = Astro.props;
+
+const canonical = new URL(Astro.url.pathname, Astro.site).href;
+const ogImage = image ? new URL(image, Astro.site).href : undefined;
+const rssHref = new URL('rss.xml', Astro.site).href;
+---
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#ffffff" />
+  <title>{title}</title>
+  <meta name="description" content={description} />
+  <link rel="canonical" href={canonical} />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏡</text></svg>" />
+
+  <!-- Fonts: Fraunces (serif display) + Manrope (body) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,600&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- Open Graph / Twitter -->
+  <meta property="og:type" content={article ? 'article' : 'website'} />
+  <meta property="og:title" content={title} />
+  <meta property="og:description" content={description} />
+  <meta property="og:url" content={canonical} />
+  <meta property="og:site_name" content="MRFL Transactions" />
+  {ogImage && <meta property="og:image" content={ogImage} />}
+  <meta name="twitter:card" content={ogImage ? 'summary_large_image' : 'summary'} />
+  <meta name="twitter:title" content={title} />
+  <meta name="twitter:description" content={description} />
+  {ogImage && <meta name="twitter:image" content={ogImage} />}
+
+  <link rel="alternate" type="application/rss+xml" title="MRFL Transactions Blog" href={rssHref} />
+
+  <!-- Anti-FOUC: set theme before first paint (matches key used site-wide) -->
+  <script is:inline>
+    (function () {
+      var t = null;
+      try { t = localStorage.getItem('mrfl_site_theme'); } catch (e) {}
+      if (t !== 'dark' && t !== 'light') t = 'light';
+      document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script>
+</head>
+<body>
+  <Nav />
+  <slot />
+  <Footer />
+
+  <!-- Shared: theme toggle + scroll-reveal (runs on every page) -->
+  <script is:inline>
+    (function () {
+      'use strict';
+      var THEME_KEY = 'mrfl_site_theme';
+      function currentTheme() { return document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light'; }
+      function applyTheme(t, persist) {
+        document.documentElement.setAttribute('data-theme', t);
+        var btn = document.getElementById('theme_btn');
+        if (btn) btn.textContent = (t === 'dark') ? '☀️' : '🌙';
+        var meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.setAttribute('content', t === 'dark' ? '#151129' : '#ffffff');
+        if (persist) { try { localStorage.setItem(THEME_KEY, t); } catch (e) {} }
+      }
+      applyTheme(currentTheme(), false);
+      var tb = document.getElementById('theme_btn');
+      if (tb) tb.addEventListener('click', function () {
+        applyTheme(currentTheme() === 'dark' ? 'light' : 'dark', true);
+      });
+
+      var io = ('IntersectionObserver' in window) ? new IntersectionObserver(function (entries) {
+        entries.forEach(function (en) {
+          if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); }
+        });
+      }, { threshold: 0.12 }) : null;
+      function watchReveals(root) {
+        (root || document).querySelectorAll('.reveal:not(.in)').forEach(function (el) {
+          if (io) io.observe(el); else el.classList.add('in');
+        });
+      }
+      watchReveals();
+      // Exposed so page scripts can reveal content they inject later (e.g. reviews).
+      window.mrflWatch = watchReveals;
+    })();
+  </script>
+</body>
+</html>

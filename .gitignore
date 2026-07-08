@@ -82,3 +82,8 @@ config.local.*
 
 # ===== Generated output dirs =====
 deliverables/output/
+
+# ===== Node / Astro =====
+node_modules/
+.astro/
+# dist/ already ignored above

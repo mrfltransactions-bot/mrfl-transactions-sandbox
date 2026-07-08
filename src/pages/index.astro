@@ -1,0 +1,359 @@
+---
+import BaseLayout from '~/layouts/BaseLayout.astro';
+---
+<BaseLayout
+  title="MRFL Transactions · Your Transaction Coordinator, On Demand"
+  description="Florida real estate transaction coordination for busy agents. Contract dates extracted in 24 hours, every party kept in sync, reminders before every deadline. Pay only when you close."
+>
+  <header class="hero" id="top">
+    <div class="shell">
+      <div class="hero-copy">
+        <span class="eyebrow">Florida Transaction Coordination</span>
+        <h1>Your deals, <em>in good hands</em>.</h1>
+        <p class="sub"><b>Transaction coordination for Florida realtors.</b> Send me your
+          executed contract — I handle every date, document, and follow-up through
+          closing day. You focus on selling.</p>
+        <div class="ctas">
+          <a class="btn big" href="sms:+14012828414?&amp;body=Hi%20Gloria!%20I%27d%20like%20to%20learn%20more%20about%20your%20TC%20services.">💬 Text Gloria</a>
+          <a class="btn big ghost" href="mailto:MRFLTransactions@gmail.com?subject=TC%20services">✉️ Email me</a>
+        </div>
+        <div class="statrow">
+          <div class="stat"><div class="n" data-count="24" data-suffix="h">24h</div><div class="l">first response</div></div>
+          <div class="stat"><div class="n">$0</div><div class="l">monthly fees</div></div>
+          <div class="stat"><div class="n">$0</div><div class="l">until closing</div></div>
+        </div>
+      </div>
+      <div class="hero-art" aria-hidden="false">
+        <svg viewBox="0 0 440 400" xmlns="http://www.w3.org/2000/svg" role="img"
+          aria-label="Illustration of a live transaction portal tracking deal milestones">
+          <!-- pastel background shapes -->
+          <rect x="256" y="10" width="168" height="168" rx="56" fill="var(--p-lilac)" opacity=".65" transform="rotate(12 340 94)"/>
+          <circle cx="64" cy="288" r="58" fill="var(--p-sky)" opacity=".6"/>
+          <circle cx="388" cy="302" r="30" fill="var(--p-gold)"/>
+          <circle cx="56" cy="70" r="26" fill="var(--p-salmon)" opacity=".7"/>
+          <!-- main portal card -->
+          <g transform="rotate(-4 220 200)">
+            <rect x="92" y="66" width="256" height="258" rx="28" fill="var(--panel)" stroke="var(--card-line)" stroke-width="1.5"/>
+            <!-- header: house chip + title lines -->
+            <rect x="116" y="92" width="44" height="44" rx="13" fill="var(--acc)"/>
+            <polygon points="138,101 157,118 119,118" fill="#ffffff"/>
+            <rect x="125" y="117" width="26" height="15" rx="2" fill="#ffffff"/>
+            <rect x="134" y="123" width="8" height="9" rx="1.5" fill="var(--acc)"/>
+            <rect x="172" y="100" width="120" height="12" rx="6" fill="var(--text)" opacity=".82"/>
+            <rect x="172" y="120" width="78" height="9" rx="4.5" fill="var(--muted)" opacity=".7"/>
+            <!-- milestone rows -->
+            <circle cx="128" cy="168" r="9" fill="var(--p-mint)"/>
+            <path d="M124 168 l3 3 6 -6" stroke="#0b7a55" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            <rect x="148" y="162" width="150" height="11" rx="5.5" fill="var(--text)" opacity=".15"/>
+            <circle cx="128" cy="200" r="9" fill="var(--p-gold)"/>
+            <path d="M124 200 l3 3 6 -6" stroke="#8a5a00" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            <rect x="148" y="194" width="132" height="11" rx="5.5" fill="var(--text)" opacity=".15"/>
+            <circle cx="128" cy="232" r="9" fill="var(--p-salmon)"/>
+            <rect x="148" y="226" width="120" height="11" rx="5.5" fill="var(--text)" opacity=".15"/>
+            <!-- progress bar -->
+            <rect x="116" y="272" width="208" height="14" rx="7" fill="var(--text)" opacity=".08"/>
+            <rect x="116" y="272" width="140" height="14" rx="7" fill="var(--acc)"/>
+          </g>
+          <!-- floating calendar chip -->
+          <g transform="rotate(8 360 150)">
+            <rect x="322" y="120" width="76" height="66" rx="16" fill="var(--panel)" stroke="var(--card-line)" stroke-width="1.5"/>
+            <path d="M322 136 h76 v34 a16 16 0 0 1 -16 16 h-44 a16 16 0 0 1 -16 -16 z" fill="var(--panel)"/>
+            <path d="M338 120 h44 a16 16 0 0 1 16 16 v0 h-76 v0 a16 16 0 0 1 16 -16 z" fill="var(--p-sky)"/>
+            <rect x="335" y="150" width="12" height="12" rx="3" fill="var(--acc)" opacity=".85"/>
+            <rect x="355" y="150" width="12" height="12" rx="3" fill="var(--text)" opacity=".14"/>
+            <rect x="375" y="150" width="12" height="12" rx="3" fill="var(--text)" opacity=".14"/>
+            <rect x="335" y="168" width="12" height="12" rx="3" fill="var(--text)" opacity=".14"/>
+            <rect x="355" y="168" width="12" height="12" rx="3" fill="var(--p-salmon)"/>
+          </g>
+          <!-- check badge -->
+          <g transform="rotate(-6 96 332)">
+            <circle cx="96" cy="332" r="30" fill="var(--p-mint)"/>
+            <path d="M84 332 l8 8 16 -17" stroke="#0b7a55" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          </g>
+        </svg>
+      </div>
+    </div>
+  </header>
+
+  <section id="why">
+    <div class="shell">
+      <h2 class="sec reveal">Not your typical TC</h2>
+      <p class="seclead reveal">Most coordination services run on email chains and "call for pricing."
+        Here's what working with me looks like instead.</p>
+      <div class="vs">
+        <div class="vs-col reveal">
+          <h3>The usual way</h3>
+          <ul>
+            <li><span class="m">✕</span><span>Updates buried in email chains and phone tag</span></li>
+            <li><span class="m">✕</span><span>Pricing quoted on request</span></li>
+            <li><span class="m">✕</span><span>Your file sits in a shared queue</span></li>
+            <li><span class="m">✕</span><span>You keep your own list of deadlines</span></li>
+          </ul>
+        </div>
+        <div class="vs-col mrfl reveal">
+          <h3>With MRFL</h3>
+          <ul>
+            <li><span class="m">✓</span><span><b>Your live portal</b> — every deal, deadline, and contact in one private link, always current</span></li>
+            <li><span class="m">✓</span><span><b>Flat, public pricing</b> — $500 single side · $700 double sided, pay only when it closes</span></li>
+            <li><span class="m">✓</span><span><b>One coordinator</b> who knows every one of your files: me</span></li>
+            <li><span class="m">✓</span><span><b>Dates calendared within 24 hours</b> — and a reminder before every deadline</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="line" id="services">
+    <div class="shell">
+      <h2 class="sec reveal">What you get on every file</h2>
+      <p class="seclead reveal">One flat fee per transaction covers the whole journey, contract to closing.</p>
+      <div class="cards">
+        <div class="card reveal"><span class="ic">📄</span><h3>Dates extracted in 24 hours</h3>
+          <p>Send the executed contract — every deadline is pulled, calculated, and calendared within a day.</p></div>
+        <div class="card reveal"><span class="ic">✉️</span><h3>Intro emails, day one</h3>
+          <p>Title, lender, and all parties get the full timeline and contacts — you're cc'd on everything.</p></div>
+        <div class="card reveal"><span class="ic">⏰</span><h3>Reminders before every deadline</h3>
+          <p>Escrow, inspection, loan approval, title, HOA, closing — tracked and flagged ahead of time.</p></div>
+        <div class="card reveal"><span class="ic">📱</span><h3>Your live deal portal</h3>
+          <p>A private link that shows all your transactions — timelines, statuses, and every contact — updated live.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="line" id="how">
+    <div class="shell">
+      <h2 class="sec reveal">How it works</h2>
+      <p class="seclead reveal">Four steps — and the first three happen within 24 hours of your contract landing in my inbox.</p>
+      <div class="steps">
+        <div class="step reveal"><h3>Send your contract</h3><p>Text or email the executed PDF — addenda and all.</p></div>
+        <div class="step reveal"><h3>I build your timeline</h3><p>Every date extracted and tracked, calendar reminders set.</p></div>
+        <div class="step reveal"><h3>Everyone gets synced</h3><p>Intro emails to title, lender, and both sides — you're cc'd.</p></div>
+        <div class="step reveal"><h3>You stay in control</h3><p>Your live portal + deadline reminders until the deal closes.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="line" id="reviews">
+    <div class="shell">
+      <h2 class="sec reveal">What agents say</h2>
+      <p class="seclead reveal">Real reviews from realtors who hand me their files.</p>
+      <div id="revs_box"><div class="revs-empty reveal">⭐ Reviews are loading…</div></div>
+
+      <div class="rev-form reveal">
+        <h3>Worked with me? Leave a review 💜</h3>
+        <div class="hint">It appears here once Gloria gives it a quick look.</div>
+        <label for="rv_name">Your name</label>
+        <input id="rv_name" maxlength="60" placeholder="e.g. Martha R." autocomplete="name">
+        <label for="rv_brok">Brokerage <span style="font-weight:600">(optional)</span></label>
+        <input id="rv_brok" maxlength="80" placeholder="e.g. Sunshine Realty Group" autocomplete="organization">
+        <label>Your rating</label>
+        <div class="starpick" id="starpick" role="radiogroup" aria-label="Star rating">
+          <button type="button" data-s="1" aria-label="1 star">★</button>
+          <button type="button" data-s="2" aria-label="2 stars">★</button>
+          <button type="button" data-s="3" aria-label="3 stars">★</button>
+          <button type="button" data-s="4" aria-label="4 stars">★</button>
+          <button type="button" data-s="5" aria-label="5 stars">★</button>
+        </div>
+        <label for="rv_text">Your review</label>
+        <textarea id="rv_text" maxlength="600" placeholder="How was it working with MRFL Transactions?"></textarea>
+        <button type="button" class="btn" id="rv_send">Send my review 🚀</button>
+        <div class="rev-fb" id="rv_fb">🎉 Thank you! Your review is in — it'll appear once approved.</div>
+        <div class="rev-err" id="rv_err"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="line" id="pricing">
+    <div class="shell">
+      <h2 class="sec reveal">Simple, flat pricing</h2>
+      <p class="seclead reveal">No subscriptions, no surprises. One flat fee per transaction — and only when it closes.</p>
+      <div class="prices">
+        <div class="price reveal">
+          <div class="pk">Single side</div>
+          <div class="amount">$500</div>
+          <div class="per">per closed transaction</div>
+          <ul>
+            <li>Full contract-to-close coordination</li>
+            <li>Live deal portal</li>
+            <li>Deadline reminders</li>
+          </ul>
+        </div>
+        <div class="price hot reveal">
+          <div class="pk">Double sided</div>
+          <div class="amount">$700</div>
+          <div class="per">per closed transaction</div>
+          <ul>
+            <li>Everything in single side</li>
+            <li>Both sides coordinated</li>
+            <li>Single point of contact for all parties</li>
+          </ul>
+        </div>
+      </div>
+      <div class="pay-note reveal">💠 If a deal falls through, you owe nothing.</div>
+      <div class="ref-strip reveal">
+        🎁 <b>Referred by a colleague?</b> Your first transaction is <b>50% off</b> —
+        $250 single side, $350 double sided. <a href="/refer/">See how referrals work →</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="line" id="about">
+    <div class="shell">
+      <h2 class="sec reveal">Who is MRFL?</h2>
+      <p class="seclead reveal" style="margin-bottom:22px">One coordinator. Every file treated like it's the only one.</p>
+      <div class="about reveal">
+        <img class="face about-photo" src="/img/gloria.jpg" alt="Gloria Grullon, MRFL Transactions"
+             onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'face',textContent:'G'}))" />
+        <p><b>Hi, I'm Gloria Grullon.</b> I run MRFL Transactions — a dedicated transaction
+          coordination practice for Florida realtors. Every file gets the same treatment:
+          dates on the calendar within 24 hours, every party looped in, and proactive
+          reminders so <b>you never chase a deadline again</b>. My clients keep their
+          evenings — and always know exactly where every deal stands.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="contact line" id="contact">
+    <div class="shell">
+      <h2 class="sec reveal">Let's get your next deal moving.</h2>
+      <p class="seclead reveal">Text or email me the executed contract and consider it handled.</p>
+      <div class="ctas">
+        <a class="btn big" href="sms:+14012828414?&amp;body=Hi%20Gloria!%20I%20have%20a%20contract%20I%27d%20like%20you%20to%20coordinate.">💬 Text (401) 282-8414</a>
+        <a class="btn big ghost" href="tel:+14012828414">📞 Call</a>
+        <a class="btn big ghost" href="mailto:MRFLTransactions@gmail.com?subject=New%20transaction">✉️ Email</a>
+      </div>
+      <div class="fine">Pay only when you close · No monthly fees</div>
+    </div>
+  </section>
+
+  <!-- Homepage-only: count-up stat + reviews (fetch/render/submit). -->
+  <script is:inline>
+  (function () {
+    'use strict';
+
+    // Same web-app URL the portal/dashboard use (see CLAUDE.md).
+    var WEBHOOK = 'https://script.google.com/macros/s/AKfycbzheiPICRaOkutzU6kkrNS3n1pVebVVMtMwqAyQtDinMrzbqnaeTxFdHaqCeKtveKEzBw/exec';
+
+    /* ---------- count-up stat ---------- */
+    var counter = document.querySelector('[data-count]');
+    if (counter && 'IntersectionObserver' in window) {
+      var cio = new IntersectionObserver(function (entries) {
+        entries.forEach(function (en) {
+          if (!en.isIntersecting) return;
+          cio.disconnect();
+          var target = parseInt(counter.getAttribute('data-count'), 10);
+          var suffix = counter.getAttribute('data-suffix') || '';
+          var start = null;
+          function tick(ts) {
+            if (start === null) start = ts;
+            var p = Math.min(1, (ts - start) / 900);
+            counter.textContent = Math.round(target * (1 - Math.pow(1 - p, 3))) + suffix;
+            if (p < 1) requestAnimationFrame(tick);
+          }
+          requestAnimationFrame(tick);
+        });
+      }, { threshold: 0.5 });
+      cio.observe(counter);
+    }
+
+    /* ---------- reviews: fetch + render ---------- */
+    function esc(s) {
+      return String(s || '').replace(/[&<>"']/g, function (c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+      });
+    }
+    function starRow(n) {
+      var h = '';
+      for (var i = 1; i <= 5; i++) h += (i <= n ? '★' : '☆');
+      return h;
+    }
+    function renderReviews(list, googleUrl) {
+      var box = document.getElementById('revs_box');
+      var h = '';
+      if (!list || !list.length) {
+        h = '<div class="revs-empty reveal">🌟 Be the first to share what it\'s like working with MRFL — leave a review below!</div>';
+      } else {
+        h = '<div class="revs">';
+        list.slice(0, 9).forEach(function (r) {
+          h += '<div class="rev reveal"><div class="stars" aria-label="' + r.stars + ' out of 5 stars">' + starRow(r.stars) + '</div>' +
+            '<p class="q">“' + esc(r.text) + '”</p>' +
+            '<div class="who">' + esc(r.name) + '</div>' +
+            '<div class="whosub">' + esc(r.brokerage || 'Realtor') + (r.date ? ' · ' + esc(r.date) : '') + '</div></div>';
+        });
+        h += '</div>';
+      }
+      // Google Business Profile tie-in — appears automatically once Gloria
+      // stores her profile's review link (Script Property google_review_url).
+      if (googleUrl && /^https:\/\//.test(googleUrl)) {
+        h += '<div class="g-strip reveal"><a class="g-btn" href="' + esc(googleUrl) + '" target="_blank" rel="noopener">' +
+          '⭐ Read &amp; leave reviews on Google ↗</a></div>';
+      }
+      box.innerHTML = h;
+      if (window.mrflWatch) window.mrflWatch(box);
+      else box.querySelectorAll('.reveal').forEach(function (e) { e.classList.add('in'); });
+    }
+    function loadReviews() {
+      fetch(WEBHOOK + '?view=reviews')
+        .then(function (r) { return r.json(); })
+        .then(function (j) { renderReviews((j && j.reviews) || [], (j && j.google_url) || ''); })
+        .catch(function () { renderReviews([], ''); });
+    }
+    loadReviews();
+
+    /* ---------- reviews: star picker + submit ---------- */
+    var picked = 5;
+    var pickBtns = Array.prototype.slice.call(document.querySelectorAll('#starpick button'));
+    function paintStars() {
+      pickBtns.forEach(function (b) {
+        b.classList.toggle('on', parseInt(b.getAttribute('data-s'), 10) <= picked);
+      });
+    }
+    pickBtns.forEach(function (b) {
+      b.addEventListener('click', function () {
+        picked = parseInt(b.getAttribute('data-s'), 10);
+        paintStars();
+      });
+    });
+    paintStars();
+
+    document.getElementById('rv_send').addEventListener('click', function () {
+      var btn = this;
+      var name = document.getElementById('rv_name').value.trim();
+      var brok = document.getElementById('rv_brok').value.trim();
+      var text = document.getElementById('rv_text').value.trim();
+      var err = document.getElementById('rv_err');
+      var fb = document.getElementById('rv_fb');
+      err.style.display = 'none'; fb.style.display = 'none';
+      if (!name || !text) {
+        err.textContent = 'Please add your name and a few words about working together.';
+        err.style.display = 'block';
+        return;
+      }
+      btn.disabled = true; btn.textContent = 'Sending… ⏳';
+      fetch(WEBHOOK, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },   // no CORS preflight
+        body: JSON.stringify({ action: 'review', name: name, brokerage: brok, stars: picked, text: text })
+      }).then(function (r) { return r.json(); }).then(function (j) {
+        btn.disabled = false; btn.textContent = 'Send my review 🚀';
+        if (j && j.success) {
+          fb.style.display = 'block';
+          document.getElementById('rv_name').value = '';
+          document.getElementById('rv_brok').value = '';
+          document.getElementById('rv_text').value = '';
+          picked = 5; paintStars();
+        } else {
+          err.textContent = (j && j.error) || 'Something went wrong — please try again.';
+          err.style.display = 'block';
+        }
+      }).catch(function () {
+        btn.disabled = false; btn.textContent = 'Send my review 🚀';
+        err.textContent = 'Couldn\'t reach the server — please try again in a minute.';
+        err.style.display = 'block';
+      });
+    });
+
+    window._mrfl = { renderReviews: renderReviews };
+  })();
+  </script>
+</BaseLayout>
