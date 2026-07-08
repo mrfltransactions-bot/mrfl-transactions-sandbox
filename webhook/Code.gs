@@ -2677,7 +2677,9 @@ function _sumParseConcession(text) {
   return { source: source, amount: amount, purpose: purpose };
 }
 
-const _SUM_SIGNATURE_PLAIN = 'Gloria Grullon\nTransaction Coordinator | MRFL Transactions\n📞 401.282.8414\n✉ MRFLTransactions@gmail.com';
+// No emoji in the signature: GmailApp.createDraft mangles some emoji
+// (📞 rendered as ������ in recipients' clients — Gloria vetoed icons).
+const _SUM_SIGNATURE_PLAIN = 'Gloria Grullon\nTransaction Coordinator | MRFL Transactions\n401.282.8414\nMRFLTransactions@gmail.com';
 
 // Cosmetic touch-up for the email body only (the tab keeps its raw
 // headers, which _sumContacts and the portal parser rely on).
@@ -2695,7 +2697,7 @@ function _sumBuildPlain(tab, greeting, primaryName) {
   out += "I'm Gloria Grullon, Transaction Coordinator for " + (primaryName || 'this transaction') +
     '. Please be sure to copy me on all communications from here on out so I can keep everything on track.\n\n';
   out += "You'll find the key contract dates and contact details for everyone involved listed below. Take a quick look when you have a moment and let me know if anything needs to be corrected or updated.\n\n";
-  out += 'Looking forward to a smooth closing with you! 🙂\n\n';
+  out += 'Looking forward to a smooth closing with you!\n\n';
 
   out += tab.detailLines.map(_sumPrettyLine).join('\n') + '\n';
 
@@ -2813,7 +2815,9 @@ function _sumBuildHtml(tab, greeting, primaryName) {
     'Please be sure to copy me on all communications from here on out so I can keep everything on track.</p>' +
     '<p style="margin: 0 0 14px;">You\'ll find the key contract dates and contact details for everyone involved listed below. ' +
     'Take a quick look when you have a moment and let me know if anything needs to be corrected or updated.</p>' +
-    '<p style="margin: 0 0 18px;">Looking forward to a smooth closing with you! 🙂</p>' +
+    // &#128578; = 🙂 as an HTML entity — survives GmailApp's encoding where
+    // the literal character can get mangled into ������.
+    '<p style="margin: 0 0 18px;">Looking forward to a smooth closing with you! &#128578;</p>' +
     detailsHtml +
     loanNoteHtml +
     '<div style="font-weight: 700; color: #312E81; margin: 18px 0 8px; letter-spacing: 0.04em;">CRITICAL DEADLINES</div>' +
@@ -2822,7 +2826,7 @@ function _sumBuildHtml(tab, greeting, primaryName) {
     '<div style="font-weight: 700; color: #312E81; margin: 22px 0 6px; letter-spacing: 0.04em;">IMPORTANT NOTES</div>' +
     '<div>• All deadlines are calculated from the Effective Date unless otherwise noted (CD = Closing Date).</div>' +
     '<div>• Any deadline that falls on a Saturday, Sunday, or national legal holiday shall extend to 5:00 PM of the next business day.</div>' +
-    '<p style="margin: 20px 0 0;">Gloria Grullon<br>Transaction Coordinator | MRFL Transactions<br>📞 401.282.8414<br>✉ MRFLTransactions@gmail.com</p>' +
+    '<p style="margin: 20px 0 0;">Gloria Grullon<br>Transaction Coordinator | MRFL Transactions<br>401.282.8414<br><a href="mailto:MRFLTransactions@gmail.com" style="color: #4338CA;">MRFLTransactions@gmail.com</a></p>' +
     '</div>';
 }
 
