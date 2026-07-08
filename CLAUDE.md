@@ -75,6 +75,11 @@ connected to Vercel 2026-07-06; www is the primary host, apex 307-redirects).
 - One tab per transaction, named `<AgentRef>_<Address>` (e.g.
   `Martha_510 SW 181st Way, Pembroke Pines, FL 33029`). AgentRef spelling must
   stay consistent — each distinct prefix is treated as a separate agent.
+  **Shared deals (v7.9):** two agents on one deal → join refs with `+` (or
+  `&`), e.g. `Tiffany+Carlitos_1253 25th Terrace SW…`. `_agentRefSplit`
+  makes the deal appear in BOTH portals (each agent's own key), lists each
+  agent individually in the links dialog / dashboard / reminder drafts,
+  with no cross-visibility of their personal deals.
 - Tab layout: row 1 = property address; milestone table (A=name, B=Deadline
   date, C=done-checkbox, D=amount/remarks, E=timeframe); optional concession
   rows; then the **details block** in column A — `Label: value` lines grouped

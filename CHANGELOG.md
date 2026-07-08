@@ -7,6 +7,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [2.8.0] — 2026-07-08
+
+### Added — shared deals between two agents (webhook v7.9)
+
+- Name a tab with both agents joined by `+` (or `&`) —
+  `Tiffany+Carlitos_1253 25th Terrace SW…` — and the deal appears in
+  BOTH agents' portals, each via their own private link, with no
+  visibility into each other's personal deals.
+- `_agentRefSplit` applied everywhere agent prefixes are read: portal
+  matching (either agent's key sees the shared deal), 🔗 Agent portal
+  links dialog (lists each agent individually), reminder drafts (both
+  agents get drafted reminders for the shared deal; `portal_email_<ref>`
+  override recommended for the second agent), operator payload
+  `portal_links` (per-individual links).
+- Dashboard: Agents tab lists each agent separately with shared deals
+  under both; per-agent drill-down matches shared prefixes; 🔗 send
+  buttons per individual agent.
+- Verified in-browser: visibility matrix (Carlitos: shared + own;
+  Tiffany: shared + own; others unaffected), split edge cases
+  (`+`, `&`, spaces, trailing separators), dashboard grouping and
+  drill-downs with a stubbed shared deal.
+
+---
+
+## [2.7.5] — 2026-07-07
+
+### Fixed
+
+- Recreated-email signature emoji rendered as ������ in recipients'
+  clients (GmailApp encoding quirk). Signature is now plain text; the
+  closing-line smiley is emitted as an HTML entity.
+
+---
+
 ## [2.7.4] — 2026-07-07
 
 ### Changed — recreated email now matches the real sent format

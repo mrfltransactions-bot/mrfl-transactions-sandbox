@@ -687,7 +687,9 @@
       }).sort(function (a, b) { return String(a.closing_date).localeCompare(String(b.closing_date)); });
       title = 'Closing soon'; sub = 'within 7 days';
     } else if (filter === 'agent') {
-      list = act.filter(function (d) { return d.agent.toLowerCase() === String(agentName).toLowerCase(); });
+      list = act.filter(function (d) {
+        return agentRefs(d.agent).some(function (r) { return r.toLowerCase() === String(agentName).toLowerCase(); });
+      });
       title = agentName; sub = list.length + ' active deal' + (list.length === 1 ? '' : 's');
     } else {
       list = act; title = 'All transactions'; sub = list.length + ' active';
@@ -708,12 +710,22 @@
     setMain(h);
   }
 
+  // A shared deal's agent prefix is "Tiffany+Carlitos" — split it so the
+  // deal is listed under each agent (matches the webhook's _agentRefSplit).
+  function agentRefs(agent) {
+    return String(agent || '').split(/\s*[+&]\s*/)
+      .map(function (s) { return s.trim(); })
+      .filter(function (s) { return s; });
+  }
+
   function viewAgents() {
     var act = activeDeals();
     var byAgent = {};
     act.forEach(function (d) {
-      if (!byAgent[d.agent]) byAgent[d.agent] = [];
-      byAgent[d.agent].push(d);
+      agentRefs(d.agent).forEach(function (n) {
+        if (!byAgent[n]) byAgent[n] = [];
+        byAgent[n].push(d);
+      });
     });
     var names = Object.keys(byAgent).sort();
     var h = '<div class="dt-head">' + backBtn('#home') + '<h1>Agents <span style="font-size:12px;color:var(--muted);font-weight:700">· ' + names.length + ' active</span></h1></div>';

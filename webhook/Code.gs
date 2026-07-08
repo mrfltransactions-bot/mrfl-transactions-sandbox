@@ -1745,15 +1745,28 @@ function _portalIso(d) {
   return Utilities.formatDate(d, Session.getScriptTimeZone(), 'yyyy-MM-dd');
 }
 
+// v7.9 — SHARED DEALS: a tab worked by two agents is named with both
+// refs joined by "+" (or "&"), e.g. "Tiffany+Carlitos_1253 25th Terrace
+// SW...". Each agent sees the shared deal in their own portal alongside
+// their personal deals — and never each other's. This splits a tab's
+// agent prefix into its individual agents.
+function _agentRefSplit(ref) {
+  return String(ref || '').split(/\s*[+&]\s*/)
+    .map(function (s) { return s.trim(); })
+    .filter(function (s) { return s; });
+}
+
 // Distinct agent refs from transaction tab names ("Martha_510 SW..." → "Martha"),
-// preserving the casing of the first occurrence.
+// preserving the casing of the first occurrence. Shared-deal prefixes
+// ("Tiffany+Carlitos_") list each agent individually.
 function _portalListAgents() {
   const seen = {};
   SpreadsheetApp.getActiveSpreadsheet().getSheets().forEach(sheet => {
     const name = sheet.getName();
     if (name.startsWith('📊') || !name.includes('_')) return;
-    const ref = name.substring(0, name.indexOf('_')).trim();
-    if (ref && !seen[ref.toLowerCase()]) seen[ref.toLowerCase()] = ref;
+    _agentRefSplit(name.substring(0, name.indexOf('_'))).forEach(function (ref) {
+      if (!seen[ref.toLowerCase()]) seen[ref.toLowerCase()] = ref;
+    });
   });
   return Object.keys(seen).map(k => seen[k]).sort();
 }
@@ -1884,9 +1897,11 @@ function portalResponse_(params) {
   ss.getSheets().forEach(sheet => {
     const name = sheet.getName();
     if (name.startsWith('📊') || !name.includes('_')) return;
-    const ref = name.substring(0, name.indexOf('_')).trim();
-    if (ref.toLowerCase() !== wanted) return;
-    displayRef = ref;
+    // Shared deals ("Tiffany+Carlitos_") match either agent's portal.
+    const refs = _agentRefSplit(name.substring(0, name.indexOf('_')));
+    const match = refs.filter(function (r) { return r.toLowerCase() === wanted; })[0];
+    if (!match) return;
+    displayRef = match;
     let d = null;
     try { d = extractTabData(sheet); } catch (err) { return; }
     if (!d) return;
@@ -2953,15 +2968,17 @@ function operatorResponse_(params) {
     const props = PropertiesService.getScriptProperties();
     const seen = {};
     deals.forEach(function (d) {
-      const ref = d.agent;
-      if (!ref || seen[ref]) return;
-      seen[ref] = true;
-      let k = props.getProperty(_portalKeyProp(ref));
-      if (!k) {
-        k = _portalRandomKey();
-        props.setProperty(_portalKeyProp(ref), k);
-      }
-      portalLinks[ref] = PORTAL_BASE_URL + '?a=' + encodeURIComponent(ref) + '&k=' + k;
+      // Shared deals ("Tiffany+Carlitos") → one link per individual agent.
+      _agentRefSplit(d.agent).forEach(function (ref) {
+        if (!ref || seen[ref]) return;
+        seen[ref] = true;
+        let k = props.getProperty(_portalKeyProp(ref));
+        if (!k) {
+          k = _portalRandomKey();
+          props.setProperty(_portalKeyProp(ref), k);
+        }
+        portalLinks[ref] = PORTAL_BASE_URL + '?a=' + encodeURIComponent(ref) + '&k=' + k;
+      });
     });
   } catch (e) { /* dashboard still works without links */ }
 
@@ -3243,24 +3260,30 @@ function _remGatherAll() {
     const due = _remSelectDue(d.milestones, today.getTime());
     if (due.length === 0) return;
 
-    const ref = d.agentRef;
-    if (!byAgent[ref]) {
-      let email = '';
-      try {
-        email = _remAgentEmail(sheet.getDataRange().getValues(),
-          props.getProperty('portal_email_' + ref.toLowerCase()) || '');
-      } catch (e) { email = ''; }
-      byAgent[ref] = { email: email, items: [] };
-    } else if (!byAgent[ref].email) {
-      try {
-        byAgent[ref].email = _remAgentEmail(sheet.getDataRange().getValues(), '');
-      } catch (e) { /* keep empty */ }
-    }
-    due.forEach(function (m) {
-      byAgent[ref].items.push({
-        name: m.name, days: m.days,
-        dateStr: Utilities.formatDate(m.date, tz, 'EEE, MMM d'),
-        property: d.propertyDisplay
+    // v7.9 — a shared tab ("Tiffany+Carlitos_") reminds BOTH agents.
+    // Per-agent email: portal_email_<ref> Script Property wins; the
+    // tab-derived fallback only fills a ref that has no email yet (on a
+    // shared deal it may belong to the other agent — Gloria reviews
+    // every draft before sending, and can set the property override).
+    _agentRefSplit(d.agentRef).forEach(function (ref) {
+      if (!byAgent[ref]) {
+        let email = '';
+        try {
+          email = _remAgentEmail(sheet.getDataRange().getValues(),
+            props.getProperty('portal_email_' + ref.toLowerCase()) || '');
+        } catch (e) { email = ''; }
+        byAgent[ref] = { email: email, items: [] };
+      } else if (!byAgent[ref].email) {
+        try {
+          byAgent[ref].email = _remAgentEmail(sheet.getDataRange().getValues(), '');
+        } catch (e) { /* keep empty */ }
+      }
+      due.forEach(function (m) {
+        byAgent[ref].items.push({
+          name: m.name, days: m.days,
+          dateStr: Utilities.formatDate(m.date, tz, 'EEE, MMM d'),
+          property: d.propertyDisplay
+        });
       });
     });
   });
