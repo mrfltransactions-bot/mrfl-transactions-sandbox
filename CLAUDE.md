@@ -1,6 +1,6 @@
 # CLAUDE.md — MRFL Transactions project context
 
-_Last full update: 2026-07-07 (system v2.5.0, webhook v7.6). Keep this file
+_Last full update: 2026-07-08 (system v3.1.0, webhook v7.9.1). Keep this file
 current whenever a feature ships — it is the canonical context/backup for
 future sessions._
 

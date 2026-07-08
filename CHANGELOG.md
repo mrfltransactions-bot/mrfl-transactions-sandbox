@@ -19,6 +19,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   subtitle + ↗); destinations are `INTAKE_URL` / `SITE_URL` /
   `SHEET_URL` consts by the endpoint. Verified in both themes, no
   console errors. Front-end only — no Code.gs change, no redeploy.
+- Follow-up: `INTAKE_URL` points at the git-main Vercel origin
+  (`…-git-main-…vercel.app/intake/intake-form.html`), where Gloria's
+  Claude API key + webhook URL live in per-origin localStorage — so the
+  form opens already connected (the apex is a different origin).
 
 ---
 
