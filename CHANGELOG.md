@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [3.1.0] — 2026-07-08
+
+### Added — dashboard Quick links (intake form + website + sheet)
+
+- The operator dashboard home view now has a "Quick links" card so
+  Gloria can reach everything from one place: the **intake form**
+  (mrfltransactions.com/intake/intake-form.html), her **public website**,
+  and the **master tracking sheet** — each opens in a new tab.
+- Reuses the existing `.row` card component (colored edge bar + title +
+  subtitle + ↗); destinations are `INTAKE_URL` / `SITE_URL` /
+  `SHEET_URL` consts by the endpoint. Verified in both themes, no
+  console errors. Front-end only — no Code.gs change, no redeploy.
+
+---
+
 ## [3.0.0] — 2026-07-08
 
 ### Changed — "Lumi" website restyle (lumi.studio reference)

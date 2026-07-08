@@ -427,6 +427,11 @@
   var THEME_KEY = 'mrfl_dash_theme';
   var ENDPOINT = 'https://script.google.com/macros/s/AKfycbzheiPICRaOkutzU6kkrNS3n1pVebVVMtMwqAyQtDinMrzbqnaeTxFdHaqCeKtveKEzBw/exec';
 
+  // Quick-link destinations shown on the home view (all open in a new tab).
+  var INTAKE_URL = 'https://mrfltransactions.com/intake/intake-form.html';
+  var SITE_URL   = 'https://mrfltransactions.com';
+  var SHEET_URL  = 'https://docs.google.com/spreadsheets/d/1HmBdzF8KRWvRFa01-QqmRIi9cKHF7Bh1-pf9jeDQ_7Y';
+
   var DATA = null;        // last successful payload
   var selDay = 0;         // selected day offset in the week timeline
   var lastErr = null;     // state to show when data missing
@@ -619,6 +624,22 @@
         h += tlItem(u);
       });
     }
+
+    // quick links — everything Gloria reaches from the dashboard
+    h += '<div class="sec"><h2>Quick links</h2><span class="more">open in a new tab ↗</span></div>';
+    h += '<a class="row g tap" href="' + INTAKE_URL + '" target="_blank" rel="noopener">' +
+      '<span class="ebar" style="background:var(--bar-blue)"></span>' +
+      '<span class="r-main"><span class="r-title">📝 New intake form</span>' +
+      '<span class="r-sub">Upload a contract & start a transaction</span></span><span class="chev">↗</span></a>';
+    h += '<a class="row g tap" href="' + SITE_URL + '" target="_blank" rel="noopener" style="margin-top:10px">' +
+      '<span class="ebar" style="background:var(--bar-green)"></span>' +
+      '<span class="r-main"><span class="r-title">🌐 My website</span>' +
+      '<span class="r-sub">mrfltransactions.com — what agents & clients see</span></span><span class="chev">↗</span></a>';
+    h += '<a class="row g tap" href="' + SHEET_URL + '" target="_blank" rel="noopener" style="margin-top:10px">' +
+      '<span class="ebar" style="background:var(--bar-amber)"></span>' +
+      '<span class="r-main"><span class="r-title">📊 Tracking sheet</span>' +
+      '<span class="r-sub">The master Google Sheet — all tabs & dashboard</span></span><span class="chev">↗</span></a>';
+
     h += '</div>';  // homebody
 
     var t = new Date();
