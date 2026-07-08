@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [2.7.4] — 2026-07-07
+
+### Changed — recreated email now matches the real sent format
+
+- Compared against Gloria's actual sent Transaction Summary (Iron
+  Horse Way PDF) and aligned: dropped the "UPDATED —" subject prefix
+  and amber banner (per Gloria — not needed), restored "Looking
+  forward to a smooth closing with you! 🙂" and the "key contract
+  dates" wording, added the listing-side loan-status note ("– Please
+  keep Seller and Broker fully informed…" — seller/listing side,
+  financed deals only), and prettified the title header to
+  "Escrow Agent / Buyer Title" in the body (tab keeps raw headers).
+- Verified against a simulated Iron Horse tab: subject, smiley line,
+  loan note present for seller+financed / absent for buyer+cash,
+  spaced header, client-privacy filter still holding, recipient
+  routing identical to the real sent email.
+
+---
+
 ## [2.7.3] — 2026-07-07
 
 ### Fixed — PRIVACY: clients' contact info leaked into the recreated email

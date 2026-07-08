@@ -2679,14 +2679,29 @@ function _sumParseConcession(text) {
 
 const _SUM_SIGNATURE_PLAIN = 'Gloria Grullon\nTransaction Coordinator | MRFL Transactions\n📞 401.282.8414\n✉ MRFLTransactions@gmail.com';
 
+// Cosmetic touch-up for the email body only (the tab keeps its raw
+// headers, which _sumContacts and the portal parser rely on).
+function _sumPrettyLine(line) {
+  return String(line).replace(/^Escrow Agent\/ /, 'Escrow Agent / ');
+}
+
+function _sumLoanNote(tab) {
+  const s = String(tab.side || '').toLowerCase();
+  return (s === 'seller' || s === 'listing') && !tab.isCash;
+}
+
 function _sumBuildPlain(tab, greeting, primaryName) {
   let out = greeting + '\n\n';
-  out += '⚠ UPDATED SUMMARY — this replaces any earlier transaction summary for this file. Please use the version below going forward.\n\n';
   out += "I'm Gloria Grullon, Transaction Coordinator for " + (primaryName || 'this transaction') +
     '. Please be sure to copy me on all communications from here on out so I can keep everything on track.\n\n';
-  out += "You'll find the current contract dates and contact details for everyone involved listed below. Take a quick look when you have a moment and let me know if anything needs to be corrected or updated.\n\n";
+  out += "You'll find the key contract dates and contact details for everyone involved listed below. Take a quick look when you have a moment and let me know if anything needs to be corrected or updated.\n\n";
+  out += 'Looking forward to a smooth closing with you! 🙂\n\n';
 
-  out += tab.detailLines.join('\n') + '\n';
+  out += tab.detailLines.map(_sumPrettyLine).join('\n') + '\n';
+
+  if (_sumLoanNote(tab)) {
+    out += "\n– Please keep Seller and Broker fully informed about the status of the buyer's mortgage loan application, loan processing, appraisal, and loan approval including property related conditions of loan approval.\n";
+  }
 
   out += '\nCRITICAL DEADLINES\n\n';
   out += '| Milestone | Deadline | Status | Amount | Timeframe |\n';
@@ -2726,10 +2741,12 @@ function _sumBuildHtml(tab, greeting, primaryName) {
   const esc = _hoaEsc;
   const FONT = "font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 14px; line-height: 1.55; color: #1A1F2E;";
   const isHeaderLine = function (line) {
-    return DETAIL_ALL_HEADERS.indexOf(line) >= 0 || line.indexOf('EFFECTIVE DATE:') === 0 ||
+    return DETAIL_ALL_HEADERS.indexOf(line) >= 0 || line.indexOf('Escrow Agent') === 0 ||
+      line.indexOf('EFFECTIVE DATE:') === 0 ||
       DETAIL_PARTY_STARTS.some(function (p) { return line.indexOf(p) === 0; });
   };
-  const detailsHtml = tab.detailLines.map(function (line) {
+  const detailsHtml = tab.detailLines.map(function (raw) {
+    const line = _sumPrettyLine(raw);
     if (line === '') return '<br>';
     if (isHeaderLine(line)) {
       return '<div style="font-weight: 700; color: #312E81; margin-top: 4px;">' + esc(line) + '</div>';
@@ -2786,15 +2803,19 @@ function _sumBuildHtml(tab, greeting, primaryName) {
       others.map(function (t) { return '<div>• ' + esc(t) + '</div>'; }).join('');
   }
 
+  const loanNoteHtml = _sumLoanNote(tab)
+    ? '<p style="margin: 14px 0 0;">– Please keep Seller and Broker fully informed about the status of the buyer\'s mortgage loan application, loan processing, appraisal, and loan approval including property related conditions of loan approval.</p>'
+    : '';
+
   return '<div style="' + FONT + ' max-width: 720px;">' +
     '<p style="margin: 0 0 14px;">' + esc(greeting) + '</p>' +
-    '<div style="background: #FEF3C7; border-left: 4px solid #F59E0B; padding: 10px 14px; margin: 0 0 16px; font-weight: 600; color: #92400E;">' +
-    '⚠ UPDATED SUMMARY — this replaces any earlier transaction summary for this file. Please use the version below going forward.</div>' +
     '<p style="margin: 0 0 14px;">I\'m Gloria Grullon, Transaction Coordinator for <b>' + esc(primaryName || 'this transaction') + '</b>. ' +
     'Please be sure to copy me on all communications from here on out so I can keep everything on track.</p>' +
-    '<p style="margin: 0 0 18px;">You\'ll find the current contract dates and contact details for everyone involved listed below. ' +
+    '<p style="margin: 0 0 14px;">You\'ll find the key contract dates and contact details for everyone involved listed below. ' +
     'Take a quick look when you have a moment and let me know if anything needs to be corrected or updated.</p>' +
+    '<p style="margin: 0 0 18px;">Looking forward to a smooth closing with you! 🙂</p>' +
     detailsHtml +
+    loanNoteHtml +
     '<div style="font-weight: 700; color: #312E81; margin: 18px 0 8px; letter-spacing: 0.04em;">CRITICAL DEADLINES</div>' +
     '<table style="border-collapse: collapse; width: 100%; ' + FONT + '">' + tableHead + tableBody + '</table>' +
     contribHtml + othersHtml +
@@ -2822,7 +2843,7 @@ function createSummaryEmailDraft() {
   const sideKey = String(tab.side || '').toLowerCase();
   const primaryName = (sideKey === 'buyer') ? contacts.byr.name : (contacts.lst.name || contacts.byr.name);
 
-  const subject = 'UPDATED — Transaction Summary: ' + tab.property;
+  const subject = 'Transaction Summary: ' + tab.property;
   const plain = _sumBuildPlain(tab, greeting, primaryName);
   const html = _sumBuildHtml(tab, greeting, primaryName);
 

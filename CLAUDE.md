@@ -114,9 +114,14 @@ connected to Vercel 2026-07-06; www is the primary host, apex 307-redirects).
   form's Transaction Summary email from the ACTIVE tab's current contents
   and create a Gmail **draft** (drafts-only constraint applies). Recipient
   policy mirrors the intake composer's `_emailComputeRecipients` (side from
-  the tab's `Side Represented:` line; cash excludes lender). Subject
-  "UPDATED — Transaction Summary: <address>" + amber disregard-earlier
-  banner; non-$ concessions listed under OTHER AGREEMENTS.
+  the tab's `Side Represented:` line; cash excludes lender; invalid
+  addresses skipped + reported). Format matches Gloria's real sent email
+  (Iron Horse sample, 2026-07-07): subject "Transaction Summary: <address>"
+  (NO "UPDATED" prefix/banner — she vetoed it), smiley closing line,
+  listing-side loan note on financed seller-side deals, "Escrow Agent /
+  Buyer Title" spacing in body. **Privacy filter strips Seller(s)/Buyer(s)
+  Email/Phone lines from the body** (see PRIVACY RULE below). Non-$
+  concessions listed under OTHER AGREEMENTS.
 - **Add / update details dialog (v7.7):** 🛠 TC Tools → "✏️ Add / update
   details" — generalizes the HOA pattern to the contact sections agents most
   often add later (buyer/closing title, **seller's title**, loan officer,
