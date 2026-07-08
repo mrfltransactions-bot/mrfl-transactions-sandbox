@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [3.0.0] — 2026-07-08
+
+### Changed — "Lumi" website restyle (lumi.studio reference)
+
+- Marketing site + referral landing rebuilt bright, warm, and playful
+  from Gloria's lumi.studio reference (her 5th style iteration:
+  data-dashboard → NFT purple → liquid glass → ink & azure → this).
+- **Light-first** now (default light; the dark toggle is kept as a warm
+  indigo counterpart). Ivory #ffffff background, one periwinkle-indigo
+  accent #6950e6, warm-dark text #1a163d.
+- Typography pivot: **Fraunces** soft-serif for all headings + price
+  amounts, **Manrope** grotesque for body (single Google Fonts link,
+  both pages) — free Recoleta/Moderat substitutes.
+- Pastel graphics: a self-contained inline-SVG "live portal"
+  illustration in the homepage hero (house-card + milestone rows +
+  progress bar + floating calendar chip + check badge, all theme-aware
+  via CSS vars); service/bullet icon chips cycle through 4 pastels; the
+  refer hero gets two soft pastel blobs. 100px pill buttons, 22–26px
+  rounded cards, eyebrow pill labels; the azure heading bars are gone.
+- Accessibility: 0 contrast failures in both themes on both pages
+  (audited). Fixes baked in — light star darkened to amber #b45309
+  (gold failed on white), light --muted darkened to #67657a (failed on
+  the tinted section bg), dark --acc-soft made a solid #241d44 chip so
+  light-purple eyebrow/step text passes. No mobile overflow; console
+  clean; ?from= personalization intact.
+
+---
+
 ## [2.9.1] — 2026-07-08
 
 ### Fixed — reminder emails: distorted icons removed (webhook v7.9.1)
