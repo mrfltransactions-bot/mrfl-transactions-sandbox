@@ -3216,11 +3216,14 @@ function _remBuildEmailHtml(ref, items, portalLink) {
       : '') +
     // v7.5 growth footer — referral + review nudge in every reminder
     // (drafts only, as always: Gloria reviews and sends each one herself)
+    // NO emoji here: GmailApp mangles astral-plane emoji into ������ in
+    // recipients' clients (Gloria's rule 2026-07-08: if an icon can't render
+    // correctly in a generated email, remove it completely).
     '<div style="margin:18px 0 0;padding:12px 14px;background:#F5F3FF;border-radius:8px;font-size:12.5px;color:#4B5563">' +
-    '🎁 <b style="color:#1E1B4B">Know an agent who\'d love this support?</b> Your invite gives them ' +
+    '<b style="color:#1E1B4B">Know an agent who\'d love this support?</b> Your invite gives them ' +
     '50% off their first transaction — and you 50% off your next when theirs closes: ' +
     '<a href="' + REFER_BASE_URL + '?from=' + encodeURIComponent(ref) + '" style="color:#4338CA;font-weight:700">share your invite</a>. ' +
-    'Loved working together? <a href="' + SITE_BASE_URL + '#reviews" style="color:#4338CA;font-weight:700">Leave a quick review ⭐</a></div>' +
+    'Loved working together? <a href="' + SITE_BASE_URL + '#reviews" style="color:#4338CA;font-weight:700">Leave a quick review</a></div>' +
     '<p style="margin:14px 0 0;font-size:12.5px;color:#9CA3AF;text-align:center">' +
     'Gloria · MRFL Transactions — questions? Just reply to this email.</p>' +
     '</div></div>';
@@ -3234,10 +3237,10 @@ function _remBuildEmailPlain(ref, items, portalLink) {
       return '• ' + it.name + ' — ' + it.dateStr + ' (' + when(it.days) + ') · ' + it.property;
     }).join('\n') +
     (portalLink ? '\n\nYour portal: ' + portalLink : '') +
-    '\n\n🎁 Know an agent who\'d love this support? Your invite gives them 50% off their first ' +
+    '\n\nKnow an agent who\'d love this support? Your invite gives them 50% off their first ' +
     'transaction (and you 50% off your next when theirs closes): ' +
     REFER_BASE_URL + '?from=' + encodeURIComponent(ref) +
-    '\n⭐ Loved working together? Leave a quick review: ' + SITE_BASE_URL + '#reviews' +
+    '\nLoved working together? Leave a quick review: ' + SITE_BASE_URL + '#reviews' +
     '\n\n— Gloria · MRFL Transactions';
 }
 

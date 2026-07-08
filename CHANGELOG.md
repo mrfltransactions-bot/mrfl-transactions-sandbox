@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [2.9.1] — 2026-07-08
+
+### Fixed — reminder emails: distorted icons removed (webhook v7.9.1)
+
+- The referral/review footer of the daily reminder drafts showed
+  scrambled `���` marks in recipients' email clients: GmailApp mangles
+  astral-plane emoji (here the 🎁 gift box), same failure as the 📞 in
+  the recreated-summary signature (v2.7.5). Removed the gift box and
+  the star from both the HTML and plain-text footers — the text reads
+  clean on its own.
+- **Standing rule (Gloria, 2026-07-08), now in CLAUDE.md:** if a
+  generated email can't render an icon correctly, the icon is removed
+  completely — never shipped as a gamble. Every email-producing
+  function must stay free of astral-plane emoji.
+
+---
+
 ## [2.9.0] — 2026-07-08
 
 ### Changed — "ink & azure" website restyle (TVM Engineering reference)

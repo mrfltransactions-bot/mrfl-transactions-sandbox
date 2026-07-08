@@ -36,7 +36,7 @@ connected to Vercel 2026-07-06; www is the primary host, apex 307-redirects).
 | Component | File | Current state |
 |---|---|---|
 | Intake form | `intake/intake-form.html` | PDF-vision extraction: sends the actual PDF to Claude (`claude-opus-4-8`, max_tokens 8000, no temperature — rejected by model) with pdf.js text as spelling aid. Applies FL AS-IS "if blank" defaults (escrow 3 / loan app 5 / loan approval 30 / inspection 15 / title 15; cash → loan fields blank; ¶9(c) "no later than 5 days" is a cap, NOT title_days). HOA detection (`has_hoa` + contact fields). Calendar buttons on date fields. Failure-only diagnostics box (bottom-left). API key: Test auto-saves; uploader falls back to typed key. pdf.js detaches ArrayBuffers → always pass a copy (`buf.slice(0)`). |
-| Webhook / Apps Script | `webhook/Code.gs` | **v7.6** (v7.6: operator payload adds `portal_links` per agent, keys generated on demand). **v7.5:** doPost (tab + calendar events + dashboard + deliverables + PDF export; `action:'review'` → ⭐ Reviews tab), doGet (health check / keyed widget view / keyed per-agent portal view / keyed all-deals operator view incl. `details` + `referrals` + `reviews` counts / keyless `view=reviews` → approved reviews + `google_url`), calendar sync, HOA dialog, portal links dialog, operator-link dialog, referral dialog, **⭐ Manage reviews dialog** (show/hide/delete, name-guarded writes), reminder drafts w/ referral+review footer. ~2,900 lines, container-bound to the master sheet. |
+| Webhook / Apps Script | `webhook/Code.gs` | **v7.9.1** (v7.9.1: reminder-email footer emoji removed — see EMAIL ICON RULE below; v7.9: shared-deal `_agentRefSplit`; v7.8: recreate summary email; v7.7: add/update details dialog; v7.6: operator payload adds `portal_links` per agent, keys generated on demand). **v7.5:** doPost (tab + calendar events + dashboard + deliverables + PDF export; `action:'review'` → ⭐ Reviews tab), doGet (health check / keyed widget view / keyed per-agent portal view / keyed all-deals operator view incl. `details` + `referrals` + `reviews` counts / keyless `view=reviews` → approved reviews + `google_url`), calendar sync, HOA dialog, portal links dialog, operator-link dialog, referral dialog, **⭐ Manage reviews dialog** (show/hide/delete, name-guarded writes), reminder drafts w/ referral+review footer. ~2,900 lines, container-bound to the master sheet. |
 | Agent portal | `portal/index.html` | Mobile-first read-only app per agent: stats chips, next-deadline color-block banner (tap-to-jump, red past-due variant), deal cards (progress, milestone timeline from sheet checkboxes, collapsible Contacts & details with tap-to-call/email), past deals collapsed. `PORTAL_ENDPOINT` const = Gloria's webhook URL. **Dark/light mode** (v1.7.1): sun/moon toggle, system-preference default, choice persisted (`mrfl_portal_theme`); ALL colors are CSS theme tokens — run the WCAG contrast audit in both themes after any styling change (audit snippet in session history). Header is just "Hello, [name]! 👋" — no brand row/subline/"South Florida" (Gloria's personalization choice). Every deal card has a "🖨 Print / save as PDF" button (v1.9.1) → hidden `#printview` + `@media print` branded Transaction Overview. Growth hooks: "🎁 Refer an agent" share card (`shareInvite()` → `REFER_BASE = https://mrfltransactions.com/refer/`), 14-day closed-deal 🎉 congrats banner (also triggers share) paired with a "⭐ Leave a quick review" link to the site's #reviews (`SITE_BASE` derived from REFER_BASE). Side label for Both = "Double sided". Do NOT add background/color transitions on html/body — wedges the theme switch in Blink. |
 | Operator dashboard | `dashboard/index.html` | Gloria's private all-transactions SPA (v2.5.0, aurora liquid-glass: violet-black bg + 3 vivid blobs, specular-edged frosted panels, glowing gradient ＋): hash-router views — #home (search, tappable stat cards, week day-pills w/ per-day deadline timeline, attention preview), #agents → #deals/agent/<name>, #deals/all|urgent|closing, #deal/<i> full detail (milestone checklist + ALL details sections + tel/mailto + Open-sheet-tab). Floating bottom nav; center ＋ opens the master sheet. Fed by `doGet?view=operator&key=<operator_key>` (v7.2 payload includes `details`; v7.6 adds `portal_links` map → 🔗 button on each Agents-tab row shares/copies that agent's portal invite). Link via 🛠 TC Tools → "🖥 My dashboard link". Detail view has "Open sheet tab ↗" + "🖨 Print / save as PDF" (same print pattern as the portal). Same dark/light token system + contrast-audit rule as the portal; `ENDPOINT` const = webhook URL. |
 | Widget | `widget/index.html` (web) + `scriptable/mrfl_widget.js` (legacy iOS) | Upcoming-deadlines dashboard. Now requires `&key=<widget_key>` on the URL. Web version stores URL in localStorage (⚙ gear to change); shares `tc_webhook_url` key with the intake form. |
@@ -169,7 +169,8 @@ connected to Vercel 2026-07-06; www is the primary host, apex 307-redirects).
   guarded by reviewer-name match at the target row).
 - **Growth footer (v7.5):** `_remBuildEmailHtml/Plain` end with the agent's
   personal referral link (`REFER_BASE_URL + '?from=' + ref`) + a review link
-  (`SITE_BASE_URL + '#reviews'`). Still drafts-only.
+  (`SITE_BASE_URL + '#reviews'`). Still drafts-only. Emoji-free since
+  v7.9.1 (EMAIL ICON RULE — the 🎁/⭐ rendered as ������ for recipients).
 - **Dashboard portal links (v7.6):** `operatorResponse_` includes
   `portal_links` (per-agent portal URLs; keys generated on demand via
   `_portalRandomKey`) → dashboard Agents-tab 🔗 buttons share/copy the same
@@ -206,6 +207,15 @@ Set up daily reminder drafts · About.
   deployments as "Almost ready").
 - She personally reviews everything outbound: reminder emails are drafts she
   sends herself; deliverables she shares herself. Preserve this principle.
+- **EMAIL ICON RULE (Gloria, 2026-07-08): if a generated email cannot
+  render an icon correctly, remove the icon completely.** GmailApp mangles
+  astral-plane emoji (📞 🎁 🙂 … → ������ in recipients' clients); BMP
+  glyphs (the ⏰ in the reminder subject) have proven safe, and
+  `&#128578;`-style HTML entities work in htmlBody only. When in doubt: no
+  icon. Applies to every email-producing function (`_rem*`, `_sum*`); after
+  editing any of them, scan the built strings for chars > U+FFFF (python
+  `ord(c) > 0xFFFF`). Precedents: v2.7.5 (summary-email signature),
+  v7.9.1 (reminder growth footer).
 - **PRIVACY RULE (Gloria, 2026-07-07): the clients' (buyers'/sellers')
   personal email/phone must NEVER appear in communications sent to the
   other parties** — outbound emails show client NAMES only. The tab stores
